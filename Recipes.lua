@@ -30,6 +30,14 @@ local function GetCharacterData()
 	return CraftRosterDB.characters[key]
 end
 
+local function GetRecipeIcon(recipeID, profession)
+	if GetSpellInfo then
+		local icon = select(3, GetSpellInfo(recipeID))
+		if icon then return icon end
+	end
+	return PROFESSION_ICONS[profession]
+end
+
 function RecipeTracker:Initialize()
 	self:RegisterEvent("NEW_RECIPE_LEARNED")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -98,11 +106,13 @@ function RecipeTracker:ImportTradeSkillRecipes()
 					saved = {
 						name = name,
 						profession = profession,
-						icon = PROFESSION_ICONS[profession],
+						icon = GetRecipeIcon(recipeID, profession),
 						firstSeenBy = GetCharacterKey(),
 						firstSeenAt = time(),
 					}
 					CraftRosterDB.recipes[recipeID] = saved
+				elseif not saved.icon then
+					saved.icon = GetRecipeIcon(recipeID, profession)
 				end
 
 				local materials = {}
@@ -146,7 +156,7 @@ function RecipeTracker:RecordRecipe(recipeID, profession, recipeName)
 	CraftRosterDB.recipes[recipeID] = CraftRosterDB.recipes[recipeID] or {
 		name = recipeName,
 		profession = profession,
-		icon = PROFESSION_ICONS[profession],
+		icon = GetRecipeIcon(recipeID, profession),
 		firstSeenBy = GetCharacterKey(),
 		firstSeenAt = time(),
 	}
