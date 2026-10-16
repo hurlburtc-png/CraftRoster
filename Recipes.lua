@@ -123,6 +123,9 @@ function RecipeTracker:ImportTradeSkillRecipes()
 		if CraftRoster.Directory then
 			CraftRoster.Directory:InvalidateIndex()
 		end
+		if CraftRoster.GuildSync then
+			CraftRoster.GuildSync:SendData()
+		end
 	end
 
 	return added
