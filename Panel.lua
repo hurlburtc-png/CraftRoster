@@ -12,7 +12,7 @@ end
 local function CaptureError(err)
 	if err and err:find("CraftRoster", 1, true) then
 		lastError = err
-		print("|cffff0000CraftRoster|r error captured. Open /cr settings and click View / Copy Last Error.")
+		print("|cffff0000CraftRoster|r error captured. Click the bug button in /cr settings to view or copy it.")
 	end
 end
 
@@ -74,11 +74,19 @@ function Panel:Initialize()
 		print("|cff00ff00CraftRoster|r: directory window position reset.")
 	end)
 
-	local errorButton = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate")
-	errorButton:SetSize(170, 26)
-	errorButton:SetPoint("TOPLEFT", 16, -200)
-	errorButton:SetText("View / Copy Last Error")
-	errorButton:SetScript("OnClick", function() Panel:ShowError() end)
+	local bugButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	bugButton:SetSize(26, 26)
+	bugButton:SetPoint("TOPRIGHT", -34, -10)
+	bugButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Gear_01")
+	bugButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+	bugButton:SetScript("OnClick", function() Panel:ShowError() end)
+	bugButton:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+		GameTooltip:SetText("CraftRoster Error")
+		GameTooltip:AddLine("View or copy the last CraftRoster error.", 1, 1, 1)
+		GameTooltip:Show()
+	end)
+	bugButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 	local autoCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
 	autoCheck:SetPoint("TOPLEFT", 14, -200)
@@ -101,7 +109,7 @@ function Panel:Initialize()
 
 	errorFrame.Instructions = errorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	errorFrame.Instructions:SetPoint("TOPLEFT", 16, -38)
-	errorFrame.Instructions:SetText("Select all text and press Ctrl+C to copy it for Discord.")
+	errorFrame.Instructions:SetText("Press Ctrl+C to copy the selected error for Discord.")
 
 	errorFrame.ErrorBox = CreateFrame("EditBox", nil, errorFrame, "InputBoxTemplate")
 	errorFrame.ErrorBox:SetMultiLine(true)
@@ -125,6 +133,7 @@ function Panel:ShowError()
 	if not self.errorFrame then return end
 
 	self.errorFrame.ErrorBox:SetText(lastError or "No CraftRoster error has been captured.")
+	self.errorFrame.ErrorBox:SetFocus()
 	self.errorFrame.ErrorBox:HighlightText()
 	self.errorFrame:Show()
 end
