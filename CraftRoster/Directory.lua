@@ -787,7 +787,9 @@ rosterFrame:RegisterEvent("GUILD_ROSTER_UPDATE")
 rosterFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 rosterFrame:SetScript("OnEvent", function(_, event)
 	if event == "PLAYER_ENTERING_WORLD" then
-		if C_GuildInfo and C_GuildInfo.RequestGuildRoster then
+		if C_GuildInfo and C_GuildInfo.GuildRoster then
+			C_GuildInfo.GuildRoster()
+		elseif C_GuildInfo and C_GuildInfo.RequestGuildRoster then
 			C_GuildInfo.RequestGuildRoster()
 		elseif RequestGuildRoster then
 			RequestGuildRoster()
@@ -797,11 +799,13 @@ rosterFrame:SetScript("OnEvent", function(_, event)
 
 	wipe(onlineByName)
 
-	local roster = C_GuildInfo and C_GuildInfo.GetGuildRoster and C_GuildInfo.GetGuildRoster()
-	if roster then
-		for _, member in ipairs(roster) do
-			if member and member.name and member.online then
-				onlineByName[member.name:lower()] = true
+	if C_GuildInfo and C_GuildInfo.GetGuildRoster then
+		local roster = C_GuildInfo.GetGuildRoster()
+		if roster then
+			for _, member in ipairs(roster) do
+				if member and member.name and member.online then
+					onlineByName[member.name:lower()] = true
+				end
 			end
 		end
 	elseif GetNumGuildMembers then
