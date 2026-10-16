@@ -88,7 +88,7 @@ function Requests:StartMailRequest(recipeID, target)
 	local recipe = GetRecipe(recipeID)
 	if not recipe then return end
 
-	if not target:match("^[%a%p]+%-%[%a%p]+$") and not target:match("^[%a%p]+%-[%a%p]+$") then
+	if not target:match("^[%a%p]+%-[%a%p]+$") then
 		print("|cffff0000CraftRoster|r: enter the full character name including server, for example: Bob-Illidan")
 		return
 	end
@@ -272,6 +272,23 @@ local function AddDirectoryButtons()
 		end
 	end)
 	tab.CraftRosterRefreshButton = refreshButton
+
+	local favoriteButton = CreateFrame("Button", nil, tab, "GameMenuButtonTemplate")
+	favoriteButton:SetSize(120, 26)
+	favoriteButton:SetPoint("LEFT", tab.CraftRosterTradeButton, "RIGHT", 8, 0)
+	favoriteButton:SetText("Favorite")
+	favoriteButton:SetScript("OnClick", function()
+		local recipe = CraftRoster.Directory and CraftRoster.Directory.selectedRecipe
+		if not recipe then
+			print("|cffff0000CraftRoster|r: select a recipe first.")
+			return
+		end
+		CraftRosterDB.favorites = CraftRosterDB.favorites or {}
+		CraftRosterDB.favorites[recipe.id] = not CraftRosterDB.favorites[recipe.id] or nil
+		local state = CraftRosterDB.favorites[recipe.id] and "added to" or "removed from"
+		print(("|cff00ff00CraftRoster|r: %s %s favorites."):format(recipe.name, state))
+	end)
+	tab.CraftRosterFavoriteButton = favoriteButton
 end
 
 SLASH_CRAFTROSTERREQUESTS1 = "/crrequests"
@@ -286,6 +303,59 @@ SlashCmdList["CRAFTROSTERREQUESTS"] = function()
 	for i, request in ipairs(requests) do
 		if i > 10 then break end
 		print(("%s → %s (%s) [%s]"):format(request.recipe, request.target, request.mode, request.status))
+	end
+end
+
+SLASH_CRAFTROSTERFAVORITES1 = "/crfavorites"
+SlashCmdList["CRAFTROSTERFAVORITES"] = function()
+	local favorites = CraftRosterDB.favorites or {}
+	local count = 0
+	print("|cff00ff00CraftRoster|r favorite recipes:")
+	for recipeID in pairs(favorites) do
+		local recipe = CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
+		if recipe then
+			count = count + 1
+			print(("%s (%s)"):format(recipe.name, recipe.profession))
+		end
+	end
+	if count == 0 then
+		print("No favorites saved yet. Select a recipe and click Favorite.")
+	end
+end
+
+SLASH_CRAFTROSTERDISCORD1 = "/crdiscord"
+SlashCmdList["CRAFTROSTERDISCORD"] = function()
+	local recipes = {}
+	for recipeID, recipe in pairs(CraftRosterDB.recipes or {}) do
+		local crafters = 0
+		for _, character in pairs(CraftRosterDB.characters or {}) do
+			if character.recipes and character.recipes[recipeID] then
+				crafters = crafters + 1
+			end
+		end
+		if crafters > 0 then
+			table.insert(recipes, {
+				profession = recipe.profession or "Unknown",
+				name = recipe.name or ("Recipe " .. recipeID),
+				crafters = crafters,
+			})
+		end
+	end
+
+	table.sort(recipes, function(a, b)
+		if a.profession ~= b.profession then return a.profession < b.profession end
+		return a.name < b.name
+	end)
+
+	print("|cff00ff00CraftRoster|r Discord export (copy from chat):")
+	print("**Guild Crafting Directory**")
+	local lastProfession = nil
+	for _, recipe in ipairs(recipes) do
+		if recipe.profession ~= lastProfession then
+			print(("**%s**"):format(recipe.profession))
+			lastProfession = recipe.profession
+		end
+		print(("- %s (%d crafter%s)"):format(recipe.name, recipe.crafters, recipe.crafters == 1 and "" or "s"))
 	end
 end
 
