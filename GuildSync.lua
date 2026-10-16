@@ -70,6 +70,12 @@ function GuildSync:RequestSync()
 	SendAddonData("REQ")
 end
 
+function GuildSync:SyncNow()
+	lastRequest = 0
+	GuildSync:RequestSync()
+	print("|cff00ff00CraftRoster|r: requesting guild recipe sync.")
+end
+
 function GuildSync:SendData()
 	if time() - lastSend < SEND_THROTTLE then return end
 	lastSend = time()
@@ -78,6 +84,17 @@ function GuildSync:SendData()
 	if not payload then return end
 
 	SendAddonData(("DATA:%s:%d:%s"):format(GetCharacterKey(), time(), payload))
+end
+
+function GuildSync:GetStatusText()
+	local synced = 0
+	for _, character in pairs(CraftRosterDB.characters or {}) do
+		if character.lastSync then synced = synced + 1 end
+	end
+
+	local lastSync = CraftRosterDB.lastGuildSync
+	local timeText = lastSync and date("%l:%M %p", lastSync) or "Never"
+	return ("Guild sync: %d crafter(s) · last sync: %s"):format(synced, timeText)
 end
 
 local function MergeCharacter(characterKey, updated, payload)
@@ -91,27 +108,28 @@ local function MergeCharacter(characterKey, updated, payload)
 		lastSync = updated,
 	}
 
+	CraftRosterDB.lastGuildSync = time()
+
 	if CraftRoster.Directory then
 		CraftRoster.Directory:InvalidateIndex()
 	end
 end
 
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-frame:RegisterEvent("GUILD_ROSTER_UPDATE")
+frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("CHAT_MSG_ADDON")
+frame:RegisterEvent("NEW_RECIPE_LEARNED")
 
 frame:SetScript("OnEvent", function(_, event, prefix, message, _, sender)
-	if event == "PLAYER_ENTERING_WORLD" then
+	if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
 		if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
 			C_ChatInfo.RegisterAddonMessagePrefix(PREFIX)
 		elseif RegisterAddonMessagePrefix then
 			RegisterAddonMessagePrefix(PREFIX)
 		end
-		GuildSync:RequestSync()
 
-	elseif event == "GUILD_ROSTER_UPDATE" then
-		GuildSync:RequestSync()
+	elseif event == "NEW_RECIPE_LEARNED" then
+		GuildSync:SendData()
 
 	elseif event == "CHAT_MSG_ADDON" and prefix == PREFIX then
 		if message == "REQ" then

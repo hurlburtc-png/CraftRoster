@@ -30,7 +30,7 @@ function Panel:Initialize()
 	end
 
 	local frame = CreateFrame("Frame", "CraftRosterPanel", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(300, 300)
+	frame:SetSize(300, 340)
 	frame:SetPoint("CENTER")
 	frame:SetMovable(true)
 	frame:EnableMouse(true)
@@ -51,9 +51,12 @@ function Panel:Initialize()
 	frame.LastUpdatedText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.LastUpdatedText:SetPoint("TOPLEFT", 16, -78)
 
+	frame.SyncStatusText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	frame.SyncStatusText:SetPoint("TOPLEFT", 16, -98)
+
 	local toggleButton = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate")
 	toggleButton:SetSize(170, 26)
-	toggleButton:SetPoint("TOPLEFT", 16, -104)
+	toggleButton:SetPoint("TOPLEFT", 16, -124)
 	toggleButton:SetText("Enable / Disable")
 	toggleButton:SetScript("OnClick", function()
 		CraftRosterDB.settings.enabled = not CraftRosterDB.settings.enabled
@@ -62,16 +65,27 @@ function Panel:Initialize()
 
 	local updateButton = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate")
 	updateButton:SetSize(170, 26)
-	updateButton:SetPoint("TOPLEFT", 16, -136)
+	updateButton:SetPoint("TOPLEFT", 16, -156)
 	updateButton:SetText("Update My Recipes")
 	updateButton:SetScript("OnClick", function()
 		local added = CraftRoster.RecipeTracker:UpdateKnownRecipes()
 		print(("|cff00ff00CraftRoster|r: recipe update complete. %d new recipe(s) added."):format(added or 0))
 	end)
 
+	local syncButton = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate")
+	syncButton:SetSize(170, 26)
+	syncButton:SetPoint("TOPLEFT", 16, -188)
+	syncButton:SetText("Sync Guild Recipes")
+	syncButton:SetScript("OnClick", function()
+		if CraftRoster.GuildSync then
+			CraftRoster.GuildSync:SyncNow()
+		end
+		Panel:RefreshStatus()
+	end)
+
 	local resetButton = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate")
 	resetButton:SetSize(170, 26)
-	resetButton:SetPoint("TOPLEFT", 16, -168)
+	resetButton:SetPoint("TOPLEFT", 16, -220)
 	resetButton:SetText("Reset Window Position")
 	resetButton:SetScript("OnClick", function()
 		if CraftRoster.Directory then CraftRoster.Directory:ResetWindow() end
@@ -93,14 +107,14 @@ function Panel:Initialize()
 	bugButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 	local autoCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	autoCheck:SetPoint("TOPLEFT", 14, -200)
+	autoCheck:SetPoint("TOPLEFT", 14, -254)
 	autoCheck.Text:SetText("Auto-update new recipes")
 	autoCheck:SetScript("OnClick", function(button)
 		CraftRosterDB.settings.autoUpdateRecipes = button:GetChecked()
 	end)
 
 	local minimapCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	minimapCheck:SetPoint("TOPLEFT", 14, -232)
+	minimapCheck:SetPoint("TOPLEFT", 14, -286)
 	minimapCheck.Text:SetText("Show minimap icon")
 	minimapCheck:SetScript("OnClick", function(button)
 		CraftRosterDB.settings.showMinimap = button:GetChecked()
@@ -171,6 +185,11 @@ function Panel:RefreshStatus()
 	self.frame.LastUpdatedText:SetText(("Last updated: %s"):format(
 		FormatTime(CraftRosterDB.lastRecipeUpdate)
 	))
+
+	if CraftRoster.GuildSync then
+		self.frame.SyncStatusText:SetText(CraftRoster.GuildSync:GetStatusText())
+	end
+
 	self.autoCheck:SetChecked(settings.autoUpdateRecipes)
 	self.minimapCheck:SetChecked(settings.showMinimap ~= false)
 end

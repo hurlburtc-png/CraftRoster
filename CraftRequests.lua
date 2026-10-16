@@ -31,6 +31,21 @@ local function CopyMaterials(materials)
 	return copy
 end
 
+local function LogRequest(recipeID, target, mode)
+	CraftRosterDB.requests = CraftRosterDB.requests or {}
+	local recipe = GetRecipe(recipeID)
+	table.insert(CraftRosterDB.requests, 1, {
+		recipe = recipe and recipe.name or "Unknown recipe",
+		target = target,
+		mode = mode,
+		status = "requested",
+		at = time(),
+	})
+	if #CraftRosterDB.requests > 50 then
+		table.remove(CraftRosterDB.requests)
+	end
+end
+
 local function CreateCancelButton(parent, key)
 	local button = CreateFrame("Button", "CraftRosterCancel" .. key, parent, "UIPanelCloseButton")
 	button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -28, -2)
@@ -64,6 +79,7 @@ function Requests:StartTradeRequest(recipeID, target)
 		materials = CopyMaterials(materials),
 	}
 
+	LogRequest(recipeID, target, "trade")
 	SendChatMessage("CraftRoster: requesting materials for " .. (recipe.name or "a recipe"), "WHISPER", nil, target)
 	print(("|cff00ff00CraftRoster|r: trade auto-load armed for %s. Open a trade with them to load materials."):format(target))
 end
@@ -86,6 +102,7 @@ function Requests:StartMailRequest(recipeID, target)
 		materials = CopyMaterials(materials),
 	}
 
+	LogRequest(recipeID, target, "mail")
 	print(("|cff00ff00CraftRoster|r: mail auto-fill armed for %s. Open a mailbox to load materials."):format(target))
 end
 
@@ -234,6 +251,21 @@ local function AddDirectoryButtons()
 
 	tab.CraftRosterTradeButton = CreateRequestButton(tab, "Whisper & Trade Mats", "CRAFTROSTER_TRADE_MATS", "TOPRIGHT", tab, "TOPRIGHT", -18, -16)
 	tab.CraftRosterMailButton = CreateRequestButton(tab, "Mail Crafter Mats", "CRAFTROSTER_MAIL_MATS", "TOPRIGHT", tab.CraftRosterTradeButton, "BOTTOMRIGHT", -18, -16)
+end
+
+SLASH_CRAFTROSTERREQUESTS1 = "/crrequests"
+SlashCmdList["CRAFTROSTERREQUESTS"] = function()
+	local requests = CraftRosterDB.requests or {}
+	if #requests == 0 then
+		print("|cff00ff00CraftRoster|r: no crafting requests logged yet.")
+		return
+	end
+
+	print("|cff00ff00CraftRoster|r recent crafting requests:")
+	for i, request in ipairs(requests) do
+		if i > 10 then break end
+		print(("%s → %s (%s) [%s]"):format(request.recipe, request.target, request.mode, request.status))
+	end
 end
 
 local frame = CreateFrame("Frame")
