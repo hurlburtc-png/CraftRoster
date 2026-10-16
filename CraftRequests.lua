@@ -6,6 +6,8 @@ CraftRoster.Requests = Requests
 local pending = nil
 local tradeCancel, mailCancel
 
+local PREFIX = "CRAFTROSTER"
+
 local function Normalize(name)
 	return (name or ""):lower()
 end
@@ -31,10 +33,19 @@ local function CopyMaterials(materials)
 	return copy
 end
 
-local function LogRequest(recipeID, target, mode)
+local function SendAddonData(message)
+	if C_ChatInfo and C_ChatInfo.SendAddonMessage then
+		C_ChatInfo.SendAddonMessage(PREFIX, message, "GUILD")
+	elseif SendAddonMessage then
+		SendAddonMessage(PREFIX, message, "GUILD")
+	end
+end
+
+local function LogRequest(recipeID, target, mode, requestID)
 	CraftRosterDB.requests = CraftRosterDB.requests or {}
 	local recipe = GetRecipe(recipeID)
 	table.insert(CraftRosterDB.requests, 1, {
+		id = requestID,
 		recipe = recipe and recipe.name or "Unknown recipe",
 		target = target,
 		mode = mode,
@@ -71,6 +82,8 @@ function Requests:StartTradeRequest(recipeID, target)
 		return
 	end
 
+	local requestID = ("%d:%s:%d"):format(recipeID, Normalize(target), time())
+
 	pending = {
 		mode = "trade",
 		target = Normalize(target),
@@ -79,8 +92,8 @@ function Requests:StartTradeRequest(recipeID, target)
 		materials = CopyMaterials(materials),
 	}
 
-	LogRequest(recipeID, target, "trade")
-	SendChatMessage("CraftRoster: requesting materials for " .. (recipe.name or "a recipe"), "WHISPER", nil, target)
+	LogRequest(recipeID, target, "trade", requestID)
+	SendChatMessage("CraftRoster: requesting materials for " .. (recipe.name or "a recipe") .. " [" .. requestID .. "]", "WHISPER", nil, target)
 	print(("|cff00ff00CraftRoster|r: trade auto-load armed for %s. Open a trade with them to load materials."):format(target))
 end
 
@@ -99,6 +112,8 @@ function Requests:StartMailRequest(recipeID, target)
 		return
 	end
 
+	local requestID = ("%d:%s:%d"):format(recipeID, Normalize(target), time())
+
 	pending = {
 		mode = "mail",
 		target = Normalize(target),
@@ -107,7 +122,7 @@ function Requests:StartMailRequest(recipeID, target)
 		materials = CopyMaterials(materials),
 	}
 
-	LogRequest(recipeID, target, "mail")
+	LogRequest(recipeID, target, "mail", requestID)
 	print(("|cff00ff00CraftRoster|r: mail auto-fill armed for %s. Open a mailbox to load materials."):format(target))
 end
 
@@ -302,8 +317,36 @@ SlashCmdList["CRAFTROSTERREQUESTS"] = function()
 	print("|cff00ff00CraftRoster|r recent crafting requests:")
 	for i, request in ipairs(requests) do
 		if i > 10 then break end
-		print(("%s → %s (%s) [%s]"):format(request.recipe, request.target, request.mode, request.status))
+		print(("%s → %s (%s) [%s] (%s)"):format(request.recipe, request.target, request.mode, request.status, request.id))
 	end
+	print("Update a request with: /crstatus <id> <accepted|completed>")
+end
+
+SLASH_CRAFTROSTERSTATUS1 = "/crstatus"
+SlashCmdList["CRAFTROSTERSTATUS"] = function(msg)
+	local requestID, status = msg:match("^(%S+)%s+(%S+)$")
+	if not requestID or not status then
+		print("Usage: /crstatus <requestID> <accepted|completed>")
+		return
+	end
+
+	status = status:lower()
+	if status ~= "accepted" and status ~= "completed" then
+		print("|cffff0000CraftRoster|r: status must be accepted or completed.")
+		return
+	end
+
+	local requests = CraftRosterDB.requests or {}
+	for _, request in ipairs(requests) do
+		if request.id == requestID then
+			request.status = status
+			SendAddonData("RSTAT:" .. requestID .. ":" .. status)
+			print(("|cff00ff00CraftRoster|r: request %s marked %s and synced to guild."):format(requestID, status))
+			return
+		end
+	end
+
+	print("|cffff0000CraftRoster|r: request not found: " .. requestID)
 end
 
 SLASH_CRAFTROSTERFAVORITES1 = "/crfavorites"
@@ -365,8 +408,9 @@ frame:RegisterEvent("TRADE_SHOW")
 frame:RegisterEvent("TRADE_CLOSED")
 frame:RegisterEvent("MAIL_SHOW")
 frame:RegisterEvent("MAIL_CLOSED")
+frame:RegisterEvent("CHAT_MSG_ADDON")
 
-frame:SetScript("OnEvent", function(_, event, arg1)
+frame:SetScript("OnEvent", function(_, event, arg1, prefix, message)
 	if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
 		if TradeFrame then
 			tradeCancel = CreateCancelButton(TradeFrame, "Trade")
@@ -401,6 +445,18 @@ frame:SetScript("OnEvent", function(_, event, arg1)
 	elseif event == "MAIL_CLOSED" then
 		if pending and pending.mode == "mail" then
 			Requests:Cancel()
+		end
+
+	elseif event == "CHAT_MSG_ADDON" and prefix == PREFIX then
+		local requestID, status = message:match("^RSTAT:(.+):(%a+)$")
+		if requestID and (status == "accepted" or status == "completed") then
+			for _, request in ipairs(CraftRosterDB.requests or {}) do
+				if request.id == requestID then
+					request.status = status
+					print(("|cff00ff00CraftRoster|r: request for %s is now %s."):format(request.recipe, status))
+					break
+				end
+			end
 		end
 	end
 end)
