@@ -4,18 +4,13 @@ local Diagnostics = {}
 CraftRoster.Diagnostics = Diagnostics
 
 local function Check(name, fn)
-	local ok = fn and fn() or false
+	local ok = type(fn) == "function"
 	return ("%s: %s"):format(name, ok and "|cff00ff00OK|r" or "|cffff0000MISSING|r")
-end
-
-local function GetBuildInfo()
-	local build, _, _, interface = GetBuildInfo()
-	return build, interface
 end
 
 SLASH_CRAFTROSTERDIAGNOSTICS1 = "/crdiagnostics"
 SlashCmdList["CRAFTROSTERDIAGNOSTICS"] = function()
-	local build, interface = GetBuildInfo()
+	local build, _, _, interface = _G.GetBuildInfo()
 	print(("|cff00ff00CraftRoster|r diagnostics — build %s, interface %s"):format(build or "?", interface or "?"))
 
 	print(Check("C_TradeSkillUI.GetRecipeInfo", C_TradeSkillUI and C_TradeSkillUI.GetRecipeInfo))
