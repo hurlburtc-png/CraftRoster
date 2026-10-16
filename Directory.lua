@@ -3,8 +3,8 @@ local ADDON_NAME, CraftRoster = ...
 local Directory = {}
 CraftRoster.Directory = Directory
 
-local DEFAULT_WINDOW = { width = 760, height = 500, x = 0, y = 0 }
-local MIN_WIDTH, MIN_HEIGHT = 620, 420
+local DEFAULT_WINDOW = { width = 780, height = 520, x = 0, y = 0 }
+local MIN_WIDTH, MIN_HEIGHT = 640, 440
 
 local PROFESSION_ICONS = {
 	Alchemy = "Interface\\Icons\\Trade_Alchemy",
@@ -32,6 +32,7 @@ local CLASS_COLORS = {
 }
 
 local rowPools = {}
+local onlineByName = {}
 
 local function GetCharacterKey()
 	return UnitName("player") .. "-" .. (GetRealmName() or "")
@@ -49,15 +50,51 @@ local function GetRaceGenderAtlas(character)
 	return nil
 end
 
-local function GetColoredName(characterKey, character)
+local function GetColoredName(characterKey, character, disabled)
 	local name = characterKey:gsub("%-.+$", "")
 	local color = CLASS_COLORS[character and character.class] or "FFFFFF"
+	if disabled then color = "7F7F7F" end
 	return "|cff" .. color .. name .. "|r"
 end
 
 local function GetRecipeName(recipeID)
 	local recipe = CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
 	return recipe and recipe.name or ("Recipe " .. tostring(recipeID))
+end
+
+local function IsCharacterOnline(characterKey)
+	local name = characterKey:gsub("%-.+$", "")
+	return onlineByName[name:lower()] == true
+end
+
+local function GetProfessionTotals(character)
+	local recipeTotals = {}
+
+	for recipeID in pairs(character.recipes or {}) do
+		local saved = CraftRosterDB.recipes[recipeID]
+		local profession = saved and saved.profession or "Unknown"
+		recipeTotals[profession] = (recipeTotals[profession] or 0) + 1
+	end
+
+	local parts = {}
+
+	for profession, data in pairs(character.professions or {}) do
+		local count = recipeTotals[profession] or 0
+		table.insert(parts, ("%s %d (%d recipe%s)"):format(
+			profession, data.skill or 0, count, count == 1 and "" or "s"
+		))
+	end
+
+	for profession, count in pairs(recipeTotals) do
+		if not (character.professions and character.professions[profession]) then
+			table.insert(parts, ("%s (%d recipe%s)"):format(
+				profession, count, count == 1 and "" or "s"
+			))
+		end
+	end
+
+	table.sort(parts)
+	return table.concat(parts, " · ")
 end
 
 function Directory:InvalidateIndex()
@@ -224,11 +261,8 @@ local function SaveGeometry()
 
 	local point, _, _, x, y = frame:GetPoint()
 	CraftRosterDB.settings.window = {
-		point = point,
-		x = x,
-		y = y,
-		width = frame:GetWidth(),
-		height = frame:GetHeight(),
+		point = point, x = x, y = y,
+		width = frame:GetWidth(), height = frame:GetHeight(),
 	}
 end
 
@@ -237,7 +271,7 @@ function Directory:ResetWindow()
 	if not frame then return end
 
 	frame:ClearAllPoints()
-	frame:SetPoint("CENTER", UIParent, "CENTER", DEFAULT_WINDOW.x, DEFAULT_WINDOW.y)
+	frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 	frame:SetSize(DEFAULT_WINDOW.width, DEFAULT_WINDOW.height)
 	CraftRosterDB.settings.window = nil
 	SaveGeometry()
@@ -260,6 +294,10 @@ end
 function Directory:Initialize()
 	if self.frame then return end
 
+	if CraftRosterDB.settings.onlineOnly == nil then
+		CraftRosterDB.settings.onlineOnly = true
+	end
+
 	local frame = CreateFrame("Frame", "CraftRosterDirectory", UIParent, "BasicFrameTemplateWithInset")
 	frame:SetFrameStrata("HIGH")
 	frame:SetMovable(true)
@@ -274,7 +312,6 @@ function Directory:Initialize()
 	frame:Hide()
 
 	RestoreGeometry(frame)
-
 	frame.TitleBar.TitleText:SetText("CraftRoster")
 
 	local resize = CreateFrame("Frame", nil, frame)
@@ -282,10 +319,8 @@ function Directory:Initialize()
 	resize:SetPoint("BOTTOMRIGHT", -4, 4)
 	resize:EnableMouse(true)
 	resize:RegisterForDrag("LeftButton")
-	resize:SetScript("OnDragStart", function(self)
-		frame:StartSizing("BOTTOMRIGHT")
-	end)
-	resize:SetScript("OnDragStop", function(self)
+	resize:SetScript("OnDragStart", function() frame:StartSizing("BOTTOMRIGHT") end)
+	resize:SetScript("OnDragStop", function()
 		frame:StopMovingOrSizing()
 		frame:SetSize(math.max(MIN_WIDTH, frame:GetWidth()), math.max(MIN_HEIGHT, frame:GetHeight()))
 		SaveGeometry()
@@ -315,22 +350,18 @@ function Directory:Initialize()
 
 	local professionsTab = CreateTab("ProfessionsTab")
 	professionsTab.SearchBox = CreateFrame("EditBox", nil, professionsTab, "SearchBoxTemplate")
-	professionsTab.SearchBox:SetSize(230, 24)
+	professionsTab.SearchBox:SetSize(210, 24)
 	professionsTab.SearchBox:SetPoint("TOPLEFT", 18, -16)
 	professionsTab.SearchBox:SetAutoFocus(false)
 	professionsTab.SearchBox:SetScript("OnTextChanged", function() Directory:RefreshProfessions() end)
 
 	professionsTab.Dropdown = CreateFrame("Frame", nil, professionsTab, "UIDropDownMenuTemplate")
 	professionsTab.Dropdown:SetPoint("LEFT", professionsTab.SearchBox, "RIGHT", 4, -4)
-	UIDropDownMenu_SetWidth(professionsTab.Dropdown, 160)
+	UIDropDownMenu_SetWidth(professionsTab.Dropdown, 150)
 	UIDropDownMenu_Initialize(professionsTab.Dropdown, function(dropdown, level)
 		local professions = { "All" }
 		for profession in pairs(PROFESSION_ICONS) do table.insert(professions, profession) end
-		table.sort(professions, function(a, b)
-			if a == "All" then return true end
-			if b == "All" then return false end
-			return a < b
-		end)
+		table.sort(professions)
 
 		for _, profession in ipairs(professions) do
 			local info = UIDropDownMenu_CreateInfo()
@@ -345,11 +376,21 @@ function Directory:Initialize()
 	end)
 	UIDropDownMenu_SetText(professionsTab.Dropdown, "All")
 
+	professionsTab.OnlineCheck = CreateFrame("CheckButton", nil, professionsTab, "UICheckButtonTemplate")
+	professionsTab.OnlineCheck:SetPoint("LEFT", professionsTab.Dropdown, "RIGHT", 0, 0)
+	professionsTab.OnlineCheck.Text:SetText("Online only")
+	professionsTab.OnlineCheck:SetChecked(CraftRosterDB.settings.onlineOnly)
+	professionsTab.OnlineCheck:SetScript("OnClick", function(button)
+		CraftRosterDB.settings.onlineOnly = button:GetChecked()
+		Directory:RefreshProfessions()
+		Directory:RefreshCrafters()
+	end)
+
 	professionsTab.Results = CreateFrame("ScrollFrame", nil, professionsTab, "UIPanelScrollFrameTemplate")
 	professionsTab.Results:SetPoint("TOPLEFT", 14, -76)
 	professionsTab.Results:SetPoint("BOTTOMRIGHT", -400, 16)
 	professionsTab.ResultsChild = CreateFrame("Frame", nil, professionsTab.Results)
-	professionsTab.ResultsChild:SetSize(310, 1)
+	professionsTab.ResultsChild:SetSize(320, 1)
 	professionsTab.Results:SetScrollChild(professionsTab.ResultsChild)
 
 	professionsTab.Details = CreateFrame("Frame", nil, professionsTab)
@@ -393,7 +434,7 @@ function Directory:Initialize()
 	playersTab.Results:SetPoint("TOPLEFT", 14, -50)
 	playersTab.Results:SetPoint("BOTTOMRIGHT", -18, -14)
 	playersTab.ResultsChild = CreateFrame("Frame", nil, playersTab.Results)
-	playersTab.ResultsChild:SetSize(700, 1)
+	playersTab.ResultsChild:SetSize(720, 1)
 	playersTab.Results:SetScrollChild(playersTab.ResultsChild)
 
 	local myRecipesTab = CreateTab("MyRecipesTab")
@@ -414,7 +455,7 @@ function Directory:Initialize()
 	myRecipesTab.Results:SetPoint("TOPLEFT", 14, -84)
 	myRecipesTab.Results:SetPoint("BOTTOMRIGHT", -18, -14)
 	myRecipesTab.ResultsChild = CreateFrame("Frame", nil, myRecipesTab.Results)
-	myRecipesTab.ResultsChild:SetSize(700, 1)
+	myRecipesTab.ResultsChild:SetSize(720, 1)
 	myRecipesTab.Results:SetScrollChild(myRecipesTab.ResultsChild)
 
 	frame:SetScript("OnKeyDown", function(_, key)
@@ -429,7 +470,8 @@ function Directory:Initialize()
 end
 
 local function BuildProfessionEntries()
-	local search = (Directory.frame.ProfessionsTab.SearchBox:GetText() or ""):lower()
+	local tab = Directory.frame.ProfessionsTab
+	local search = (tab.SearchBox:GetText() or ""):lower()
 	local entries = {}
 	local lastProfession = nil
 
@@ -463,7 +505,7 @@ end
 function Directory:RefreshProfessions()
 	if not self.frame or not self.frame:IsShown() then return end
 	local tab = self.frame.ProfessionsTab
-	RenderList(tab.ResultsChild, BuildProfessionEntries(), 310, 34, 28, function(entry)
+	RenderList(tab.ResultsChild, BuildProfessionEntries(), 320, 34, 28, function(entry)
 		Directory.selectedRecipe = entry.recipe
 		Directory:RefreshDetails()
 		Directory:RefreshCrafters()
@@ -492,13 +534,34 @@ function Directory:RefreshCrafters()
 	local entries = {}
 
 	if self.selectedRecipe then
+		local onlineOnly = CraftRosterDB.settings.onlineOnly
+		local online, offline = {}, {}
+
 		for _, characterKey in ipairs(self.selectedRecipe.crafters) do
 			local character = CraftRosterDB.characters[characterKey] or {}
-			table.insert(entries, {
-				text = GetColoredName(characterKey, character),
+			local entry = {
+				text = GetColoredName(characterKey, character, not IsCharacterOnline(characterKey)),
 				atlas = GetRaceGenderAtlas(character),
 				icon = "Interface\\Icons\\Achievement_Character_Human_Male",
-			})
+				offline = not IsCharacterOnline(characterKey),
+			}
+
+			if IsCharacterOnline(characterKey) then
+				table.insert(online, entry)
+			else
+				table.insert(offline, entry)
+			end
+		end
+
+		if onlineOnly then
+			for _, entry in ipairs(online) do table.insert(entries, entry) end
+
+			if #online == 0 then
+				for _, entry in ipairs(offline) do table.insert(entries, entry) end
+			end
+		else
+			for _, entry in ipairs(online) do table.insert(entries, entry) end
+			for _, entry in ipairs(offline) do table.insert(entries, entry) end
 		end
 	end
 
@@ -513,19 +576,16 @@ function Directory:RefreshPlayers()
 
 	for characterKey, character in pairs(CraftRosterDB.characters or {}) do
 		if search == "" or characterKey:lower():find(search, 1, true) then
-			local count = 0
-			for _ in pairs(character.recipes or {}) do count = count + 1 end
-
 			table.insert(entries, {
 				text = GetColoredName(characterKey, character),
 				atlas = GetRaceGenderAtlas(character),
 				icon = "Interface\\Icons\\Achievement_Character_Human_Male",
-				rightText = ("%d recipe%s"):format(count, count == 1 and "" or "s"),
+				rightText = GetProfessionTotals(character),
 			})
 		end
 	end
 
-	RenderList(tab.ResultsChild, entries, 700, 42, 28)
+	RenderList(tab.ResultsChild, entries, 720, 42, 28)
 end
 
 function Directory:RefreshMyRecipes()
@@ -545,7 +605,7 @@ function Directory:RefreshMyRecipes()
 		end
 	end
 
-	RenderList(tab.ResultsChild, entries, 700, 36, 28)
+	RenderList(tab.ResultsChild, entries, 720, 36, 28)
 	tab.Status:SetText(("Your saved recipes: %d"):format(#entries))
 end
 
@@ -593,3 +653,37 @@ function Directory:Toggle()
 		self.frame:Show()
 	end
 end
+
+local rosterFrame = CreateFrame("Frame")
+rosterFrame:RegisterEvent("GUILD_ROSTER_UPDATE")
+rosterFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+rosterFrame:SetScript("OnEvent", function(_, event)
+	if event == "PLAYER_ENTERING_WORLD" then
+		if C_GuildInfo and C_GuildInfo.RequestGuildRoster then
+			C_GuildInfo.RequestGuildRoster()
+		elseif RequestGuildRoster then
+			RequestGuildRoster()
+		end
+		return
+	end
+
+	wipe(onlineByName)
+
+	local roster = C_GuildInfo and C_GuildInfo.GetGuildRoster and C_GuildInfo.GetGuildRoster()
+	if roster then
+		for _, member in ipairs(roster) do
+			if member and member.name and member.online then
+				onlineByName[member.name:lower()] = true
+			end
+		end
+	elseif GetNumGuildMembers then
+		for i = 1, GetNumGuildMembers() do
+			local name, _, _, _, _, _, _, _, _, _, _, _, _, _, _, isOnline = GetGuildRosterInfo(i)
+			if name and isOnline then
+				onlineByName[name:lower()] = true
+			end
+		end
+	end
+
+	Directory:RefreshIfVisible()
+end)
