@@ -38,14 +38,78 @@ local function GetRecipeIcon(recipeID, profession)
 	return PROFESSION_ICONS[profession]
 end
 
+local function GetCurrentProfession()
+	if GetTradeSkillLine then
+		local name = GetTradeSkillLine()
+		if name then return name end
+	end
+	return "Unknown"
+end
+
+local function ExtractMaterialsFromSchematic(schematic)
+	local materials = {}
+	if not schematic or not schematic.reagentSlotSchematics then return materials end
+
+	for _, slot in ipairs(schematic.reagentSlotSchematics) do
+		local quantity = slot.quantity or (slot.reagent and slot.reagent.quantity) or 0
+		local reagents = slot.reagents or (slot.reagent and { slot.reagent }) or {}
+
+		for _, reagent in ipairs(reagents) do
+			local itemID = reagent.itemID or (reagent.item and reagent.item.itemID)
+			local name = reagent.name
+			if itemID and not name and GetItemInfo then
+				name = GetItemInfo(itemID)
+			end
+			if name and quantity and quantity > 0 then
+				table.insert(materials, { name = name, count = quantity, itemID = itemID })
+			end
+		end
+	end
+
+	return materials
+end
+
+local function SaveRecipe(character, recipeID, name, profession, icon, itemLink, materials)
+	local isNew = not character.recipes[recipeID]
+	if isNew then
+		character.recipes[recipeID] = { learnedAt = time() }
+	end
+
+	local saved = CraftRosterDB.recipes[recipeID]
+	if not saved then
+		saved = {
+			name = name,
+			profession = profession,
+			icon = icon or GetRecipeIcon(recipeID, profession),
+			firstSeenBy = GetCharacterKey(),
+			firstSeenAt = time(),
+		}
+		CraftRosterDB.recipes[recipeID] = saved
+	elseif not saved.icon then
+		saved.icon = icon or GetRecipeIcon(recipeID, profession)
+	end
+
+	if itemLink then saved.itemLink = itemLink end
+	if materials then saved.materials = materials end
+
+	return isNew
+end
+
 function RecipeTracker:Initialize()
 	self:RegisterEvent("NEW_RECIPE_LEARNED")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("TRADE_SKILL_SHOW")
+
+	-- Forever exposes async trade-skill data; register defensively.
+	pcall(function() self:RegisterEvent("TRADE_SKILL_LIST_UPDATE") end)
+	pcall(function() self:RegisterEvent("TRADE_SKILL_DATA_UPDATE") end)
+
 	self:SetScript("OnEvent", function(_, event, recipeID)
 		if event == "NEW_RECIPE_LEARNED" then
 			RecipeTracker:RecordRecipe(recipeID)
-		elseif event == "TRADE_SKILL_SHOW" then
+		elseif event == "TRADE_SKILL_SHOW"
+			or event == "TRADE_SKILL_LIST_UPDATE"
+			or event == "TRADE_SKILL_DATA_UPDATE" then
 			RecipeTracker:UpdateProfessions()
 			RecipeTracker:ImportTradeSkillRecipes()
 		else
@@ -80,11 +144,35 @@ function RecipeTracker:UpdateProfessions()
 	end
 end
 
-function RecipeTracker:ImportTradeSkillRecipes()
-	local profession = GetTradeSkillLine()
-	if not profession then return 0 end
+local function ImportForeverRecipes(character, profession)
+	local added = 0
+	local recipeIDs = C_TradeSkillUI.GetAllRecipeIDs and C_TradeSkillUI.GetAllRecipeIDs() or {}
 
-	local character = GetCharacterData()
+	for _, recipeID in ipairs(recipeIDs) do
+		local info = C_TradeSkillUI.GetRecipeInfo and C_TradeSkillUI.GetRecipeInfo(recipeID)
+		if info and info.learned then
+			local schematic = C_TradeSkillUI.GetRecipeSchematic and C_TradeSkillUI.GetRecipeSchematic(recipeID)
+			local materials = ExtractMaterialsFromSchematic(schematic)
+			local itemLink = schematic and schematic.outputItemLink or (info.hyperlink)
+
+			local isNew = SaveRecipe(
+				character,
+				recipeID,
+				info.name or ("Recipe " .. recipeID),
+				profession,
+				info.icon or GetRecipeIcon(recipeID, profession),
+				itemLink,
+				materials
+			)
+
+			if isNew then added = added + 1 end
+		end
+	end
+
+	return added
+end
+
+local function ImportLegacyRecipes(character, profession)
 	local added = 0
 
 	for i = 1, GetNumTradeSkills() do
@@ -95,33 +183,7 @@ function RecipeTracker:ImportTradeSkillRecipes()
 			recipeID = recipeID and tonumber(recipeID)
 
 			if recipeID then
-				local isNew = not character.recipes[recipeID]
-				if isNew then
-					character.recipes[recipeID] = { learnedAt = time() }
-					added = added + 1
-				end
-
-				local saved = CraftRosterDB.recipes[recipeID]
-				if not saved then
-					saved = {
-						name = name,
-						profession = profession,
-						icon = GetRecipeIcon(recipeID, profession),
-						firstSeenBy = GetCharacterKey(),
-						firstSeenAt = time(),
-					}
-					CraftRosterDB.recipes[recipeID] = saved
-				elseif not saved.icon then
-					saved.icon = GetRecipeIcon(recipeID, profession)
-				end
-
-				if GetTradeSkillItemLink then
-					local itemLink = GetTradeSkillItemLink(i)
-					if itemLink then
-						saved.itemLink = itemLink
-					end
-				end
-
+				local itemLink = GetTradeSkillItemLink and GetTradeSkillItemLink(i)
 				local materials = {}
 				local numReagents = GetTradeSkillNumReagents and GetTradeSkillNumReagents(i) or 0
 				for j = 1, numReagents do
@@ -130,9 +192,34 @@ function RecipeTracker:ImportTradeSkillRecipes()
 						table.insert(materials, { name = reagentName, count = reagentCount })
 					end
 				end
-				saved.materials = materials
+
+				local isNew = SaveRecipe(
+					character,
+					recipeID,
+					name,
+					profession,
+					GetRecipeIcon(recipeID, profession),
+					itemLink,
+					materials
+				)
+
+				if isNew then added = added + 1 end
 			end
 		end
+	end
+
+	return added
+end
+
+function RecipeTracker:ImportTradeSkillRecipes()
+	local profession = GetCurrentProfession()
+	local character = GetCharacterData()
+	local added = 0
+
+	if C_TradeSkillUI and C_TradeSkillUI.GetAllRecipeIDs and C_TradeSkillUI.GetRecipeInfo then
+		added = ImportForeverRecipes(character, profession)
+	elseif GetNumTradeSkills then
+		added = ImportLegacyRecipes(character, profession)
 	end
 
 	if added > 0 then
