@@ -88,6 +88,11 @@ function Requests:StartMailRequest(recipeID, target)
 	local recipe = GetRecipe(recipeID)
 	if not recipe then return end
 
+	if not target:match("^[%a%p]+%-%[%a%p]+$") and not target:match("^[%a%p]+%-[%a%p]+$") then
+		print("|cffff0000CraftRoster|r: enter the full character name including server, for example: Bob-Illidan")
+		return
+	end
+
 	local materials = GetMaterials(recipeID)
 	if #materials == 0 then
 		print("|cffff0000CraftRoster|r: no material data saved for this recipe yet. Open the crafting window for it once to record materials.")
@@ -204,7 +209,7 @@ StaticPopupDialogs["CRAFTROSTER_TRADE_MATS"] = {
 }
 
 StaticPopupDialogs["CRAFTROSTER_MAIL_MATS"] = {
-	text = "Enter the offline character to mail materials to:",
+	text = "Enter the FULL character name including server, for example: Bob-Illidan",
 	button1 = "Arm Mail Fill",
 	button2 = "Cancel",
 	OnAccept = function(self)
