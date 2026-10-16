@@ -37,6 +37,9 @@ function RecipeTracker:Initialize()
 	self:SetScript("OnEvent", function(_, event, recipeID)
 		if event == "NEW_RECIPE_LEARNED" then
 			RecipeTracker:RecordRecipe(recipeID)
+		elseif event == "TRADE_SKILL_SHOW" then
+			RecipeTracker:UpdateProfessions()
+			RecipeTracker:ImportEnchantingRecipes()
 		else
 			RecipeTracker:UpdateProfessions()
 		end
@@ -67,6 +70,45 @@ function RecipeTracker:UpdateProfessions()
 	if CraftRoster.Directory then
 		CraftRoster.Directory:InvalidateIndex()
 	end
+end
+
+function RecipeTracker:ImportEnchantingRecipes()
+	if GetTradeSkillLine() ~= "Enchanting" then return 0 end
+
+	local character = GetCharacterData()
+	local added = 0
+
+	for i = 1, GetNumTradeSkills() do
+		local name, skillType = GetTradeSkillInfo(i)
+		if name and skillType ~= "header" then
+			local link = GetTradeSkillRecipeLink(i)
+			local recipeID = link and link:match("%d+")
+			recipeID = recipeID and tonumber(recipeID)
+
+			if recipeID and not character.recipes[recipeID] then
+				character.recipes[recipeID] = { learnedAt = time() }
+
+				CraftRosterDB.recipes[recipeID] = CraftRosterDB.recipes[recipeID] or {
+					name = name,
+					profession = "Enchanting",
+					icon = PROFESSION_ICONS.Enchanting,
+					firstSeenBy = GetCharacterKey(),
+					firstSeenAt = time(),
+				}
+
+				added = added + 1
+			end
+		end
+	end
+
+	if added > 0 then
+		CraftRosterDB.lastRecipeUpdate = time()
+		if CraftRoster.Directory then
+			CraftRoster.Directory:InvalidateIndex()
+		end
+	end
+
+	return added
 end
 
 function RecipeTracker:RecordRecipe(recipeID, profession, recipeName)
@@ -103,6 +145,8 @@ function RecipeTracker:UpdateKnownRecipes()
 	local added = 0
 
 	self:UpdateProfessions()
+	added = added + self:ImportEnchantingRecipes()
+
 	self.manualUpdateInProgress = nil
 	CraftRosterDB.lastRecipeUpdate = time()
 
