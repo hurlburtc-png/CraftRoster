@@ -1,0 +1,8 @@
+## Interface: 110200
+## Title: Wow Forever Addons
+## Notes: Starter scaffold for Wow Forever Addons.
+## Author: hurlburtc-png
+## Version: 0.1.0
+## SavedVariables: WowForeverAddonsDB
+
+Core.lua
