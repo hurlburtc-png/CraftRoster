@@ -14,6 +14,7 @@ icon:SetAllPoints()
 icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
 local function UpdatePosition()
+	if not CraftRosterDB or not CraftRosterDB.settings then return end
 	local angle = CraftRosterDB.settings.minimapAngle or -math.pi / 4
 	local radius = 80
 	local x = math.cos(angle) * radius
@@ -35,7 +36,9 @@ button:SetScript("OnDragStart", function(self)
 		local cx, cy = GetCursorPosition()
 		local scale = Minimap:GetEffectiveScale()
 		local angle = math.atan2(cy / scale - my, cx / scale - mx)
-		CraftRosterDB.settings.minimapAngle = angle
+		if CraftRosterDB and CraftRosterDB.settings then
+			CraftRosterDB.settings.minimapAngle = angle
+		end
 		UpdatePosition()
 	end)
 end)
@@ -58,6 +61,7 @@ button:SetScript("OnLeave", function() GameTooltip:Hide() end)
 CraftRoster.MinimapButton = CraftRoster.MinimapButton or {}
 
 function CraftRoster.MinimapButton:UpdateVisibility()
+	if not CraftRosterDB or not CraftRosterDB.settings then return end
 	if CraftRosterDB.settings.showMinimap == false then
 		button:Hide()
 	else
@@ -65,5 +69,13 @@ function CraftRoster.MinimapButton:UpdateVisibility()
 	end
 end
 
-UpdatePosition()
-CraftRoster.MinimapButton:UpdateVisibility()
+-- Defer init until ADDON_LOADED fires and CraftRosterDB is ready.
+local initFrame = CreateFrame("Frame")
+initFrame:RegisterEvent("ADDON_LOADED")
+initFrame:SetScript("OnEvent", function(self, event, loadedAddon)
+	if event == "ADDON_LOADED" and loadedAddon == ADDON_NAME and CraftRosterDB then
+		UpdatePosition()
+		CraftRoster.MinimapButton:UpdateVisibility()
+		self:UnregisterEvent("ADDON_LOADED")
+	end
+end)
