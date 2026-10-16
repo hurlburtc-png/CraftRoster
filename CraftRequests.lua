@@ -304,6 +304,11 @@ local function AddDirectoryButtons()
 		print(("|cff00ff00CraftRoster|r: %s %s favorites."):format(recipe.name, state))
 	end)
 	tab.CraftRosterFavoriteButton = favoriteButton
+
+	local credit = directory.frame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+	credit:SetPoint("BOTTOMLEFT", directory.frame, "BOTTOMLEFT", 8, 4)
+	credit:SetText("Made by Triggles")
+	credit:SetAlpha(0.5)
 end
 
 SLASH_CRAFTROSTERREQUESTS1 = "/crrequests"
@@ -423,6 +428,17 @@ frame:SetScript("OnEvent", function(_, event, arg1, prefix, message)
 		function CraftRoster.Directory:Toggle(...)
 			AddDirectoryButtons()
 			return originalToggle(self, ...)
+		end
+
+		local originalPanelToggle = CraftRoster.Panel.Toggle
+		function CraftRoster.Panel:Toggle(...)
+			if self.frame and not self.credit then
+				self.credit = self.frame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
+				self.credit:SetPoint("BOTTOMLEFT", self.frame, "BOTTOMLEFT", 8, 4)
+				self.credit:SetText("Made by Triggles")
+				self.credit:SetAlpha(0.5)
+			end
+			return originalPanelToggle(self, ...)
 		end
 
 	elseif event == "TRADE_SHOW" then
