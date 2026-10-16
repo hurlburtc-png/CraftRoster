@@ -39,7 +39,7 @@ function RecipeTracker:Initialize()
 			RecipeTracker:RecordRecipe(recipeID)
 		elseif event == "TRADE_SKILL_SHOW" then
 			RecipeTracker:UpdateProfessions()
-			RecipeTracker:ImportEnchantingRecipes()
+			RecipeTracker:ImportTradeSkillRecipes()
 		else
 			RecipeTracker:UpdateProfessions()
 		end
@@ -72,8 +72,9 @@ function RecipeTracker:UpdateProfessions()
 	end
 end
 
-function RecipeTracker:ImportEnchantingRecipes()
-	if GetTradeSkillLine() ~= "Enchanting" then return 0 end
+function RecipeTracker:ImportTradeSkillRecipes()
+	local profession = GetTradeSkillLine()
+	if not profession then return 0 end
 
 	local character = GetCharacterData()
 	local added = 0
@@ -96,8 +97,8 @@ function RecipeTracker:ImportEnchantingRecipes()
 				if not saved then
 					saved = {
 						name = name,
-						profession = "Enchanting",
-						icon = PROFESSION_ICONS.Enchanting,
+						profession = profession,
+						icon = PROFESSION_ICONS[profession],
 						firstSeenBy = GetCharacterKey(),
 						firstSeenAt = time(),
 					}
@@ -161,7 +162,7 @@ function RecipeTracker:UpdateKnownRecipes()
 	local added = 0
 
 	self:UpdateProfessions()
-	added = added + self:ImportEnchantingRecipes()
+	added = added + self:ImportTradeSkillRecipes()
 
 	self.manualUpdateInProgress = nil
 	CraftRosterDB.lastRecipeUpdate = time()
