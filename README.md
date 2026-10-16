@@ -1,21 +1,29 @@
 # Wow Forever Addons
 
-A starter World of Warcraft addon project.
+A World of Warcraft addon for tracking professions and recipes, with a foundation for a guild-wide recipe directory.
 
 ## Installation
 
 1. Download or clone this repository.
-2. Copy the `WowForeverAddons` folder into your WoW `Interface/AddOns` directory.
-3. Restart WoW or use `/reload`.
+2. Copy the addon folder into `Interface/AddOns`.
+3. Restart WoW or run `/reload`.
 4. Enable **Wow Forever Addons** in the AddOns menu.
 
 ## Commands
 
-- `/wfa` — show available commands
+- `/wfa` — open or close the addon panel
 - `/wfa toggle` — enable or disable the addon
+
+## Recipe tracking
+
+- Click **Update My Recipes** to manually refresh your locally saved recipe list.
+- Newly learned recipes are captured automatically when WoW reports `NEW_RECIPE_LEARNED`.
+- Use the **Auto-update new recipes** checkbox to enable or disable automatic capture.
+- Recipe data is stored locally in `WowForeverAddonsDB` for now.
 
 ## Development
 
-- `WowForeverAddons.toc` defines addon metadata and file load order.
-- `Core.lua` contains initialization and slash-command handling.
-- Settings persist through `WowForeverAddonsDB` saved variables.
+- `Core.lua` — initialization, saved variables, and slash commands
+- `Recipes.lua` — recipe capture and automatic new-recipe tracking
+- `Panel.lua` — small movable settings/status panel
+- `WowForeverAddons.toc` — addon metadata and load order

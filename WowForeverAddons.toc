@@ -1,8 +1,10 @@
 ## Interface: 110200
 ## Title: Wow Forever Addons
-## Notes: Starter scaffold for Wow Forever Addons.
+## Notes: Guild profession and recipe directory.
 ## Author: hurlburtc-png
-## Version: 0.1.0
+## Version: 0.2.0
 ## SavedVariables: WowForeverAddonsDB
 
 Core.lua
+Recipes.lua
+Panel.lua

@@ -7,9 +7,25 @@ WowForeverAddons:SetScript("OnEvent", function(self, event, loadedAddon)
         WowForeverAddonsDB = WowForeverAddonsDB or {}
         WowForeverAddonsDB.settings = WowForeverAddonsDB.settings or {
             enabled = true,
+            autoUpdateRecipes = true,
+        }
+        WowForeverAddonsDB.characters = WowForeverAddonsDB.characters or {}
+        WowForeverAddonsDB.recipes = WowForeverAddonsDB.recipes or {}
+
+        local characterKey = UnitName("player") .. "-" .. (GetRealmName() or "")
+        WowForeverAddonsDB.characters[characterKey] = WowForeverAddonsDB.characters[characterKey] or {
+            recipes = {},
         }
 
-        print("|cff00ff00Wow Forever Addons|r loaded. Type /wfa for options.")
+        if WowForeverAddons.RecipeTracker then
+            WowForeverAddons.RecipeTracker:Initialize()
+        end
+
+        if WowForeverAddons.Panel then
+            WowForeverAddons.Panel:Initialize()
+        end
+
+        print("|cff00ff00Wow Forever Addons|r loaded. Type /wfa to open the panel.")
         self:UnregisterEvent("ADDON_LOADED")
     end
 end)
@@ -22,10 +38,11 @@ SlashCmdList["WOWFOREVERADDONS"] = function(msg)
         local settings = WowForeverAddonsDB and WowForeverAddonsDB.settings
         if settings then
             settings.enabled = not settings.enabled
-            print(("Wow Forever Addons is now %s."):format(settings.enabled and "|cff00ff00enabled|r" or "|cffff0000disabled|r"))
+            print(("Wow Forever Addons is now %s."):format(
+                settings.enabled and "|cff00ff00enabled|r" or "|cffff0000disabled|r"
+            ))
         end
-    else
-        print("Wow Forever Addons commands:")
-        print("  /wfa toggle - enable or disable the addon")
+    elseif WowForeverAddons.Panel then
+        WowForeverAddons.Panel:Toggle()
     end
 end
