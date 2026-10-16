@@ -18,8 +18,8 @@ jobs:
 
       - name: Package addon
         run: |
-          mkdir -p packaging/CraftRoster
-          cp CraftRoster.toc Core.lua Recipes.lua Panel.lua Directory.lua packaging/CraftRoster/
+          mkdir -p packaging
+          cp -r CraftRoster packaging/
           cd packaging
           zip -r ../CraftRoster.zip CraftRoster
 
