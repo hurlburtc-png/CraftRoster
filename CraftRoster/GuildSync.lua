@@ -14,11 +14,24 @@ local function GetCharacterKey()
 end
 
 local function SendAddonData(message)
+	if C_ChatInfo and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted
+		and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted() then
+		print("|cffff0000CraftRoster|r: addon chat is restricted; sync not sent.")
+		return false
+	end
+	if C_ChatInfo and C_ChatInfo.InChatMessagingLockdown
+		and C_ChatInfo.InChatMessagingLockdown() then
+		print("|cffff0000CraftRoster|r: chat is in lockdown; sync not sent.")
+		return false
+	end
 	if C_ChatInfo and C_ChatInfo.SendAddonMessage then
 		C_ChatInfo.SendAddonMessage(PREFIX, message, "GUILD")
+		return true
 	elseif SendAddonMessage then
 		SendAddonMessage(PREFIX, message, "GUILD")
+		return true
 	end
+	return false
 end
 
 local function SerializeCharacter()
@@ -121,7 +134,7 @@ frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 frame:RegisterEvent("NEW_RECIPE_LEARNED")
 
-frame:SetScript("OnEvent", function(_, event, arg1, prefix, message)
+frame:SetScript("OnEvent", function(_, event, arg1, prefix, message, channel, sender)
 	if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
 		if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
 			C_ChatInfo.RegisterAddonMessagePrefix(PREFIX)
@@ -137,6 +150,8 @@ frame:SetScript("OnEvent", function(_, event, arg1, prefix, message)
 		GuildSync:SendData()
 
 	elseif event == "CHAT_MSG_ADDON" and prefix == PREFIX then
+		if not sender or sender == "" then return end
+
 		if message == "REQ" then
 			GuildSync:SendData()
 
