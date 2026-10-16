@@ -117,16 +117,21 @@ end
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 frame:RegisterEvent("NEW_RECIPE_LEARNED")
 
-frame:SetScript("OnEvent", function(_, event, prefix, message, _, sender)
+frame:SetScript("OnEvent", function(_, event, arg1, prefix, message)
 	if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
 		if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
 			C_ChatInfo.RegisterAddonMessagePrefix(PREFIX)
 		elseif RegisterAddonMessagePrefix then
 			RegisterAddonMessagePrefix(PREFIX)
 		end
+
+	elseif event == "PLAYER_ENTERING_WORLD" then
+		-- One lightweight sync request per login; throttled and memory-cheap.
+		GuildSync:RequestSync()
 
 	elseif event == "NEW_RECIPE_LEARNED" then
 		GuildSync:SendData()
