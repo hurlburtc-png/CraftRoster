@@ -134,7 +134,11 @@ function Requests:StartTradeRequest(recipeID, target)
 	}
 
 	LogRequest(recipeID, target, "trade", requestID)
-	SendChatMessage("CraftRoster: requesting materials for " .. (recipe.name or "a recipe") .. " [" .. requestID .. "]", "WHISPER", nil, target)
+	if C_ChatInfo and C_ChatInfo.SendChatMessage then
+		C_ChatInfo.SendChatMessage("CraftRoster: requesting materials for " .. (recipe.name or "a recipe") .. " [" .. requestID .. "]", "WHISPER", nil, target)
+	elseif SendChatMessage then
+		SendChatMessage("CraftRoster: requesting materials for " .. (recipe.name or "a recipe") .. " [" .. requestID .. "]", "WHISPER", nil, target)
+	end
 	print(("|cff00ff00CraftRoster|r: trade auto-load armed for %s. Open a trade with them to load materials."):format(target))
 end
 
