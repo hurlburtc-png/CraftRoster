@@ -106,6 +106,8 @@ function Requests:StartMailRequest(recipeID, target)
 	print(("|cff00ff00CraftRoster|r: mail auto-fill armed for %s. Open a mailbox to load materials."):format(target))
 end
 
+-- Safety: automation only fills the trade/mail window.
+-- It never calls AcceptTrade() or SendMail(). The user must confirm both.
 local function AttachMaterialsToTrade()
 	if not pending or pending.mode ~= "trade" then return end
 
@@ -251,6 +253,20 @@ local function AddDirectoryButtons()
 
 	tab.CraftRosterTradeButton = CreateRequestButton(tab, "Whisper & Trade Mats", "CRAFTROSTER_TRADE_MATS", "TOPRIGHT", tab, "TOPRIGHT", -18, -16)
 	tab.CraftRosterMailButton = CreateRequestButton(tab, "Mail Crafter Mats", "CRAFTROSTER_MAIL_MATS", "TOPRIGHT", tab.CraftRosterTradeButton, "BOTTOMRIGHT", -18, -16)
+
+	local refreshButton = CreateFrame("Button", nil, tab, "GameMenuButtonTemplate")
+	refreshButton:SetSize(90, 22)
+	refreshButton:SetPoint("TOPLEFT", tab, "TOPLEFT", 170, -48)
+	refreshButton:SetText("Refresh")
+	refreshButton:SetScript("OnClick", function()
+		if CraftRoster.GuildSync then
+			CraftRoster.GuildSync:SyncNow()
+		end
+		if CraftRoster.Directory then
+			CraftRoster.Directory:RefreshIfVisible()
+		end
+	end)
+	tab.CraftRosterRefreshButton = refreshButton
 end
 
 SLASH_CRAFTROSTERREQUESTS1 = "/crrequests"
