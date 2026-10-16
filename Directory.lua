@@ -53,6 +53,15 @@ local SEARCH_PHRASE_ALIASES = {
 	["bracer enchant"] = { "bracer" },
 }
 
+local SORT_MODES = { "name", "crafters", "profession" }
+local SORT_LABELS = {
+	name = "Sort: Name",
+	crafters = "Sort: Crafters",
+	profession = "Sort: Profession",
+}
+
+local sortMode = "name"
+
 local function GetSearchTerms(search)
 	local terms = { search }
 
@@ -216,11 +225,21 @@ local function CreateRow(child, width, height)
 	row:SetScript("OnEnter", function(self)
 		self:SetBackdropColor(0.16, 0.16, 0.16, 0.65)
 		self:SetBackdropBorderColor(0.9, 0.8, 0.5, 0.75)
+
+		if self.tooltipLines then
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetText(self.tooltipTitle or "")
+			for _, line in ipairs(self.tooltipLines) do
+				GameTooltip:AddLine(line, 1, 1, 1)
+			end
+			GameTooltip:Show()
+		end
 	end)
 
 	row:SetScript("OnLeave", function(self)
 		self:SetBackdropColor(0, 0, 0, 0.30)
 		self:SetBackdropBorderColor(0.8, 0.7, 0.4, 0.25)
+		GameTooltip:Hide()
 	end)
 
 	return row
@@ -267,6 +286,8 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 
 		row.Label:SetText(entry.text or "")
 		row.RightLabel:SetText(entry.rightText or "")
+		row.tooltipTitle = entry.text
+		row.tooltipLines = entry.tooltipLines
 
 		if entry.isHeader then
 			row.Label:SetFontObject("GameFontNormal")
@@ -294,6 +315,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 		empty.RightLabel:SetText("")
 		empty.Label:SetFontObject("GameFontHighlight")
 		empty:EnableMouse(false)
+		empty.tooltipLines = nil
 		yOffset = yOffset - 50
 	end
 
@@ -399,6 +421,20 @@ function Directory:Initialize()
 	professionsTab.SearchBox:SetPoint("TOPLEFT", 18, -16)
 	professionsTab.SearchBox:SetAutoFocus(false)
 	professionsTab.SearchBox:SetScript("OnTextChanged", function() Directory:RefreshProfessions() end)
+
+	professionsTab.SortButton = CreateFrame("Button", nil, professionsTab, "GameMenuButtonTemplate")
+	professionsTab.SortButton:SetSize(140, 22)
+	professionsTab.SortButton:SetPoint("TOPLEFT", 18, -48)
+	professionsTab.SortButton:SetText(SORT_LABELS[sortMode])
+	professionsTab.SortButton:SetScript("OnClick", function(self)
+		local currentIndex = 1
+		for i, mode in ipairs(SORT_MODES) do
+			if mode == sortMode then currentIndex = i break end
+		end
+		sortMode = SORT_MODES[(currentIndex % #SORT_MODES) + 1]
+		self:SetText(SORT_LABELS[sortMode])
+		Directory:RefreshProfessions()
+	end)
 
 	professionsTab.Dropdown = CreateFrame("Frame", nil, professionsTab, "UIDropDownMenuTemplate")
 	professionsTab.Dropdown:SetPoint("LEFT", professionsTab.SearchBox, "RIGHT", 4, -4)
@@ -518,8 +554,7 @@ local function BuildProfessionEntries()
 	local tab = Directory.frame.ProfessionsTab
 	local search = (tab.SearchBox:GetText() or ""):lower()
 	local searchTerms = GetSearchTerms(search)
-	local entries = {}
-	local lastProfession = nil
+	local matching = {}
 
 	for _, recipe in ipairs(GetRecipeIndex()) do
 		local professionOK = Directory.selectedProfession == "All" or recipe.profession == Directory.selectedProfession
@@ -536,23 +571,53 @@ local function BuildProfessionEntries()
 		end
 
 		if professionOK and searchOK then
-			if recipe.profession ~= lastProfession then
-				table.insert(entries, {
-					isHeader = true,
-					text = recipe.profession,
-					icon = GetProfessionIcon(recipe.profession),
-				})
-				lastProfession = recipe.profession
-			end
-
-			table.insert(entries, {
-				id = recipe.id,
-				text = recipe.name,
-				icon = recipe.icon,
-				rightText = ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
-				recipe = recipe,
-			})
+			table.insert(matching, recipe)
 		end
+	end
+
+	table.sort(matching, function(a, b)
+		if sortMode == "crafters" then
+			if #a.crafters ~= #b.crafters then return #a.crafters > #b.crafters end
+			return a.name < b.name
+		elseif sortMode == "profession" then
+			if a.profession ~= b.profession then return a.profession < b.profession end
+			return a.name < b.name
+		end
+		return a.name < b.name
+	end)
+
+	local entries = {}
+	local lastProfession = nil
+
+	for _, recipe in ipairs(matching) do
+		if recipe.profession ~= lastProfession then
+			table.insert(entries, {
+				isHeader = true,
+				text = recipe.profession,
+				icon = GetProfessionIcon(recipe.profession),
+			})
+			lastProfession = recipe.profession
+		end
+
+		local saved = CraftRosterDB.recipes and CraftRosterDB.recipes[recipe.id]
+		local tooltipLines = {}
+
+		if saved and saved.materials and #saved.materials > 0 then
+			for _, material in ipairs(saved.materials) do
+				table.insert(tooltipLines, ("%dx %s"):format(material.count, material.name))
+			end
+		else
+			table.insert(tooltipLines, "No material data saved yet.")
+		end
+
+		table.insert(entries, {
+			id = recipe.id,
+			text = recipe.name,
+			icon = recipe.icon,
+			rightText = ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
+			tooltipLines = tooltipLines,
+			recipe = recipe,
+		})
 	end
 
 	return entries
