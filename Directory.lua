@@ -226,7 +226,11 @@ local function CreateRow(child, width, height)
 		self:SetBackdropColor(0.16, 0.16, 0.16, 0.65)
 		self:SetBackdropBorderColor(0.9, 0.8, 0.5, 0.75)
 
-		if self.tooltipLines then
+		if self.hyperlink then
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetHyperlink(self.hyperlink)
+			GameTooltip:Show()
+		elseif self.tooltipLines then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 			GameTooltip:SetText(self.tooltipTitle or "")
 			for _, line in ipairs(self.tooltipLines) do
@@ -288,6 +292,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 		row.RightLabel:SetText(entry.rightText or "")
 		row.tooltipTitle = entry.text
 		row.tooltipLines = entry.tooltipLines
+		row.hyperlink = entry.hyperlink
 
 		if entry.isHeader then
 			row.Label:SetFontObject("GameFontNormal")
@@ -316,6 +321,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 		empty.Label:SetFontObject("GameFontHighlight")
 		empty:EnableMouse(false)
 		empty.tooltipLines = nil
+		empty.hyperlink = nil
 		yOffset = yOffset - 50
 	end
 
@@ -616,6 +622,7 @@ local function BuildProfessionEntries()
 			icon = recipe.icon,
 			rightText = ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
 			tooltipLines = tooltipLines,
+			hyperlink = saved and saved.itemLink,
 			recipe = recipe,
 		})
 	end
