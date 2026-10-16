@@ -34,11 +34,52 @@ local function CopyMaterials(materials)
 end
 
 local function SendAddonData(message)
+	if C_ChatInfo and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted
+		and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted() then
+		print("|cffff0000CraftRoster|r: addon chat is restricted; status not sent.")
+		return false
+	end
+	if C_ChatInfo and C_ChatInfo.InChatMessagingLockdown
+		and C_ChatInfo.InChatMessagingLockdown() then
+		print("|cffff0000CraftRoster|r: chat is in lockdown; status not sent.")
+		return false
+	end
 	if C_ChatInfo and C_ChatInfo.SendAddonMessage then
 		C_ChatInfo.SendAddonMessage(PREFIX, message, "GUILD")
+		return true
 	elseif SendAddonMessage then
 		SendAddonMessage(PREFIX, message, "GUILD")
+		return true
 	end
+	return false
+end
+
+local function GetNumSlots(bag)
+	if C_Container and C_Container.GetContainerNumSlots then
+		return C_Container.GetContainerNumSlots(bag)
+	end
+	return GetContainerNumSlots and GetContainerNumSlots(bag) or 0
+end
+
+local function GetItemLink(bag, slot)
+	if C_Container and C_Container.GetContainerItemLink then
+		return C_Container.GetContainerItemLink(bag, slot)
+	end
+	return GetContainerItemLink and GetContainerItemLink(bag, slot)
+end
+
+local function UseItem(bag, slot)
+	if C_Container and C_Container.UseContainerItem then
+		return C_Container.UseContainerItem(bag, slot)
+	end
+	return UseContainerItem and UseContainerItem(bag, slot)
+end
+
+local function PickupItem(bag, slot)
+	if C_Container and C_Container.PickupContainerItem then
+		return C_Container.PickupContainerItem(bag, slot)
+	end
+	return PickupContainerItem and PickupContainerItem(bag, slot)
 end
 
 local function LogRequest(recipeID, target, mode, requestID)
@@ -136,12 +177,12 @@ local function AttachMaterialsToTrade()
 			local placed = false
 
 			for bag = 0, 4 do
-				for slot = 1, GetContainerNumSlots(bag) do
-					local link = GetContainerItemLink(bag, slot)
+				for slot = 1, GetNumSlots(bag) do
+					local link = GetItemLink(bag, slot)
 					if link then
 						local itemName = link:match("%[(.-)%]")
 						if itemName == material.name then
-							UseContainerItem(bag, slot)
+							UseItem(bag, slot)
 							material.remaining = material.remaining - 1
 							placed = true
 							break
@@ -176,12 +217,12 @@ local function AttachMaterialsToMail()
 			local attached = false
 
 			for bag = 0, 4 do
-				for slot = 1, GetContainerNumSlots(bag) do
-					local link = GetContainerItemLink(bag, slot)
+				for slot = 1, GetNumSlots(bag) do
+					local link = GetItemLink(bag, slot)
 					if link then
 						local itemName = link:match("%[(.-)%]")
 						if itemName == material.name then
-							PickupContainerItem(bag, slot)
+							PickupItem(bag, slot)
 							if ClickSendMailItemButton then
 								ClickSendMailItemButton(attachSlot)
 							end
@@ -415,7 +456,7 @@ frame:RegisterEvent("MAIL_SHOW")
 frame:RegisterEvent("MAIL_CLOSED")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 
-frame:SetScript("OnEvent", function(_, event, arg1, prefix, message)
+frame:SetScript("OnEvent", function(_, event, arg1, prefix, message, channel, sender)
 	if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
 		if TradeFrame then
 			tradeCancel = CreateCancelButton(TradeFrame, "Trade")
@@ -464,6 +505,8 @@ frame:SetScript("OnEvent", function(_, event, arg1, prefix, message)
 		end
 
 	elseif event == "CHAT_MSG_ADDON" and prefix == PREFIX then
+		if not sender or sender == "" then return end
+
 		local requestID, status = message:match("^RSTAT:(.+):(%a+)$")
 		if requestID and (status == "accepted" or status == "completed") then
 			for _, request in ipairs(CraftRosterDB.requests or {}) do
