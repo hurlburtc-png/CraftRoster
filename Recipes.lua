@@ -85,18 +85,34 @@ function RecipeTracker:ImportEnchantingRecipes()
 			local recipeID = link and link:match("%d+")
 			recipeID = recipeID and tonumber(recipeID)
 
-			if recipeID and not character.recipes[recipeID] then
-				character.recipes[recipeID] = { learnedAt = time() }
+			if recipeID then
+				local isNew = not character.recipes[recipeID]
+				if isNew then
+					character.recipes[recipeID] = { learnedAt = time() }
+					added = added + 1
+				end
 
-				CraftRosterDB.recipes[recipeID] = CraftRosterDB.recipes[recipeID] or {
-					name = name,
-					profession = "Enchanting",
-					icon = PROFESSION_ICONS.Enchanting,
-					firstSeenBy = GetCharacterKey(),
-					firstSeenAt = time(),
-				}
+				local saved = CraftRosterDB.recipes[recipeID]
+				if not saved then
+					saved = {
+						name = name,
+						profession = "Enchanting",
+						icon = PROFESSION_ICONS.Enchanting,
+						firstSeenBy = GetCharacterKey(),
+						firstSeenAt = time(),
+					}
+					CraftRosterDB.recipes[recipeID] = saved
+				end
 
-				added = added + 1
+				local materials = {}
+				local numReagents = GetTradeSkillNumReagents and GetTradeSkillNumReagents(i) or 0
+				for j = 1, numReagents do
+					local reagentName, _, _, reagentCount = GetTradeSkillReagentInfo(i, j)
+					if reagentName and reagentCount then
+						table.insert(materials, { name = reagentName, count = reagentCount })
+					end
+				end
+				saved.materials = materials
 			end
 		end
 	end
