@@ -6,13 +6,10 @@ CraftRoster is a lightweight World of Warcraft addon for tracking professions an
 
 ## Installation
 
-1. Click **Code → Download ZIP** on this page.
-2. Unzip it anywhere.
-3. Double-click **Install-CraftRoster.bat**.
-4. Pick your WoW client when prompted (Forever/_classic_beta_, _classic_, or _retail_), or enter a custom AddOns path.
-5. Restart WoW, or type `/reload` in-game.
-
-The installer automatically downloads the latest CraftRoster.zip release, validates it, backs up any existing CraftRoster folder, and installs the new one.
+1. Go to **Releases** and download the latest **CraftRoster.zip**.
+2. Extract the zip.
+3. Copy the **CraftRoster** folder into your WoW `Interface\AddOns` folder.
+4. Restart WoW, or type `/reload` in-game.
 
 ## Commands
 
