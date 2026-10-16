@@ -1,7 +1,7 @@
-local ADDON_NAME, WowForeverAddons = ...
+local ADDON_NAME, CraftRoster = ...
 
 local Panel = {}
-WowForeverAddons.Panel = Panel
+CraftRoster.Panel = Panel
 
 local function FormatTime(timestamp)
     if not timestamp then
@@ -16,7 +16,7 @@ function Panel:Initialize()
         return
     end
 
-    local frame = CreateFrame("Frame", "WowForeverAddonsPanel", UIParent, "BasicFrameTemplateWithInset")
+    local frame = CreateFrame("Frame", "CraftRosterPanel", UIParent, "BasicFrameTemplateWithInset")
     frame:SetSize(300, 190)
     frame:SetPoint("CENTER")
     frame:SetMovable(true)
@@ -27,7 +27,7 @@ function Panel:Initialize()
     frame:SetFrameStrata("HIGH")
     frame:Hide()
 
-    frame.TitleBar.TitleText:SetText("Wow Forever Addons")
+    frame.TitleBar.TitleText:SetText("CraftRoster")
 
     frame.StatusText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     frame.StatusText:SetPoint("TOPLEFT", 16, -38)
@@ -46,7 +46,7 @@ function Panel:Initialize()
     toggleButton:SetPoint("TOPLEFT", 16, -104)
     toggleButton:SetText("Enable / Disable")
     toggleButton:SetScript("OnClick", function()
-        local settings = WowForeverAddonsDB.settings
+        local settings = CraftRosterDB.settings
         settings.enabled = not settings.enabled
         Panel:RefreshStatus()
     end)
@@ -56,15 +56,15 @@ function Panel:Initialize()
     updateButton:SetPoint("TOPLEFT", 16, -136)
     updateButton:SetText("Update My Recipes")
     updateButton:SetScript("OnClick", function()
-        local added = WowForeverAddons.RecipeTracker:UpdateKnownRecipes()
-        print(("|cff00ff00Wow Forever Addons|r: recipe update complete. %d new recipe(s) added."):format(added or 0))
+        local added = CraftRoster.RecipeTracker:UpdateKnownRecipes()
+        print(("|cff00ff00CraftRoster|r: recipe update complete. %d new recipe(s) added."):format(added or 0))
     end)
 
     local autoCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
     autoCheck:SetPoint("TOPLEFT", 14, -168)
     autoCheck.Text:SetText("Auto-update new recipes")
     autoCheck:SetScript("OnClick", function(button)
-        WowForeverAddonsDB.settings.autoUpdateRecipes = button:GetChecked()
+        CraftRosterDB.settings.autoUpdateRecipes = button:GetChecked()
     end)
 
     frame:SetScript("OnKeyDown", function(_, key)
@@ -97,17 +97,17 @@ function Panel:RefreshStatus()
         return
     end
 
-    local settings = WowForeverAddonsDB.settings
+    local settings = CraftRosterDB.settings
     local enabled = settings.enabled
     local auto = settings.autoUpdateRecipes
-    local count = WowForeverAddons.RecipeTracker:GetKnownRecipeCount()
+    local count = CraftRoster.RecipeTracker:GetKnownRecipeCount()
 
     self.frame.StatusText:SetText(("Status: %s"):format(
         enabled and "|cff00ff00Enabled|r" or "|cffff0000Disabled|r"
     ))
     self.frame.RecipeCountText:SetText(("Known recipes saved: %d"):format(count))
     self.frame.LastUpdatedText:SetText(("Last updated: %s"):format(
-        FormatTime(WowForeverAddonsDB.lastRecipeUpdate)
+        FormatTime(CraftRosterDB.lastRecipeUpdate)
     ))
 
     self.autoCheck:SetChecked(auto)

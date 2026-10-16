@@ -1,48 +1,48 @@
-local ADDON_NAME = ...
-local WowForeverAddons = CreateFrame("Frame", ADDON_NAME .. "Core")
+local ADDON_NAME, CraftRoster = ...
+local Core = CreateFrame("Frame", ADDON_NAME .. "Core")
+CraftRoster.Core = Core
 
-WowForeverAddons:RegisterEvent("ADDON_LOADED")
-WowForeverAddons:SetScript("OnEvent", function(self, event, loadedAddon)
+Core:RegisterEvent("ADDON_LOADED")
+Core:SetScript("OnEvent", function(self, event, loadedAddon)
     if event == "ADDON_LOADED" and loadedAddon == ADDON_NAME then
-        WowForeverAddonsDB = WowForeverAddonsDB or {}
-        WowForeverAddonsDB.settings = WowForeverAddonsDB.settings or {
+        CraftRosterDB = CraftRosterDB or {}
+        CraftRosterDB.settings = CraftRosterDB.settings or {
             enabled = true,
             autoUpdateRecipes = true,
         }
-        WowForeverAddonsDB.characters = WowForeverAddonsDB.characters or {}
-        WowForeverAddonsDB.recipes = WowForeverAddonsDB.recipes or {}
+        CraftRosterDB.characters = CraftRosterDB.characters or {}
+        CraftRosterDB.recipes = CraftRosterDB.recipes or {}
 
         local characterKey = UnitName("player") .. "-" .. (GetRealmName() or "")
-        WowForeverAddonsDB.characters[characterKey] = WowForeverAddonsDB.characters[characterKey] or {
+        CraftRosterDB.characters[characterKey] = CraftRosterDB.characters[characterKey] or {
             recipes = {},
         }
 
-        if WowForeverAddons.RecipeTracker then
-            WowForeverAddons.RecipeTracker:Initialize()
+        if CraftRoster.RecipeTracker then
+            CraftRoster.RecipeTracker:Initialize()
         end
 
-        if WowForeverAddons.Panel then
-            WowForeverAddons.Panel:Initialize()
+        if CraftRoster.Panel then
+            CraftRoster.Panel:Initialize()
         end
 
-        print("|cff00ff00Wow Forever Addons|r loaded. Type /wfa to open the panel.")
+        print("|cff00ff00CraftRoster|r loaded. Type /cr to open the panel.")
         self:UnregisterEvent("ADDON_LOADED")
     end
 end)
 
-SLASH_WOWFOREVERADDONS1 = "/wfa"
-SlashCmdList["WOWFOREVERADDONS"] = function(msg)
+SLASH_CRAFTROSTER1 = "/cr"
+SLASH_CRAFTROSTER2 = "/craftroster"
+SlashCmdList["CRAFTROSTER"] = function(msg)
     msg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
 
     if msg == "toggle" then
-        local settings = WowForeverAddonsDB and WowForeverAddonsDB.settings
-        if settings then
-            settings.enabled = not settings.enabled
-            print(("Wow Forever Addons is now %s."):format(
-                settings.enabled and "|cff00ff00enabled|r" or "|cffff0000disabled|r"
-            ))
-        end
-    elseif WowForeverAddons.Panel then
-        WowForeverAddons.Panel:Toggle()
+        local settings = CraftRosterDB.settings
+        settings.enabled = not settings.enabled
+        print(("CraftRoster is now %s."):format(
+            settings.enabled and "|cff00ff00enabled|r" or "|cffff0000disabled|r"
+        ))
+    elseif CraftRoster.Panel then
+        CraftRoster.Panel:Toggle()
     end
 end

@@ -1,7 +1,7 @@
-local ADDON_NAME, WowForeverAddons = ...
+local ADDON_NAME, CraftRoster = ...
 
 local RecipeTracker = {}
-WowForeverAddons.RecipeTracker = RecipeTracker
+CraftRoster.RecipeTracker = RecipeTracker
 
 local function GetCharacterKey()
     return UnitName("player") .. "-" .. (GetRealmName() or "")
@@ -9,10 +9,10 @@ end
 
 local function GetCharacterData()
     local key = GetCharacterKey()
-    WowForeverAddonsDB.characters[key] = WowForeverAddonsDB.characters[key] or {
+    CraftRosterDB.characters[key] = CraftRosterDB.characters[key] or {
         recipes = {},
     }
-    return WowForeverAddonsDB.characters[key]
+    return CraftRosterDB.characters[key]
 end
 
 function RecipeTracker:Initialize()
@@ -29,7 +29,7 @@ function RecipeTracker:RecordRecipe(recipeID)
         return false
     end
 
-    local settings = WowForeverAddonsDB.settings
+    local settings = CraftRosterDB.settings
     local character = GetCharacterData()
 
     if not settings.autoUpdateRecipes and not self.manualUpdateInProgress then
@@ -44,15 +44,15 @@ function RecipeTracker:RecordRecipe(recipeID)
         learnedAt = time(),
     }
 
-    WowForeverAddonsDB.recipes[recipeID] = WowForeverAddonsDB.recipes[recipeID] or {
+    CraftRosterDB.recipes[recipeID] = CraftRosterDB.recipes[recipeID] or {
         firstSeenBy = GetCharacterKey(),
         firstSeenAt = time(),
     }
 
-    WowForeverAddonsDB.lastRecipeUpdate = time()
+    CraftRosterDB.lastRecipeUpdate = time()
 
-    if WowForeverAddons.Panel then
-        WowForeverAddons.Panel:RefreshStatus()
+    if CraftRoster.Panel then
+        CraftRoster.Panel:RefreshStatus()
     end
 
     return true
@@ -62,16 +62,14 @@ function RecipeTracker:UpdateKnownRecipes()
     self.manualUpdateInProgress = true
     local added = 0
 
-    -- Blizzard does not expose one universal API that returns every recipe ID
-    -- known by every profession. Professions can register their own data
-    -- providers here as they are implemented.
+    -- Profession-specific importers will populate full known-recipe lists.
 
     self.manualUpdateInProgress = nil
 
-    WowForeverAddonsDB.lastRecipeUpdate = time()
+    CraftRosterDB.lastRecipeUpdate = time()
 
-    if WowForeverAddons.Panel then
-        WowForeverAddons.Panel:RefreshStatus()
+    if CraftRoster.Panel then
+        CraftRoster.Panel:RefreshStatus()
     end
 
     return added
