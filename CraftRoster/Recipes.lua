@@ -51,8 +51,8 @@ local function ExtractMaterialsFromSchematic(schematic)
 	if not schematic or not schematic.reagentSlotSchematics then return materials end
 
 	for _, slot in ipairs(schematic.reagentSlotSchematics) do
-		local quantity = slot.quantity or (slot.reagent and slot.reagent.quantity) or 0
-		local reagents = slot.reagents or (slot.reagent and { slot.reagent }) or {}
+		local quantity = slot.quantityRequired or slot.quantity or 0
+		local reagents = slot.reagents or {}
 
 		for _, reagent in ipairs(reagents) do
 			local itemID = reagent.itemID or (reagent.item and reagent.item.itemID)
@@ -85,26 +85,34 @@ local function SaveRecipe(character, recipeID, name, profession, icon, itemLink,
 			firstSeenAt = time(),
 		}
 		CraftRosterDB.recipes[recipeID] = saved
-	elseif not saved.icon then
-		saved.icon = icon or GetRecipeIcon(recipeID, profession)
+	else
+		-- Repair incomplete metadata when authoritative info arrives.
+		if not saved.name and name then saved.name = name end
+		if (not saved.profession or saved.profession == "Unknown") and profession and profession ~= "Unknown" then
+			saved.profession = profession
+		end
+		if not saved.icon and icon then saved.icon = icon end
 	end
 
 	if itemLink then saved.itemLink = itemLink end
-	if materials then saved.materials = materials end
+	-- Only overwrite materials when we actually got data (avoid wiping with empty).
+	if materials and #materials > 0 then
+		saved.materials = materials
+	end
 
 	return isNew
 end
 
 function RecipeTracker:Initialize()
-	self:RegisterEvent("NEW_RECIPE_LEARNED")
-	self:RegisterEvent("PLAYER_ENTERING_WORLD")
-	self:RegisterEvent("TRADE_SKILL_SHOW")
+	-- Dedicated event frame; RecipeTracker itself is a plain table.
+	local frame = CreateFrame("Frame")
+	frame:RegisterEvent("NEW_RECIPE_LEARNED")
+	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	frame:RegisterEvent("TRADE_SKILL_SHOW")
+	pcall(function() frame:RegisterEvent("TRADE_SKILL_LIST_UPDATE") end)
+	pcall(function() frame:RegisterEvent("TRADE_SKILL_DATA_UPDATE") end)
 
-	-- Forever exposes async trade-skill data; register defensively.
-	pcall(function() self:RegisterEvent("TRADE_SKILL_LIST_UPDATE") end)
-	pcall(function() self:RegisterEvent("TRADE_SKILL_DATA_UPDATE") end)
-
-	self:SetScript("OnEvent", function(_, event, recipeID)
+	frame:SetScript("OnEvent", function(_, event, recipeID)
 		if event == "NEW_RECIPE_LEARNED" then
 			RecipeTracker:RecordRecipe(recipeID)
 		elseif event == "TRADE_SKILL_SHOW"
@@ -151,9 +159,10 @@ local function ImportForeverRecipes(character, profession)
 	for _, recipeID in ipairs(recipeIDs) do
 		local info = C_TradeSkillUI.GetRecipeInfo and C_TradeSkillUI.GetRecipeInfo(recipeID)
 		if info and info.learned then
-			local schematic = C_TradeSkillUI.GetRecipeSchematic and C_TradeSkillUI.GetRecipeSchematic(recipeID)
+			local schematic = C_TradeSkillUI.GetRecipeSchematic
+				and C_TradeSkillUI.GetRecipeSchematic(recipeID, false)
 			local materials = ExtractMaterialsFromSchematic(schematic)
-			local itemLink = schematic and schematic.outputItemLink or (info.hyperlink)
+			local itemLink = schematic and schematic.outputItemLink or info.hyperlink
 
 			local isNew = SaveRecipe(
 				character,
@@ -220,6 +229,8 @@ function RecipeTracker:ImportTradeSkillRecipes()
 		added = ImportForeverRecipes(character, profession)
 	elseif GetNumTradeSkills then
 		added = ImportLegacyRecipes(character, profession)
+	else
+		print("|cffff0000CraftRoster|r: no supported recipe enumeration API found; skipping import.")
 	end
 
 	if added > 0 then
