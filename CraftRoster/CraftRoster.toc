@@ -11,4 +11,5 @@ Panel.lua
 Directory.lua
 CraftRequests.lua
 GuildSync.lua
+Diagnostics.lua
 MinimapButton.lua
