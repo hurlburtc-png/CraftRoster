@@ -1,0 +1,30 @@
+name: Release CraftRoster
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Package addon
+        run: |
+          mkdir -p packaging/CraftRoster
+          cp CraftRoster.toc Core.lua Recipes.lua Panel.lua Directory.lua packaging/CraftRoster/
+          cd packaging
+          zip -r ../CraftRoster.zip CraftRoster
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: CraftRoster.zip
+          generate_release_notes: true
