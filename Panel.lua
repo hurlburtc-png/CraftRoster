@@ -25,8 +25,12 @@ end)
 function Panel:Initialize()
 	if self.frame then return end
 
+	if CraftRosterDB.settings.showMinimap == nil then
+		CraftRosterDB.settings.showMinimap = true
+	end
+
 	local frame = CreateFrame("Frame", "CraftRosterPanel", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(300, 260)
+	frame:SetSize(300, 300)
 	frame:SetPoint("CENTER")
 	frame:SetMovable(true)
 	frame:EnableMouse(true)
@@ -95,6 +99,16 @@ function Panel:Initialize()
 		CraftRosterDB.settings.autoUpdateRecipes = button:GetChecked()
 	end)
 
+	local minimapCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+	minimapCheck:SetPoint("TOPLEFT", 14, -232)
+	minimapCheck.Text:SetText("Show minimap icon")
+	minimapCheck:SetScript("OnClick", function(button)
+		CraftRosterDB.settings.showMinimap = button:GetChecked()
+		if CraftRoster.MinimapButton then
+			CraftRoster.MinimapButton:UpdateVisibility()
+		end
+	end)
+
 	local errorFrame = CreateFrame("Frame", "CraftRosterErrorPopup", UIParent, "BasicFrameTemplateWithInset")
 	errorFrame:SetSize(560, 320)
 	errorFrame:SetPoint("CENTER")
@@ -126,6 +140,7 @@ function Panel:Initialize()
 	self.frame = frame
 	self.errorFrame = errorFrame
 	self.autoCheck = autoCheck
+	self.minimapCheck = minimapCheck
 	self:RefreshStatus()
 end
 
@@ -157,4 +172,5 @@ function Panel:RefreshStatus()
 		FormatTime(CraftRosterDB.lastRecipeUpdate)
 	))
 	self.autoCheck:SetChecked(settings.autoUpdateRecipes)
+	self.minimapCheck:SetChecked(settings.showMinimap ~= false)
 end

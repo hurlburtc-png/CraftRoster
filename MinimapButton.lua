@@ -55,4 +55,15 @@ end)
 
 button:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
+CraftRoster.MinimapButton = CraftRoster.MinimapButton or {}
+
+function CraftRoster.MinimapButton:UpdateVisibility()
+	if CraftRosterDB.settings.showMinimap == false then
+		button:Hide()
+	else
+		button:Show()
+	end
+end
+
 UpdatePosition()
+CraftRoster.MinimapButton:UpdateVisibility()

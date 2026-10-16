@@ -232,8 +232,8 @@ local function AddDirectoryButtons()
 	local tab = directory.frame.ProfessionsTab
 	if tab.CraftRosterTradeButton then return end
 
-	tab.CraftRosterTradeButton = CreateRequestButton(tab, "Whisper & Trade Mats", "CRAFTROSTER_TRADE_MATS", "TOPLEFT", tab.Details, "BOTTOMLEFT")
-	tab.CraftRosterMailButton = CreateRequestButton(tab, "Mail Crafter Mats", "CRAFTROSTER_MAIL_MATS", "TOPLEFT", tab.CraftRosterTradeButton, "BOTTOMLEFT")
+	tab.CraftRosterTradeButton = CreateRequestButton(tab, "Whisper & Trade Mats", "CRAFTROSTER_TRADE_MATS", "TOPRIGHT", tab, "TOPRIGHT", -18, -16)
+	tab.CraftRosterMailButton = CreateRequestButton(tab, "Mail Crafter Mats", "CRAFTROSTER_MAIL_MATS", "TOPRIGHT", tab.CraftRosterTradeButton, "BOTTOMRIGHT", -18, -16)
 end
 
 local frame = CreateFrame("Frame")
