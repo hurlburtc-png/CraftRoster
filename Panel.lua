@@ -12,7 +12,7 @@ end
 local function CaptureError(err)
 	if err and err:find("CraftRoster", 1, true) then
 		lastError = err
-		print("|cffff0000CraftRoster|r error captured. Click the bug button in /cr settings to view or copy it.")
+		print("|cffff0000CraftRoster|r error captured. Click the beetle button in /cr settings to view or copy it.")
 	end
 end
 
@@ -77,7 +77,7 @@ function Panel:Initialize()
 	local bugButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 	bugButton:SetSize(26, 26)
 	bugButton:SetPoint("TOPRIGHT", -34, -10)
-	bugButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Gear_01")
+	bugButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Bug_01")
 	bugButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
 	bugButton:SetScript("OnClick", function() Panel:ShowError() end)
 	bugButton:SetScript("OnEnter", function(self)
