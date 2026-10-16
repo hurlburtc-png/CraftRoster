@@ -32,11 +32,41 @@ end
 
 function RecipeTracker:Initialize()
 	self:RegisterEvent("NEW_RECIPE_LEARNED")
+	self:RegisterEvent("PLAYER_ENTERING_WORLD")
+	self:RegisterEvent("TRADE_SKILL_SHOW")
 	self:SetScript("OnEvent", function(_, event, recipeID)
 		if event == "NEW_RECIPE_LEARNED" then
 			RecipeTracker:RecordRecipe(recipeID)
+		else
+			RecipeTracker:UpdateProfessions()
 		end
 	end)
+end
+
+function RecipeTracker:UpdateProfessions()
+	local character = GetCharacterData()
+	character.professions = character.professions or {}
+
+	for i = 1, GetNumProfessions() do
+		local professionID = select(i, GetProfessions())
+		if professionID then
+			local name, icon, skill, max, _, _, _, rank = GetProfessionInfo(professionID)
+			if name then
+				character.professions[name] = {
+					skill = skill or 0,
+					max = max or 0,
+					rank = rank,
+					icon = icon,
+				}
+			end
+		end
+	end
+
+	CraftRosterDB.lastProfessionUpdate = time()
+
+	if CraftRoster.Directory then
+		CraftRoster.Directory:InvalidateIndex()
+	end
 end
 
 function RecipeTracker:RecordRecipe(recipeID, profession, recipeName)
@@ -72,8 +102,7 @@ function RecipeTracker:UpdateKnownRecipes()
 	self.manualUpdateInProgress = true
 	local added = 0
 
-	-- Profession-specific importers will populate complete known-recipe lists.
-
+	self:UpdateProfessions()
 	self.manualUpdateInProgress = nil
 	CraftRosterDB.lastRecipeUpdate = time()
 

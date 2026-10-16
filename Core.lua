@@ -9,6 +9,7 @@ Core:SetScript("OnEvent", function(self, event, loadedAddon)
 		CraftRosterDB.settings = CraftRosterDB.settings or {
 			enabled = true,
 			autoUpdateRecipes = true,
+			onlineOnly = true,
 		}
 		CraftRosterDB.characters = CraftRosterDB.characters or {}
 		CraftRosterDB.recipes = CraftRosterDB.recipes or {}
@@ -16,12 +17,17 @@ Core:SetScript("OnEvent", function(self, event, loadedAddon)
 		local characterKey = UnitName("player") .. "-" .. (GetRealmName() or "")
 		local character = CraftRosterDB.characters[characterKey] or {}
 		character.recipes = character.recipes or {}
+		character.professions = character.professions or {}
 		character.class = select(2, UnitClass("player"))
 		character.raceName, character.raceFile = UnitRace("player")
 		character.gender = UnitSex("player")
 		CraftRosterDB.characters[characterKey] = character
 
-		if CraftRoster.RecipeTracker then CraftRoster.RecipeTracker:Initialize() end
+		if CraftRoster.RecipeTracker then
+			CraftRoster.RecipeTracker:Initialize()
+			CraftRoster.RecipeTracker:UpdateProfessions()
+		end
+
 		if CraftRoster.Panel then CraftRoster.Panel:Initialize() end
 		if CraftRoster.Directory then CraftRoster.Directory:Initialize() end
 
