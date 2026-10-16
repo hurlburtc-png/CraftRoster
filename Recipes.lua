@@ -3,6 +3,23 @@ local ADDON_NAME, CraftRoster = ...
 local RecipeTracker = {}
 CraftRoster.RecipeTracker = RecipeTracker
 
+local PROFESSION_ICONS = {
+    Alchemy = "Interface\\Icons\\Trade_Alchemy",
+    Blacksmithing = "Interface\\Icons\\Trade_BlackSmithing",
+    Enchanting = "Interface\\Icons\\Trade_Engraving",
+    Engineering = "Interface\\Icons\\Trade_Engineering",
+    Herbalism = "Interface\\Icons\\Trade_Herbalism",
+    Inscription = "Interface\\Icons\\trade_inscription",
+    Jewelcrafting = "Interface\\Icons\\Trade_Jewelcrafting",
+    Leatherworking = "Interface\\Icons\\Trade_Leatherworking",
+    Mining = "Interface\\Icons\\Trade_Mining",
+    Skinning = "Interface\\Icons\\inv_misc_pelt_wolf_01",
+    Tailoring = "Interface\\Icons\\Trade_Tailoring",
+    Cooking = "Interface\\Icons\\Trade_Cooking",
+    Fishing = "Interface\\Icons\\Trade_Fishing",
+    Archaeology = "Interface\\Icons\\Trade_Archaeology",
+}
+
 local function GetCharacterKey()
     return UnitName("player") .. "-" .. (GetRealmName() or "")
 end
@@ -24,7 +41,7 @@ function RecipeTracker:Initialize()
     end)
 end
 
-function RecipeTracker:RecordRecipe(recipeID)
+function RecipeTracker:RecordRecipe(recipeID, profession)
     if not recipeID then
         return false
     end
@@ -44,7 +61,11 @@ function RecipeTracker:RecordRecipe(recipeID)
         learnedAt = time(),
     }
 
+    profession = profession or "Unknown"
+
     CraftRosterDB.recipes[recipeID] = CraftRosterDB.recipes[recipeID] or {
+        profession = profession,
+        icon = PROFESSION_ICONS[profession],
         firstSeenBy = GetCharacterKey(),
         firstSeenAt = time(),
     }
@@ -53,6 +74,11 @@ function RecipeTracker:RecordRecipe(recipeID)
 
     if CraftRoster.Panel then
         CraftRoster.Panel:RefreshStatus()
+    end
+
+    if CraftRoster.Directory then
+        CraftRoster.Directory:RefreshProfessions()
+        CraftRoster.Directory:RefreshMyRecipes()
     end
 
     return true
@@ -70,6 +96,11 @@ function RecipeTracker:UpdateKnownRecipes()
 
     if CraftRoster.Panel then
         CraftRoster.Panel:RefreshStatus()
+    end
+
+    if CraftRoster.Directory then
+        CraftRoster.Directory:RefreshProfessions()
+        CraftRoster.Directory:RefreshMyRecipes()
     end
 
     return added

@@ -14,9 +14,12 @@ Core:SetScript("OnEvent", function(self, event, loadedAddon)
         CraftRosterDB.recipes = CraftRosterDB.recipes or {}
 
         local characterKey = UnitName("player") .. "-" .. (GetRealmName() or "")
-        CraftRosterDB.characters[characterKey] = CraftRosterDB.characters[characterKey] or {
-            recipes = {},
-        }
+        local character = CraftRosterDB.characters[characterKey] or {}
+        character.recipes = character.recipes or {}
+        character.class = select(2, UnitClass("player"))
+        character.raceName, character.raceFile = UnitRace("player")
+        character.gender = UnitSex("player")
+        CraftRosterDB.characters[characterKey] = character
 
         if CraftRoster.RecipeTracker then
             CraftRoster.RecipeTracker:Initialize()
@@ -26,7 +29,11 @@ Core:SetScript("OnEvent", function(self, event, loadedAddon)
             CraftRoster.Panel:Initialize()
         end
 
-        print("|cff00ff00CraftRoster|r loaded. Type /cr to open the panel.")
+        if CraftRoster.Directory then
+            CraftRoster.Directory:Initialize()
+        end
+
+        print("|cff00ff00CraftRoster|r loaded. Type /cr to open the directory.")
         self:UnregisterEvent("ADDON_LOADED")
     end
 end)
@@ -42,7 +49,9 @@ SlashCmdList["CRAFTROSTER"] = function(msg)
         print(("CraftRoster is now %s."):format(
             settings.enabled and "|cff00ff00enabled|r" or "|cffff0000disabled|r"
         ))
-    elseif CraftRoster.Panel then
+    elseif msg == "settings" and CraftRoster.Panel then
         CraftRoster.Panel:Toggle()
+    elseif CraftRoster.Directory then
+        CraftRoster.Directory:Toggle()
     end
 end
