@@ -31,6 +31,51 @@ local CLASS_COLORS = {
 	EVOKER = "33937F",
 }
 
+local SEARCH_WORD_ALIASES = {
+	wrist = { "bracer" },
+	bracer = { "bracer" },
+	chest = { "chest", "chestpiece", "robe" },
+	hands = { "gloves", "gauntlets" },
+	gloves = { "gloves" },
+	gauntlets = { "gauntlets" },
+	feet = { "boots" },
+	boots = { "boots" },
+	legs = { "leg" },
+	leg = { "leg" },
+	weapon = { "weapon" },
+	mail = { "mail" },
+}
+
+local SEARCH_PHRASE_ALIASES = {
+	["mail chest"] = { "mail chest" },
+	["mail chest piece"] = { "mail chest" },
+	["wrist enchant"] = { "bracer" },
+	["bracer enchant"] = { "bracer" },
+}
+
+local function GetSearchTerms(search)
+	local terms = { search }
+
+	for phrase, expansions in pairs(SEARCH_PHRASE_ALIASES) do
+		if search:find(phrase, 1, true) then
+			for _, expansion in ipairs(expansions) do
+				table.insert(terms, expansion)
+			end
+		end
+	end
+
+	for word in search:gmatch("%a+") do
+		local expansions = SEARCH_WORD_ALIASES[word]
+		if expansions then
+			for _, expansion in ipairs(expansions) do
+				table.insert(terms, expansion)
+			end
+		end
+	end
+
+	return terms
+end
+
 local rowPools = {}
 local onlineByName = {}
 
@@ -472,12 +517,23 @@ end
 local function BuildProfessionEntries()
 	local tab = Directory.frame.ProfessionsTab
 	local search = (tab.SearchBox:GetText() or ""):lower()
+	local searchTerms = GetSearchTerms(search)
 	local entries = {}
 	local lastProfession = nil
 
 	for _, recipe in ipairs(GetRecipeIndex()) do
 		local professionOK = Directory.selectedProfession == "All" or recipe.profession == Directory.selectedProfession
-		local searchOK = search == "" or recipe.name:lower():find(search, 1, true)
+		local searchOK = search == ""
+
+		if not searchOK then
+			local recipeName = recipe.name:lower()
+			for _, term in ipairs(searchTerms) do
+				if recipeName:find(term, 1, true) then
+					searchOK = true
+					break
+				end
+			end
+		end
 
 		if professionOK and searchOK then
 			if recipe.profession ~= lastProfession then
