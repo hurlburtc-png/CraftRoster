@@ -1,1 +1,1 @@
-<full updated Directory.lua with all 4 Directory changes applied>
+<full updated Directory.lua with debounced search (0.25s C_Timer.NewTimer) for Professions and Players tabs, and clickable crafter rows that call CraftRoster.CraftRequests.CreateRequest(recipeID, 1, "")>
