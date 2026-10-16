@@ -115,6 +115,13 @@ function RecipeTracker:ImportTradeSkillRecipes()
 					saved.icon = GetRecipeIcon(recipeID, profession)
 				end
 
+				if GetTradeSkillItemLink then
+					local itemLink = GetTradeSkillItemLink(i)
+					if itemLink then
+						saved.itemLink = itemLink
+					end
+				end
+
 				local materials = {}
 				local numReagents = GetTradeSkillNumReagents and GetTradeSkillNumReagents(i) or 0
 				for j = 1, numReagents do
