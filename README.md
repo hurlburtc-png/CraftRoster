@@ -2,44 +2,33 @@
 
 Find the right guild crafter for any recipe.
 
-CraftRoster is a World of Warcraft addon for tracking professions and recipes, with a foundation for a guild-wide recipe directory.
+CraftRoster is a lightweight World of Warcraft addon for tracking professions and recipes, with a foundation for a guild-wide recipe directory.
 
 ## Commands
 
-- `/cr` — open the CraftRoster directory
-- `/craftroster` — alternate command for the directory
-- `/cr settings` — open the compact settings panel
-- `/cr toggle` — enable or disable the addon
+- `/cr` — open the directory
+- `/craftroster` — alternate command
+- `/cr settings` — open settings
+- `/cr reset` — reset the directory window position and size
+- `/cr toggle` — enable or disable CraftRoster
+
+## Window controls
+
+- Drag the title bar to move the directory.
+- Drag the bottom-right corner to resize it.
+- Position and size are saved automatically.
+- Minimum size is 620 x 420.
+- Use `/cr reset` or **Reset Window Position** in settings to restore the default centered 760 x 500 layout.
 
 ## Directory
 
-### Professions
+- **Professions:** search recipes, filter by profession, and see who can craft a selected recipe.
+- **Players:** search characters and view race/gender icons, class-colored names, and recipe counts.
+- **My Recipes:** view your saved recipes and manually update them.
 
-- Search saved recipes by name.
-- Filter by profession.
-- Recipes are grouped with standard WoW profession icons.
-- Select a recipe to see its details and which saved characters can craft it.
+## Performance
 
-### Players
-
-- Search saved characters.
-- Each player row shows a race/gender icon, class-colored character name, and saved recipe count.
-
-### My Recipes
-
-- View recipes saved for your current character.
-- Click **Update My Recipes** to run a manual refresh.
-
-## Recipe tracking
-
-- Newly learned recipes are captured automatically when WoW reports `NEW_RECIPE_LEARNED`.
-- Use **Auto-update new recipes** in the settings panel to enable or disable automatic capture.
-- Recipe data is stored locally in `CraftRosterDB` for now.
-
-## Development
-
-- `Core.lua` — initialization, saved variables, and slash commands
-- `Recipes.lua` — recipe capture and automatic new-recipe tracking
-- `Panel.lua` — compact settings and status panel
-- `Directory.lua` — main recipe/player directory interface
-- `CraftRoster.toc` — addon metadata and load order
+- Directory rows are pooled and reused.
+- The recipe index is cached and rebuilt only when recipe data changes.
+- The directory does not refresh while hidden.
+- Newly learned recipes are captured automatically through `NEW_RECIPE_LEARNED`.
