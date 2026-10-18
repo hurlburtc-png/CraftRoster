@@ -349,13 +349,29 @@ CASES.update({
         SlashCmdList.CRAFTROSTERSTATUS('test accepted')
         assert(CraftRosterDB.requests[1].status=='completed')
     """,
-    'standard_tab_api_and_optional_diagnostics': """
-        PanelTemplates_SetTabState=nil
-        local selects=0
-        function PanelTemplates_SelectTab(tab) selects=selects+1 end
-        function PanelTemplates_DeselectTab(tab) end
+    'forever_tabs_without_character_template': """
+        local originalCreateFrame=CreateFrame
+        function CreateFrame(kind,name,parent,template)
+            assert(template~='CharacterFrameTabButtonTemplate', 'Unavailable Forever template')
+            local frame=originalCreateFrame(kind,name,parent,template)
+            function frame:SetEnabled(enabled) self.enabled=enabled end
+            return frame
+        end
+        local function unsupported() error('Legacy tab API must not be used') end
+        PanelTemplates_SelectTab=unsupported
+        PanelTemplates_DeselectTab=unsupported
+        PanelTemplates_SetTabState=unsupported
         SlashCmdList.CRAFTROSTER('')
-        addon.Directory:ShowTab(2); assert(selects==2)
+        for index=1,3 do
+            addon.Directory:ShowTab(index)
+            local frame=addon.Directory.frame
+            assert(frame.TabButtons[index].enabled==false)
+            assert(frame.TabButtons[index%3+1].enabled==true)
+            assert(frame.TabButtons[index].template=='UIPanelButtonTemplate')
+            assert(frame.ProfessionsTab:IsShown()==(index==1))
+            assert(frame.PlayersTab:IsShown()==(index==2))
+            assert(frame.MyRecipesTab:IsShown()==(index==3))
+        end
         GetBuildInfo=nil; SlashCmdList.CRAFTROSTERDIAGNOSTICS()
     """,
     'inventory_one_pass_and_duplicate_material_aggregation': """
@@ -652,7 +668,7 @@ CASES.update({
         for _,entry in ipairs(CraftRosterDB.errorReports) do assert(#entry.message<=2048 and #entry.stack<=6000) end
     """,
     'bug_report_includes_metadata_and_copyable_error': """
-        function GetAddOnMetadata() return '0.8.0-beta.2' end
+        function GetAddOnMetadata() return '0.8.0-beta.3' end
         function GetBuildInfo() return '1.60.1','70450','today',16001 end
         function debugstack() return 'CraftRoster/Recipes.lua:42: stack' end
         geterrorhandler()('CraftRoster/Recipes.lua:42: sample failure')
@@ -661,7 +677,7 @@ CASES.update({
         local popup=addon.Panel.errorFrame
         assert(popup:IsShown() and popup.ErrorBox.focused and popup.ErrorBox.highlighted)
         local text=popup.ErrorBox:GetText()
-        assert(text:find('0.8.0-beta.2',1,true) and text:find('70450',1,true) and text:find('16001',1,true))
+        assert(text:find('0.8.0-beta.3',1,true) and text:find('70450',1,true) and text:find('16001',1,true))
         assert(text:find('sample failure',1,true) and text:find('stack',1,true))
         assert(not addon.Directory.frame)
         popup.ErrorBox.scripts.OnEscapePressed(popup.ErrorBox)
@@ -885,7 +901,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster/CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.2')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.3')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/'CraftRoster'/line).is_file(), 'Missing TOC module: '+line)

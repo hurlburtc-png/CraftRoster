@@ -2,7 +2,7 @@
 ## Title: CraftRoster
 ## Notes: Find the right guild crafter for any recipe.
 ## Author: hurlburtc-png
-## Version: 0.8.0-beta.2
+## Version: 0.8.0-beta.3
 ## SavedVariables: CraftRosterDB
 
 ErrorReporter.lua

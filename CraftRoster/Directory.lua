@@ -439,7 +439,8 @@ function Directory:Initialize()
 
 	frame.TabButtons = {}
 	for index, tabName in ipairs({ "Professions", "Players", "My Recipes" }) do
-		local tab = CreateFrame("Button", nil, frame, "CharacterFrameTabButtonTemplate")
+		local tab = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+		tab:SetSize(120, 26)
 		tab:SetText(tabName)
 		tab:SetID(index)
 		tab:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 12 + (index - 1) * 125, 0)
@@ -817,11 +818,9 @@ function Directory:ShowTab(index)
 	self.frame.MyRecipesTab:Hide()
 
 	for _, tab in ipairs(self.frame.TabButtons) do
-		if PanelTemplates_SelectTab and PanelTemplates_DeselectTab then
-			if index == tab:GetID() then PanelTemplates_SelectTab(tab) else PanelTemplates_DeselectTab(tab) end
-		elseif PanelTemplates_SetTabState then
-			PanelTemplates_SetTabState(self.frame, tab, index == tab:GetID() and "SELECTED" or "NORMAL")
-		end
+		local selected = index == tab:GetID()
+		tab:SetEnabled(not selected)
+		tab:SetNormalFontObject(selected and "GameFontHighlight" or "GameFontNormal")
 	end
 
 	if index == 1 then

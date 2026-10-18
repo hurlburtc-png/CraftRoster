@@ -71,7 +71,7 @@ in Forever; matching the manifest removes the loader mismatch only.
 
 ## Development checks
 
-Current candidate: **0.8.0-beta.2**. See [TESTING.md](TESTING.md) for readiness,
+Current candidate: **0.8.0-beta.3**. See [TESTING.md](TESTING.md) for readiness,
 known limits and the in-game acceptance checklist.
 
 Install Python 3.12 and run:
