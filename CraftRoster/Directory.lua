@@ -245,6 +245,8 @@ local function CreateRow(child, width, height)
 
 	row.RightLabel = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	row.RightLabel:SetPoint("RIGHT", -10, 0)
+	row.RightLabel:SetWordWrap(false)
+	row.RightLabel:SetJustifyH("RIGHT")
 
 	row:SetScript("OnEnter", function(self)
 		self:SetBackdropColor(0.16, 0.16, 0.16, 0.65)
@@ -293,6 +295,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 	local scroll = child:GetParent()
 	local function Draw()
 		width = math.max(80, scroll:GetWidth() - 4)
+		child:SetWidth(width)
 		local top = scroll.GetVerticalScroll and scroll:GetVerticalScroll() or 0
 		local maximum = math.max(0, y + 12 - math.max(1, scroll:GetHeight()))
 		if top > maximum then top = maximum; scroll:SetVerticalScroll(top) end
@@ -326,6 +329,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			else row.Icon:SetTexture(entry.icon or "Interface\\Icons\\Trade_Tailoring") end
 			row.Label:SetWidth(math.max(40, width - 140))
 			row.Label:SetText(entry.text or "")
+			row.RightLabel:SetWidth(math.max(30, math.min(120, width * 0.35)))
 			row.RightLabel:SetText(entry.rightText or "")
 			row.Label:SetFontObject(entry.isHeader and "GameFontNormal" or "GameFontHighlight")
 			row.tooltipTitle, row.tooltipLines = entry.tooltipTitle or entry.text, entry.tooltipLines
@@ -443,14 +447,16 @@ function Directory:Initialize()
 		tab:SetSize(120, 26)
 		tab:SetText(tabName)
 		tab:SetID(index)
-		tab:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 12 + (index - 1) * 125, 0)
+		tab:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 12 + (index - 1) * 125, 18)
 		tab:SetScript("OnClick", function() Directory:ShowTab(index) end)
 		frame.TabButtons[index] = tab
 	end
 
 	local function CreateTab(name)
 		local tab = CreateFrame("Frame", nil, frame)
-		tab:SetAllPoints(frame.Inset)
+		-- Explicit content bounds avoid client-specific inset template geometry.
+		tab:SetPoint("TOPLEFT", frame, "TOPLEFT", 8, -30)
+		tab:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -8, 50)
 		frame[name] = tab
 		return tab
 	end
@@ -508,7 +514,7 @@ function Directory:Initialize()
 	UIDropDownMenu_SetText(professionsTab.Dropdown, "All")
 
 	professionsTab.OnlineCheck = CreateFrame("CheckButton", nil, professionsTab, "UICheckButtonTemplate")
-	professionsTab.OnlineCheck:SetPoint("LEFT", professionsTab.Dropdown, "RIGHT", 0, 0)
+	professionsTab.OnlineCheck:SetPoint("TOPLEFT", professionsTab, "TOPLEFT", 420, -44)
 	professionsTab.OnlineCheck.Text:SetText("Online only")
 	professionsTab.OnlineCheck:SetChecked(CraftRosterDB.settings.onlineOnly)
 	professionsTab.OnlineCheck:SetScript("OnClick", function(button)
@@ -519,14 +525,14 @@ function Directory:Initialize()
 
 	professionsTab.Results = CreateFrame("ScrollFrame", nil, professionsTab, "UIPanelScrollFrameTemplate")
 	professionsTab.Results:SetPoint("TOPLEFT", 14, -76)
-	professionsTab.Results:SetPoint("BOTTOMRIGHT", professionsTab, "BOTTOM", -12, 16)
+	professionsTab.Results:SetPoint("BOTTOMRIGHT", professionsTab, "BOTTOM", -24, 14)
 	professionsTab.ResultsChild = CreateFrame("Frame", nil, professionsTab.Results)
 	professionsTab.ResultsChild:SetSize(320, 1)
 	professionsTab.Results:SetScrollChild(professionsTab.ResultsChild)
 
 	professionsTab.Details = CreateFrame("Frame", nil, professionsTab, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	professionsTab.Details:SetPoint("TOPLEFT", professionsTab, "TOP", 12, -76)
-	professionsTab.Details:SetPoint("TOPRIGHT", -14, -76)
+	professionsTab.Details:SetPoint("TOPRIGHT", -28, -76)
 	professionsTab.Details:SetHeight(170)
 	professionsTab.Details:SetBackdrop({
 		bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -553,7 +559,7 @@ function Directory:Initialize()
 
 	professionsTab.CrafterList = CreateFrame("ScrollFrame", nil, professionsTab, "UIPanelScrollFrameTemplate")
 	professionsTab.CrafterList:SetPoint("TOPLEFT", professionsTab, "TOP", 12, -270)
-	professionsTab.CrafterList:SetPoint("BOTTOMRIGHT", -18, -14)
+	professionsTab.CrafterList:SetPoint("BOTTOMRIGHT", -32, 14)
 	professionsTab.CrafterListChild = CreateFrame("Frame", nil, professionsTab.CrafterList)
 	professionsTab.CrafterListChild:SetSize(350, 1)
 	professionsTab.CrafterList:SetScrollChild(professionsTab.CrafterListChild)
@@ -567,7 +573,7 @@ function Directory:Initialize()
 
 	playersTab.Results = CreateFrame("ScrollFrame", nil, playersTab, "UIPanelScrollFrameTemplate")
 	playersTab.Results:SetPoint("TOPLEFT", 14, -50)
-	playersTab.Results:SetPoint("BOTTOMRIGHT", -18, -14)
+	playersTab.Results:SetPoint("BOTTOMRIGHT", -32, 14)
 	playersTab.ResultsChild = CreateFrame("Frame", nil, playersTab.Results)
 	playersTab.ResultsChild:SetSize(720, 1)
 	playersTab.Results:SetScrollChild(playersTab.ResultsChild)
@@ -588,7 +594,7 @@ function Directory:Initialize()
 
 	myRecipesTab.Results = CreateFrame("ScrollFrame", nil, myRecipesTab, "UIPanelScrollFrameTemplate")
 	myRecipesTab.Results:SetPoint("TOPLEFT", 14, -84)
-	myRecipesTab.Results:SetPoint("BOTTOMRIGHT", -18, -14)
+	myRecipesTab.Results:SetPoint("BOTTOMRIGHT", -32, 14)
 	myRecipesTab.ResultsChild = CreateFrame("Frame", nil, myRecipesTab.Results)
 	myRecipesTab.ResultsChild:SetSize(720, 1)
 	myRecipesTab.Results:SetScrollChild(myRecipesTab.ResultsChild)

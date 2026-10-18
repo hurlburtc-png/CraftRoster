@@ -1,4 +1,4 @@
-# CraftRoster 0.8.0-beta.3 test candidate
+# CraftRoster 0.8.0-beta.4 test candidate
 
 Status: ready for controlled in-game testing; release approval still requires a real client run.
 Target client reported by the user: Forever **1.60.1, build 70450, interface 16001**.
@@ -11,6 +11,10 @@ Further runtime compatibility on Forever still requires a real client run. Lua 5
 client/flavor/build/interface with `/crdiagnostics`.
 Do not treat the generated mockup images as runtime evidence.
 
+Beta 4 moves tabs inside the footer, gives content explicit window bounds, fixes
+bottom anchor directions, reserves scrollbar space, and keeps filters on two rows.
+These layout corrections still need visual confirmation on Forever.
+
 ## Automated review
 
 ```sh
@@ -19,7 +23,7 @@ python -m unittest discover -s tests -v
 python tests/benchmark.py
 ```
 
-Current review: 430 tests executed, 420 passed and 10 explicitly skipped for APIs
+Current review: 436 tests executed, 426 passed and 10 explicitly skipped for APIs
 absent from the chosen profile. Both Lua 5.1 and LuaJIT 2.1 run modern, legacy and
 minimal API scenarios. Isolated peer tests cover sync and request/status exchange.
 Syntax and ZIP membership/integrity checks also pass.

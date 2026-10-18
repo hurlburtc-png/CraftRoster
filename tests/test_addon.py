@@ -349,6 +349,33 @@ CASES.update({
         SlashCmdList.CRAFTROSTERSTATUS('test accepted')
         assert(CraftRosterDB.requests[1].status=='completed')
     """,
+    'directory_content_stays_inside_window': """
+        local originalCreateFrame=CreateFrame
+        function CreateFrame(...)
+            local frame=originalCreateFrame(...)
+            frame.layoutPoints={}
+            function frame:SetPoint(...) table.insert(self.layoutPoints,{...}) end
+            return frame
+        end
+        SlashCmdList.CRAFTROSTER('')
+        local frame=addon.Directory.frame
+        for _,button in ipairs(frame.TabButtons) do
+            local point=button.layoutPoints[1]
+            assert(point[1]=='BOTTOMLEFT' and point[2]==frame and point[5]>=0)
+        end
+        for _,name in ipairs({'ProfessionsTab','PlayersTab','MyRecipesTab'}) do
+            local tab=frame[name]
+            local top,bottom=tab.layoutPoints[1],tab.layoutPoints[2]
+            assert(top[2]==frame and top[5]<0)
+            assert(bottom[2]==frame and bottom[4]<0 and bottom[5]>=50)
+            local listBottom=tab.Results.layoutPoints[2]
+            assert(listBottom[#listBottom]>0, 'List extends below content')
+        end
+        local tab=frame.ProfessionsTab
+        assert(tab.CrafterList.layoutPoints[2][3]>0)
+        local online=tab.OnlineCheck.layoutPoints[1]
+        assert(online[4]==420 and online[5]==-44)
+    """,
     'forever_tabs_without_character_template': """
         local originalCreateFrame=CreateFrame
         function CreateFrame(kind,name,parent,template)
@@ -668,7 +695,7 @@ CASES.update({
         for _,entry in ipairs(CraftRosterDB.errorReports) do assert(#entry.message<=2048 and #entry.stack<=6000) end
     """,
     'bug_report_includes_metadata_and_copyable_error': """
-        function GetAddOnMetadata() return '0.8.0-beta.3' end
+        function GetAddOnMetadata() return '0.8.0-beta.4' end
         function GetBuildInfo() return '1.60.1','70450','today',16001 end
         function debugstack() return 'CraftRoster/Recipes.lua:42: stack' end
         geterrorhandler()('CraftRoster/Recipes.lua:42: sample failure')
@@ -677,7 +704,7 @@ CASES.update({
         local popup=addon.Panel.errorFrame
         assert(popup:IsShown() and popup.ErrorBox.focused and popup.ErrorBox.highlighted)
         local text=popup.ErrorBox:GetText()
-        assert(text:find('0.8.0-beta.3',1,true) and text:find('70450',1,true) and text:find('16001',1,true))
+        assert(text:find('0.8.0-beta.4',1,true) and text:find('70450',1,true) and text:find('16001',1,true))
         assert(text:find('sample failure',1,true) and text:find('stack',1,true))
         assert(not addon.Directory.frame)
         popup.ErrorBox.scripts.OnEscapePressed(popup.ErrorBox)
@@ -901,7 +928,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster/CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.3')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.4')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/'CraftRoster'/line).is_file(), 'Missing TOC module: '+line)
