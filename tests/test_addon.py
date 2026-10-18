@@ -652,8 +652,8 @@ CASES.update({
         for _,entry in ipairs(CraftRosterDB.errorReports) do assert(#entry.message<=2048 and #entry.stack<=6000) end
     """,
     'bug_report_includes_metadata_and_copyable_error': """
-        function GetAddOnMetadata() return '0.8.0-beta.1' end
-        function GetBuildInfo() return '11.2.0','12345','today',110200 end
+        function GetAddOnMetadata() return '0.8.0-beta.2' end
+        function GetBuildInfo() return '1.60.1','70450','today',16001 end
         function debugstack() return 'CraftRoster/Recipes.lua:42: stack' end
         geterrorhandler()('CraftRoster/Recipes.lua:42: sample failure')
         assert(not addon.Panel.frame and not addon.Directory.frame)
@@ -661,7 +661,7 @@ CASES.update({
         local popup=addon.Panel.errorFrame
         assert(popup:IsShown() and popup.ErrorBox.focused and popup.ErrorBox.highlighted)
         local text=popup.ErrorBox:GetText()
-        assert(text:find('0.8.0-beta.1',1,true) and text:find('12345',1,true) and text:find('110200',1,true))
+        assert(text:find('0.8.0-beta.2',1,true) and text:find('70450',1,true) and text:find('16001',1,true))
         assert(text:find('sample failure',1,true) and text:find('stack',1,true))
         assert(not addon.Directory.frame)
         popup.ErrorBox.scripts.OnEscapePressed(popup.ErrorBox)
@@ -879,6 +879,16 @@ class ErrorPersistenceTests(unittest.TestCase):
                     assert(report:find('startup failure',1,true) and report:find('saved failure',1,true))
                     assert(report:find('occurrences: 3',1,true))
                 """)
+
+class ForeverManifestTests(unittest.TestCase):
+    def test_manifest_matches_reported_forever_client(self):
+        lines=(ROOT/'CraftRoster/CraftRoster.toc').read_text().splitlines()
+        metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
+        self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.2')
+        for line in lines:
+            if line and not line.startswith('#'):
+                self.assertTrue((ROOT/'CraftRoster'/line).is_file(), 'Missing TOC module: '+line)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

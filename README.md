@@ -6,6 +6,11 @@ CraftRoster is a lightweight World of Warcraft addon for tracking professions an
 
 ## Installation
 
+Target client: **WoW Forever 1.60.1, build 70450, interface 16001**, as reported
+in-game. Beta 2 corrects the Retail interface declaration that caused Forever to
+mark the previous package incompatible. Actual UI/API behavior still needs testing
+in Forever; matching the manifest removes the loader mismatch only.
+
 1. Go to **Releases** and download the latest **CraftRoster.zip**.
 2. Extract the zip.
 3. Copy the **CraftRoster** folder into your WoW `Interface\AddOns` folder.
@@ -66,7 +71,7 @@ CraftRoster is a lightweight World of Warcraft addon for tracking professions an
 
 ## Development checks
 
-Current candidate: **0.8.0-beta.1**. See [TESTING.md](TESTING.md) for readiness,
+Current candidate: **0.8.0-beta.2**. See [TESTING.md](TESTING.md) for readiness,
 known limits and the in-game acceptance checklist.
 
 Install Python 3.12 and run:

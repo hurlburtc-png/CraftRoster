@@ -1,8 +1,11 @@
-# CraftRoster 0.8.0-beta.1 test candidate
+# CraftRoster 0.8.0-beta.2 test candidate
 
 Status: ready for controlled in-game testing; release approval still requires a real client run.
-The declared TOC interface is 110200. Lua 5.1/LuaJIT checks use API mocks, not a WoW
-installation. Record the actual client/flavor/build/interface with `/crdiagnostics`.
+Target client reported by the user: Forever **1.60.1, build 70450, interface 16001**.
+The TOC now declares 16001; beta 1 declared Retail interface 110200 and was rejected
+by Forever's loader. Runtime compatibility on Forever is still pending a real client
+run. Lua 5.1/LuaJIT checks use API mocks, not a WoW installation. Record the actual
+client/flavor/build/interface with `/crdiagnostics`.
 Do not treat the generated mockup images as runtime evidence.
 
 ## Automated review
@@ -13,7 +16,7 @@ python -m unittest discover -s tests -v
 python tests/benchmark.py
 ```
 
-Current review: 429 tests executed, 419 passed and 10 explicitly skipped for APIs
+Current review: 430 tests executed, 420 passed and 10 explicitly skipped for APIs
 absent from the chosen profile. Both Lua 5.1 and LuaJIT 2.1 run modern, legacy and
 minimal API scenarios. Isolated peer tests cover sync and request/status exchange.
 Syntax and ZIP membership/integrity checks also pass.
