@@ -1,6 +1,13 @@
 local ADDON_NAME, CraftRoster = ...
 
 local RecipeTracker = {}
+local scanTimer
+
+local function DataChanged()
+	if CraftRoster.ShoppingList then CraftRoster.ShoppingList:ScheduleRefresh() end
+	if CraftRoster.Directory then CraftRoster.Directory:InvalidateIndex() end
+	if CraftRoster.GuildSync then CraftRoster.GuildSync:InvalidateData() end
+end
 CraftRoster.RecipeTracker = RecipeTracker
 
 local PROFESSION_ICONS = {
@@ -31,6 +38,10 @@ local function GetCharacterData()
 end
 
 local function GetRecipeIcon(recipeID, profession)
+	if C_Spell and C_Spell.GetSpellInfo then
+		local info = C_Spell.GetSpellInfo(recipeID)
+		if info and info.iconID then return info.iconID end
+	end
 	if GetSpellInfo then
 		local icon = select(3, GetSpellInfo(recipeID))
 		if icon then return icon end
@@ -39,6 +50,14 @@ local function GetRecipeIcon(recipeID, profession)
 end
 
 local function GetCurrentProfession()
+	if C_TradeSkillUI and C_TradeSkillUI.GetBaseProfessionInfo then
+		local info = C_TradeSkillUI.GetBaseProfessionInfo()
+		if info and info.professionName then return info.professionName end
+	end
+	if C_TradeSkillUI and C_TradeSkillUI.GetTradeSkillLine then
+		local info = C_TradeSkillUI.GetTradeSkillLine()
+		if type(info) == "table" and info.professionName then return info.professionName end
+	end
 	if GetTradeSkillLine then
 		local name = GetTradeSkillLine()
 		if name then return name end
@@ -47,36 +66,42 @@ local function GetCurrentProfession()
 end
 
 local function ExtractMaterialsFromSchematic(schematic)
+	if not schematic or not schematic.reagentSlotSchematics then return nil end
 	local materials = {}
-	if not schematic or not schematic.reagentSlotSchematics then return materials end
-
 	for _, slot in ipairs(schematic.reagentSlotSchematics) do
 		local quantity = slot.quantityRequired or slot.quantity or 0
-		local reagents = slot.reagents or {}
-
-		for _, reagent in ipairs(reagents) do
+		local reagent = (slot.reagents or {})[1]
+		if slot.required ~= false and reagent and quantity > 0 then
 			local itemID = reagent.itemID or (reagent.item and reagent.item.itemID)
 			local name = reagent.name
-			if itemID and not name and GetItemInfo then
-				name = GetItemInfo(itemID)
-			end
-			if name and quantity and quantity > 0 then
-				table.insert(materials, { name = name, count = quantity, itemID = itemID })
-			end
+			local getItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
+			if itemID and not name and getItemInfo then name = getItemInfo(itemID) end
+			if not name then return nil end
+			table.insert(materials, { name = name, count = quantity, itemID = itemID })
 		end
 	end
-
 	return materials
+end
+
+local function SameMaterials(a, b)
+	if not a or #a ~= #b then return false end
+	for i, material in ipairs(b) do
+		local old = a[i]
+		if old.name ~= material.name or old.itemID ~= material.itemID or old.count ~= material.count then return false end
+	end
+	return true
 end
 
 local function SaveRecipe(character, recipeID, name, profession, icon, itemLink, materials)
 	local isNew = not character.recipes[recipeID]
+	local changed = isNew
 	if isNew then
 		character.recipes[recipeID] = { learnedAt = time() }
 	end
 
 	local saved = CraftRosterDB.recipes[recipeID]
 	if not saved then
+		changed = true
 		saved = {
 			name = name,
 			profession = profession,
@@ -86,26 +111,36 @@ local function SaveRecipe(character, recipeID, name, profession, icon, itemLink,
 		}
 		CraftRosterDB.recipes[recipeID] = saved
 	else
-		-- Repair incomplete metadata when authoritative info arrives.
-		if not saved.name and name then saved.name = name end
-		if (not saved.profession or saved.profession == "Unknown") and profession and profession ~= "Unknown" then
-			saved.profession = profession
+		if name and saved.name ~= name then saved.name = name; changed = true end
+		if profession and profession ~= "Unknown" and saved.profession ~= profession then
+			saved.profession = profession; changed = true
 		end
-		if not saved.icon and icon then saved.icon = icon end
+		if icon and saved.icon ~= icon then saved.icon = icon; changed = true end
+	end
+	if itemLink and saved.itemLink ~= itemLink then saved.itemLink = itemLink; changed = true end
+	if materials and not SameMaterials(saved.materials, materials) then
+		saved.materials = materials; changed = true
 	end
 
-	if itemLink then saved.itemLink = itemLink end
-	-- Only overwrite materials when we actually got data (avoid wiping with empty).
-	if materials and #materials > 0 then
-		saved.materials = materials
-	end
+	return isNew, changed
+end
 
-	return isNew
+function RecipeTracker:ScheduleScan()
+	if scanTimer then return end
+	local function Scan()
+		scanTimer = nil
+		if not CraftRosterDB.settings.enabled or not CraftRosterDB.settings.autoUpdateRecipes then return end
+		RecipeTracker:UpdateProfessions()
+		RecipeTracker:ImportTradeSkillRecipes()
+	end
+	if C_Timer and C_Timer.NewTimer then scanTimer = C_Timer.NewTimer(0.25, Scan) else Scan() end
 end
 
 function RecipeTracker:Initialize()
+	if self.eventFrame then return end
 	-- Dedicated event frame; RecipeTracker itself is a plain table.
 	local frame = CreateFrame("Frame")
+	self.eventFrame = frame
 	frame:RegisterEvent("NEW_RECIPE_LEARNED")
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	frame:RegisterEvent("TRADE_SKILL_SHOW")
@@ -113,13 +148,13 @@ function RecipeTracker:Initialize()
 	pcall(function() frame:RegisterEvent("TRADE_SKILL_DATA_UPDATE") end)
 
 	frame:SetScript("OnEvent", function(_, event, recipeID)
+		if not CraftRosterDB.settings.enabled or not CraftRosterDB.settings.autoUpdateRecipes then return end
 		if event == "NEW_RECIPE_LEARNED" then
 			RecipeTracker:RecordRecipe(recipeID)
 		elseif event == "TRADE_SKILL_SHOW"
 			or event == "TRADE_SKILL_LIST_UPDATE"
 			or event == "TRADE_SKILL_DATA_UPDATE" then
-			RecipeTracker:UpdateProfessions()
-			RecipeTracker:ImportTradeSkillRecipes()
+			RecipeTracker:ScheduleScan()
 		else
 			RecipeTracker:UpdateProfessions()
 		end
@@ -129,31 +164,34 @@ end
 function RecipeTracker:UpdateProfessions()
 	local character = GetCharacterData()
 	character.professions = character.professions or {}
+	local changed = false
 
-	for i = 1, GetNumProfessions() do
-		local professionID = select(i, GetProfessions())
-		if professionID then
+	local professionIDs = GetProfessions and { GetProfessions() } or {}
+	for _, professionID in pairs(professionIDs) do
+		if professionID and GetProfessionInfo then
 			local name, icon, skill, max, _, _, _, rank = GetProfessionInfo(professionID)
 			if name then
-				character.professions[name] = {
-					skill = skill or 0,
-					max = max or 0,
-					rank = rank,
-					icon = icon,
-				}
+				local old = character.professions[name]
+				if not old or old.skill ~= (skill or 0) or old.max ~= (max or 0) or old.rank ~= rank or old.icon ~= icon then
+					changed = true
+					character.professions[name] = {
+						skill = skill or 0,
+						max = max or 0,
+						rank = rank,
+						icon = icon,
+					}
+				end
 			end
 		end
 	end
 
 	CraftRosterDB.lastProfessionUpdate = time()
 
-	if CraftRoster.Directory then
-		CraftRoster.Directory:InvalidateIndex()
-	end
+	if changed then DataChanged() end
 end
 
 local function ImportForeverRecipes(character, profession)
-	local added = 0
+	local added, changed = 0, false
 	local recipeIDs = C_TradeSkillUI.GetAllRecipeIDs and C_TradeSkillUI.GetAllRecipeIDs() or {}
 
 	for _, recipeID in ipairs(recipeIDs) do
@@ -164,7 +202,7 @@ local function ImportForeverRecipes(character, profession)
 			local materials = ExtractMaterialsFromSchematic(schematic)
 			local itemLink = schematic and schematic.outputItemLink or info.hyperlink
 
-			local isNew = SaveRecipe(
+			local isNew, updated = SaveRecipe(
 				character,
 				recipeID,
 				info.name or ("Recipe " .. recipeID),
@@ -175,34 +213,35 @@ local function ImportForeverRecipes(character, profession)
 			)
 
 			if isNew then added = added + 1 end
+			if updated then changed = true end
 		end
 	end
 
-	return added
+	return added, changed
 end
 
 local function ImportLegacyRecipes(character, profession)
-	local added = 0
+	local added, changed = 0, false
 
 	for i = 1, GetNumTradeSkills() do
 		local name, skillType = GetTradeSkillInfo(i)
 		if name and skillType ~= "header" then
 			local link = GetTradeSkillRecipeLink(i)
-			local recipeID = link and link:match("%d+")
+			local recipeID = link and (link:match("enchant:(%d+)") or link:match("spell:(%d+)"))
 			recipeID = recipeID and tonumber(recipeID)
 
 			if recipeID then
 				local itemLink = GetTradeSkillItemLink and GetTradeSkillItemLink(i)
-				local materials = {}
-				local numReagents = GetTradeSkillNumReagents and GetTradeSkillNumReagents(i) or 0
+				local materials = GetTradeSkillNumReagents and GetTradeSkillReagentInfo and {} or nil
+				local numReagents = GetTradeSkillNumReagents and GetTradeSkillReagentInfo and GetTradeSkillNumReagents(i) or 0
 				for j = 1, numReagents do
-					local reagentName, _, _, reagentCount = GetTradeSkillReagentInfo(i, j)
+					local reagentName, _, reagentCount = GetTradeSkillReagentInfo(i, j)
 					if reagentName and reagentCount then
 						table.insert(materials, { name = reagentName, count = reagentCount })
 					end
 				end
 
-				local isNew = SaveRecipe(
+				local isNew, updated = SaveRecipe(
 					character,
 					recipeID,
 					name,
@@ -213,46 +252,49 @@ local function ImportLegacyRecipes(character, profession)
 				)
 
 				if isNew then added = added + 1 end
+				if updated then changed = true end
 			end
 		end
 	end
 
-	return added
+	return added, changed
 end
 
 function RecipeTracker:ImportTradeSkillRecipes()
+	if not CraftRosterDB.settings.enabled then return 0 end
+	if C_TradeSkillUI then
+		if C_TradeSkillUI.IsTradeSkillLinked and C_TradeSkillUI.IsTradeSkillLinked() then return 0 end
+		if C_TradeSkillUI.IsTradeSkillGuild and C_TradeSkillUI.IsTradeSkillGuild() then return 0 end
+	end
+	if IsTradeSkillLinked and IsTradeSkillLinked() then return 0 end
 	local profession = GetCurrentProfession()
 	local character = GetCharacterData()
-	local added = 0
+	local added, changed = 0, false
 
 	if C_TradeSkillUI and C_TradeSkillUI.GetAllRecipeIDs and C_TradeSkillUI.GetRecipeInfo then
-		added = ImportForeverRecipes(character, profession)
-	elseif GetNumTradeSkills then
-		added = ImportLegacyRecipes(character, profession)
+		added, changed = ImportForeverRecipes(character, profession)
+	elseif GetNumTradeSkills and GetTradeSkillInfo and GetTradeSkillRecipeLink then
+		added, changed = ImportLegacyRecipes(character, profession)
 	else
 		print("|cffff0000CraftRoster|r: no supported recipe enumeration API found; skipping import.")
 	end
 
-	if added > 0 then
+	if changed then
 		CraftRosterDB.lastRecipeUpdate = time()
-		if CraftRoster.Directory then
-			CraftRoster.Directory:InvalidateIndex()
-		end
-		if CraftRoster.GuildSync then
-			CraftRoster.GuildSync:SendData()
-		end
+		DataChanged()
+		if CraftRoster.GuildSync then CraftRoster.GuildSync:SendData() end
 	end
 
 	return added
 end
 
 function RecipeTracker:RecordRecipe(recipeID, profession, recipeName)
-	if not recipeID then return false end
+	if type(recipeID) ~= "number" or recipeID <= 0 then return false end
 
 	local settings = CraftRosterDB.settings
 	local character = GetCharacterData()
 
-	if not settings.autoUpdateRecipes and not self.manualUpdateInProgress then return false end
+	if not settings.enabled or (not settings.autoUpdateRecipes and not self.manualUpdateInProgress) then return false end
 	if character.recipes[recipeID] then return false end
 
 	character.recipes[recipeID] = { learnedAt = time() }
@@ -268,27 +310,21 @@ function RecipeTracker:RecordRecipe(recipeID, profession, recipeName)
 
 	CraftRosterDB.lastRecipeUpdate = time()
 
-	if CraftRoster.Directory then
-		CraftRoster.Directory:InvalidateIndex()
-	end
+	DataChanged()
+	if CraftRoster.GuildSync then CraftRoster.GuildSync:SendData() end
 
 	return true
 end
 
 function RecipeTracker:UpdateKnownRecipes()
+	if scanTimer then scanTimer:Cancel(); scanTimer = nil end
 	self.manualUpdateInProgress = true
-	local added = 0
-
-	self:UpdateProfessions()
-	added = added + self:ImportTradeSkillRecipes()
-
+	local ok, added = pcall(function()
+		self:UpdateProfessions()
+		return self:ImportTradeSkillRecipes()
+	end)
 	self.manualUpdateInProgress = nil
-	CraftRosterDB.lastRecipeUpdate = time()
-
-	if CraftRoster.Directory then
-		CraftRoster.Directory:InvalidateIndex()
-	end
-
+	if not ok then error(added) end
 	return added
 end
 

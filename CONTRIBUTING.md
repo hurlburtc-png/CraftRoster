@@ -8,7 +8,8 @@ Open an issue and include:
 
 - WoW version/flavor (e.g., 3.3.5a)
 - What you clicked / what you expected
-- Any error text (use the beetle button in `/cr settings` to copy it)
+- The copied `/cr bug` report (also available from the beetle in `/cr settings`)
+- Follow [TESTING.md](TESTING.md) for the in-game acceptance run
 
 ## Pull requests
 

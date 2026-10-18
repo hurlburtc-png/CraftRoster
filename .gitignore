@@ -10,3 +10,7 @@ Thumbs.db
 # Build artifacts
 *.zip
 *.toc.bak
+
+# Python test outputs
+__pycache__/
+*.pyc

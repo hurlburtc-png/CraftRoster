@@ -6,13 +6,14 @@ Core:RegisterEvent("ADDON_LOADED")
 Core:SetScript("OnEvent", function(self, event, loadedAddon)
 	if event == "ADDON_LOADED" and loadedAddon == ADDON_NAME then
 		CraftRosterDB = CraftRosterDB or {}
-		CraftRosterDB.settings = CraftRosterDB.settings or {
-			enabled = true,
-			autoUpdateRecipes = true,
-			onlineOnly = true,
-		}
+		CraftRosterDB.settings = CraftRosterDB.settings or {}
+		for key, value in pairs({ enabled = true, autoUpdateRecipes = true, onlineOnly = true }) do
+			if CraftRosterDB.settings[key] == nil then CraftRosterDB.settings[key] = value end
+		end
 		CraftRosterDB.characters = CraftRosterDB.characters or {}
 		CraftRosterDB.recipes = CraftRosterDB.recipes or {}
+
+		if CraftRoster.ErrorReporter then CraftRoster.ErrorReporter:Restore() end
 
 		local characterKey = UnitName("player") .. "-" .. (GetRealmName() or "")
 		local character = CraftRosterDB.characters[characterKey] or {}
@@ -28,8 +29,9 @@ Core:SetScript("OnEvent", function(self, event, loadedAddon)
 			CraftRoster.RecipeTracker:UpdateProfessions()
 		end
 
-		if CraftRoster.Panel then CraftRoster.Panel:Initialize() end
-		if CraftRoster.Directory then CraftRoster.Directory:Initialize() end
+		if CraftRoster.ShoppingList then CraftRoster.ShoppingList:Restore() end
+
+		-- Build UI frames only when the player opens the directory or settings.
 
 		print("|cff00ff00CraftRoster|r loaded. Type /cr to open the directory.")
 		self:UnregisterEvent("ADDON_LOADED")
@@ -46,6 +48,10 @@ SlashCmdList["CRAFTROSTER"] = function(msg)
 		print(("CraftRoster is now %s."):format(
 			CraftRosterDB.settings.enabled and "|cff00ff00enabled|r" or "|cffff0000disabled|r"
 		))
+	elseif (msg == "bug" or msg == "errors") and CraftRoster.Panel then
+		CraftRoster.Panel:ShowError()
+	elseif msg == "shopping" and CraftRoster.ShoppingList then
+		CraftRoster.ShoppingList:Toggle()
 	elseif msg == "reset" and CraftRoster.Directory then
 		CraftRoster.Directory:ResetWindow()
 	elseif msg == "settings" and CraftRoster.Panel then

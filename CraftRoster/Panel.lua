@@ -3,24 +3,9 @@ local ADDON_NAME, CraftRoster = ...
 local Panel = {}
 CraftRoster.Panel = Panel
 
-local lastError = nil
-
 local function FormatTime(timestamp)
-	return timestamp and date("%l:%M %p", timestamp) or "Never"
+	return timestamp and date("%I:%M %p", timestamp) or "Never"
 end
-
-local function CaptureError(err)
-	if err and err:find("CraftRoster", 1, true) then
-		lastError = err
-		print("|cffff0000CraftRoster|r error captured. Click the beetle button in /cr settings to view or copy it.")
-	end
-end
-
-local originalErrorHandler = geterrorhandler()
-seterrorhandler(function(err)
-	CaptureError(err)
-	return originalErrorHandler(err)
-end)
 
 function Panel:Initialize()
 	if self.frame then return end
@@ -40,7 +25,8 @@ function Panel:Initialize()
 	frame:SetFrameStrata("HIGH")
 	frame:Hide()
 
-	frame.TitleBar.TitleText:SetText("CraftRoster Settings")
+	local title = frame.TitleText or frame.TitleBar.TitleText
+	title:SetText("CraftRoster Settings")
 
 	frame.StatusText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.StatusText:SetPoint("TOPLEFT", 16, -38)
@@ -101,7 +87,7 @@ function Panel:Initialize()
 	bugButton:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 		GameTooltip:SetText("CraftRoster Error")
-		GameTooltip:AddLine("View or copy the last CraftRoster error.", 1, 1, 1)
+		GameTooltip:AddLine("Copy a bug report with recent Lua errors and client details.", 1, 1, 1)
 		GameTooltip:Show()
 	end)
 	bugButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -133,23 +119,30 @@ function Panel:Initialize()
 	errorFrame:SetScript("OnDragStop", errorFrame.StopMovingOrSizing)
 	errorFrame:SetFrameStrata("TOOLTIP")
 	errorFrame:Hide()
-	errorFrame.TitleBar.TitleText:SetText("CraftRoster — Last Error")
+	local errorTitle = errorFrame.TitleText or errorFrame.TitleBar.TitleText
+	errorTitle:SetText("CraftRoster — Copy Bug Report")
 
 	errorFrame.Instructions = errorFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	errorFrame.Instructions:SetPoint("TOPLEFT", 16, -38)
-	errorFrame.Instructions:SetText("Press Ctrl+C to copy the selected error for Discord.")
+	errorFrame.Instructions:SetText("Press Ctrl+C (Cmd+C on Mac), then paste the report to us.")
 
-	errorFrame.ErrorBox = CreateFrame("EditBox", nil, errorFrame, "InputBoxTemplate")
+	errorFrame.Scroll = CreateFrame("ScrollFrame", nil, errorFrame, "UIPanelScrollFrameTemplate")
+	errorFrame.Scroll:SetPoint("TOPLEFT", 16, -64)
+	errorFrame.Scroll:SetPoint("BOTTOMRIGHT", -34, 16)
+	errorFrame.ErrorBox = CreateFrame("EditBox", nil, errorFrame.Scroll)
 	errorFrame.ErrorBox:SetMultiLine(true)
 	errorFrame.ErrorBox:SetAutoFocus(false)
-	errorFrame.ErrorBox:SetPoint("TOPLEFT", 16, -64)
-	errorFrame.ErrorBox:SetPoint("BOTTOMRIGHT", -18, 16)
-	errorFrame.ErrorBox:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
+	errorFrame.ErrorBox:SetFontObject("ChatFontNormal")
+	errorFrame.ErrorBox:SetSize(490, 220)
+	errorFrame.ErrorBox:SetMaxLetters(0)
+	errorFrame.Scroll:SetScrollChild(errorFrame.ErrorBox)
+	errorFrame.ErrorBox:SetScript("OnEscapePressed", function() errorFrame:Hide() end)
+	errorFrame:SetScript("OnHide", function() errorFrame.ErrorBox:ClearFocus() end)
 
 	frame:SetScript("OnKeyDown", function(_, key)
 		if key == "ESCAPE" then frame:Hide() end
 	end)
-	frame:SetPropagateKeyboardInput(true)
+	if frame.SetPropagateKeyboardInput then frame:SetPropagateKeyboardInput(true) end
 
 	self.frame = frame
 	self.errorFrame = errorFrame
@@ -159,12 +152,14 @@ function Panel:Initialize()
 end
 
 function Panel:ShowError()
-	if not self.errorFrame then return end
-
-	self.errorFrame.ErrorBox:SetText(lastError or "No CraftRoster error has been captured.")
+	if not self.frame then self:Initialize() end
+	local report = CraftRoster.ErrorReporter and CraftRoster.ErrorReporter:GetReport() or "Error reporting is unavailable on this client."
+	self.errorFrame:Show()
+	self.errorFrame.ErrorBox:SetText(report)
+	self.errorFrame.ErrorBox:SetHeight(math.max(220, self.errorFrame.ErrorBox:GetNumLines() * 16 + 20))
+	self.errorFrame.Scroll:SetVerticalScroll(0)
 	self.errorFrame.ErrorBox:SetFocus()
 	self.errorFrame.ErrorBox:HighlightText()
-	self.errorFrame:Show()
 end
 
 function Panel:Toggle()

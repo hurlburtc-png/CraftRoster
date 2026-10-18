@@ -10,7 +10,11 @@ end
 
 SLASH_CRAFTROSTERDIAGNOSTICS1 = "/crdiagnostics"
 SlashCmdList["CRAFTROSTERDIAGNOSTICS"] = function()
-	local build, _, _, interface = _G.GetBuildInfo()
+	local build, interface = "?", "?"
+	if type(GetBuildInfo) == "function" then
+		local version, _, _, api = GetBuildInfo()
+		build, interface = version, api
+	end
 	print(("|cff00ff00CraftRoster|r diagnostics — build %s, interface %s"):format(build or "?", interface or "?"))
 
 	print(Check("C_TradeSkillUI.GetRecipeInfo", C_TradeSkillUI and C_TradeSkillUI.GetRecipeInfo))
@@ -28,7 +32,7 @@ SlashCmdList["CRAFTROSTERDIAGNOSTICS"] = function()
 	print(("Saved recipes: %d · saved characters: %d"):format(recipeCount, characterCount))
 
 	local lastSync = CraftRosterDB.lastGuildSync
-	print(("Last guild sync: %s"):format(lastSync and date("%l:%M %p", lastSync) or "Never"))
+	print(("Last guild sync: %s"):format(lastSync and date("%I:%M %p", lastSync) or "Never"))
 end
 
 return Diagnostics
