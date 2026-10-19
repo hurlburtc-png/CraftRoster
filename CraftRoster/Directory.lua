@@ -327,9 +327,10 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			row:SetPoint("TOPLEFT", 0, -offsets[i])
 			if entry.atlas and row.Icon.SetAtlas then row.Icon:SetAtlas(entry.atlas)
 			else row.Icon:SetTexture(entry.icon or "Interface\\Icons\\Trade_Tailoring") end
-			row.Label:SetWidth(math.max(40, width - 140))
+			local rightWidth = entry.rightText and entry.rightText ~= "" and math.max(30, math.min(120, width * 0.35)) or 0
+			row.Label:SetWidth(math.max(1, width - 59 - rightWidth))
 			row.Label:SetText(entry.text or "")
-			row.RightLabel:SetWidth(math.max(30, math.min(120, width * 0.35)))
+			row.RightLabel:SetWidth(math.max(1, rightWidth))
 			row.RightLabel:SetText(entry.rightText or "")
 			row.Label:SetFontObject(entry.isHeader and "GameFontNormal" or "GameFontHighlight")
 			row.tooltipTitle, row.tooltipLines = entry.tooltipTitle or entry.text, entry.tooltipLines
@@ -406,6 +407,9 @@ function Directory:Initialize()
 	frame:SetFrameStrata("HIGH")
 	frame:SetMovable(true)
 	frame:SetResizable(true)
+	frame:SetClampedToScreen(true)
+	if frame.SetResizeBounds then frame:SetResizeBounds(MIN_WIDTH, MIN_HEIGHT)
+	elseif frame.SetMinResize then frame:SetMinResize(MIN_WIDTH, MIN_HEIGHT) end
 	frame:EnableMouse(true)
 	frame:RegisterForDrag("LeftButton")
 	frame:SetScript("OnDragStart", frame.StartMoving)
@@ -549,6 +553,8 @@ function Directory:Initialize()
 	professionsTab.DetailsName = professionsTab.Details:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 	professionsTab.DetailsName:SetPoint("TOPLEFT", professionsTab.DetailsIcon, "TOPRIGHT", 10, -2)
 	professionsTab.DetailsName:SetJustifyH("LEFT")
+	professionsTab.DetailsName:SetHeight(38)
+	if professionsTab.DetailsName.SetMaxLines then professionsTab.DetailsName:SetMaxLines(2) end
 	professionsTab.DetailsName:SetWidth(math.max(100, professionsTab.Details:GetWidth() - 78))
 	professionsTab.Details:HookScript("OnSizeChanged", function(self)
 		professionsTab.DetailsName:SetWidth(math.max(100, self:GetWidth() - 78))
@@ -556,6 +562,18 @@ function Directory:Initialize()
 
 	professionsTab.DetailsProfession = professionsTab.Details:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	professionsTab.DetailsProfession:SetPoint("TOPLEFT", professionsTab.DetailsIcon, "BOTTOMLEFT", 0, -10)
+	professionsTab.DetailsProfession:SetWordWrap(false)
+	professionsTab.DetailsProfession:SetPoint("TOPRIGHT", professionsTab.Details, "TOPRIGHT", -12, -64)
+	professionsTab.Details:SetScript("OnEnter", function(self)
+		local recipe = Directory.selectedRecipe
+		if not recipe then return end
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(recipe.name)
+		GameTooltip:AddLine(recipe.profession or "Unknown", 1, 1, 1)
+		GameTooltip:Show()
+	end)
+	professionsTab.Details:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	professionsTab.Details:EnableMouse(true)
 
 	professionsTab.CrafterList = CreateFrame("ScrollFrame", nil, professionsTab, "UIPanelScrollFrameTemplate")
 	professionsTab.CrafterList:SetPoint("TOPLEFT", professionsTab, "TOP", 12, -270)
@@ -700,6 +718,9 @@ function Directory:RefreshDetails()
 	if not self.frame or not self.frame:IsShown() then return end
 	local tab = self.frame.ProfessionsTab
 	local recipe = self.selectedRecipe
+	if tab.CraftRosterFavoriteButton then
+		tab.CraftRosterFavoriteButton:SetText(recipe and (CraftRosterDB.favorites or {})[recipe.id] and "Unfavorite" or "Favorite")
+	end
 
 	if recipe then
 		tab.DetailsIcon:SetTexture(recipe.icon)
@@ -781,6 +802,7 @@ function Directory:RefreshPlayers()
 				atlas = GetRaceGenderAtlas(character),
 				icon = "Interface\\Icons\\Achievement_Character_Human_Male",
 				rightText = GetProfessionTotals(character),
+			tooltipLines = { characterKey, GetProfessionTotals(character) },
 			})
 		end
 	end

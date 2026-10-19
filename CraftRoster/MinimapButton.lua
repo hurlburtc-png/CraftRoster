@@ -9,7 +9,7 @@ button:RegisterForDrag("LeftButton")
 button:RegisterForClicks("AnyUp")
 
 local icon = button:CreateTexture(nil, "ARTWORK")
-icon:SetTexture("Interface\\Icons\\Trade_Engraving")
+icon:SetTexture("Interface\\Icons\\Trade_Alchemy")
 icon:SetAllPoints()
 icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 

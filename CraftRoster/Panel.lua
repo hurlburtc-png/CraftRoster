@@ -15,7 +15,8 @@ function Panel:Initialize()
 	end
 
 	local frame = CreateFrame("Frame", "CraftRosterPanel", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(300, 340)
+	frame:SetSize(380, 340)
+	frame:SetClampedToScreen(true)
 	frame:SetPoint("CENTER")
 	frame:SetMovable(true)
 	frame:EnableMouse(true)
@@ -111,6 +112,7 @@ function Panel:Initialize()
 
 	local errorFrame = CreateFrame("Frame", "CraftRosterErrorPopup", UIParent, "BasicFrameTemplateWithInset")
 	errorFrame:SetSize(560, 320)
+	errorFrame:SetClampedToScreen(true)
 	errorFrame:SetPoint("CENTER")
 	errorFrame:SetMovable(true)
 	errorFrame:EnableMouse(true)
