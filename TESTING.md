@@ -1,4 +1,4 @@
-# CraftRoster 0.8.0-beta.4 test candidate
+# CraftRoster 0.8.0-beta.5 test candidate
 
 Status: ready for controlled in-game testing; release approval still requires a real client run.
 Target client reported by the user: Forever **1.60.1, build 70450, interface 16001**.
@@ -15,6 +15,26 @@ Beta 4 moves tabs inside the footer, gives content explicit window bounds, fixes
 bottom anchor directions, reserves scrollbar space, and keeps filters on two rows.
 These layout corrections still need visual confirmation on Forever.
 
+Beta 5 includes locally discovered unlearned recipes in search without treating
+them as learned. A recipe with zero saved owners shows a scrollable acquisition
+pane and clickable recipe tooltip; Shift-click inserts the link into an open
+chat edit box. A known but offline owner remains a crafter, even with Online only
+enabled. Optional client source APIs may return nothing: that state is explicit.
+No complete external catalogue or Forever acquisition database is bundled.
+
+### Recipe-source acceptance checks
+
+1. Open each profession and scan. Check an unlearned recipe appears without
+   increasing your learned count or being advertised as your known recipe.
+2. Select a recipe with no saved crafter. Check the link/tooltip and Shift-click
+   into an open chat draft. Confirm no message is sent automatically.
+3. Check a recipe with client source text and one without it. Missing details
+   must say Source unknown, and prior source text must survive an incomplete scan.
+4. Resize to 620 x 420, 760 x 500 and a larger window. Scroll long source text;
+   check the source pane does not cover the action buttons or recipe list.
+5. Sync a character who knows the recipe. The source pane should return to the
+   crafter list. With Online only checked, offline owners must not be called unknown.
+
 ## Automated review
 
 ```sh
@@ -23,13 +43,13 @@ python -m unittest discover -s tests -v
 python tests/benchmark.py
 ```
 
-Current review: 436 tests executed, 426 passed and 10 explicitly skipped for APIs
+Current review: 457 tests executed, 447 passed and 10 explicitly skipped for APIs
 absent from the chosen profile. Both Lua 5.1 and LuaJIT 2.1 run modern, legacy and
 minimal API scenarios. Isolated peer tests cover sync and request/status exchange.
 Syntax and ZIP membership/integrity checks also pass.
 
 The 5,000-recipe / 105,000-link workload keeps startup at 8 mocked UI objects,
-adds 55 on first directory open, and adds only 4 more after 100 scrolls. A 20-event
+adds 60 on first directory open, and adds only 4 more after 100 scrolls. A 20-event
 recipe burst schedules one scan. Timings measure the mock runtime, not game FPS
 or memory. Lua error storms retain at most 10 distinct reports, reuse the stack
 for repeated messages, and print at most one capture notice per 10 seconds.
@@ -102,3 +122,4 @@ snapshot as well as requesting peers; and reporting interrupted chunk sends.
 For feedback, include the copied `/cr bug` report plus steps, expected/actual
 behavior, recipient/quantity details where relevant, and whether other addons
 were enabled. Avoid publishing account information or unrelated private chat.
+

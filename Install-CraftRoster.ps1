@@ -46,7 +46,7 @@ function Main {
 		}
 	}
 
-	$zipUrl = "https://github.com/hurlburtc-png/wow-forever-addons/releases/latest/download/CraftRoster.zip"
+	$zipUrl = "https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip"
 	$temp = Join-Path $env:TEMP "CraftRoster-install"
 	if (Test-Path $temp) { Remove-Item $temp -Recurse -Force }
 	New-Item -ItemType Directory -Path $temp | Out-Null
@@ -84,3 +84,4 @@ function Main {
 }
 
 Main
+

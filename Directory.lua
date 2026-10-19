@@ -209,6 +209,16 @@ local function BuildRecipeIndex()
 		end
 	end
 
+	-- Include catalogue recipes even when no saved character knows them.
+	for recipeID, saved in pairs(CraftRosterDB.recipes or {}) do
+		if not index[recipeID] then
+			local profession = saved.profession or "Unknown"
+			index[recipeID] = { id = recipeID, name = saved.name or GetRecipeName(recipeID),
+				searchName = (saved.name or GetRecipeName(recipeID)):lower(), profession = profession,
+				icon = saved.icon or GetProfessionIcon(profession), crafters = {} }
+		end
+	end
+
 	local recipes = {}
 	for _, recipe in pairs(index) do table.insert(recipes, recipe) end
 
@@ -582,6 +592,50 @@ function Directory:Initialize()
 	professionsTab.CrafterListChild:SetSize(350, 1)
 	professionsTab.CrafterList:SetScrollChild(professionsTab.CrafterListChild)
 
+	-- Reuse the lower right area; long acquisition descriptions scroll instead
+	-- of pushing the action buttons out of the smallest supported window.
+	local source = CreateFrame("ScrollFrame", nil, professionsTab, "UIPanelScrollFrameTemplate")
+	professionsTab.RecipeSource = source
+	source:SetPoint("TOPLEFT", professionsTab.CrafterList, "TOPLEFT", 0, 0)
+	source:SetPoint("BOTTOMRIGHT", professionsTab.CrafterList, "BOTTOMRIGHT", 0, 0)
+	source.Child = CreateFrame("Frame", nil, source)
+	source:SetScrollChild(source.Child)
+	source.Status = source.Child:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	source.Status:SetPoint("TOPLEFT", 4, -4)
+	source.Status:SetJustifyH("LEFT")
+	source.Status:SetWordWrap(true)
+	source.Link = CreateFrame("Button", nil, source.Child, "GameMenuButtonTemplate")
+	source.Link:SetPoint("TOPLEFT", 4, -48)
+	source.Link:SetHeight(26)
+	source.Link:SetText("View recipe link")
+	local function ShowRecipeTooltip(button)
+		local recipe = Directory.selectedRecipe
+		if not recipe then return end
+		local saved = CraftRosterDB.recipes[recipe.id] or {}
+		local link = saved.recipeLink or ("spell:" .. recipe.id)
+		GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+		GameTooltip:SetHyperlink(link)
+		GameTooltip:Show()
+	end
+	source.Link:SetScript("OnEnter", ShowRecipeTooltip)
+	source.Link:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	source.Link:SetScript("OnClick", function(button)
+		local recipe = Directory.selectedRecipe
+		if not recipe then return end
+		local saved = CraftRosterDB.recipes[recipe.id] or {}
+		local link = saved.recipeLink or ("|cff71d5ff|Hspell:" .. recipe.id .. "|h[" .. recipe.name .. "]|h|r")
+		if IsShiftKeyDown and IsShiftKeyDown() and ChatEdit_InsertLink then
+			if ChatEdit_InsertLink(link) then return end
+		end
+		ShowRecipeTooltip(button)
+	end)
+	source.Text = source.Child:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	source.Text:SetPoint("TOPLEFT", 4, -84)
+	source.Text:SetJustifyH("LEFT")
+	source.Text:SetWordWrap(true)
+	source:HookScript("OnSizeChanged", function() Directory:RefreshRecipeSource() end)
+	source:Hide()
+
 	local playersTab = CreateTab("PlayersTab")
 	playersTab.SearchBox = CreateFrame("EditBox", nil, playersTab, "SearchBoxTemplate")
 	playersTab.SearchBox:SetSize(260, 24)
@@ -684,7 +738,7 @@ local function BuildProfessionEntries()
 			id = recipe.id,
 			text = recipe.name,
 			icon = recipe.icon,
-			rightText = ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
+			rightText = #recipe.crafters == 0 and "No crafter" or ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
 			materials = saved and saved.materials,
 			hyperlink = saved and saved.itemLink,
 			recipe = recipe,
@@ -733,6 +787,38 @@ function Directory:RefreshDetails()
 	end
 end
 
+function Directory:RefreshRecipeSource()
+	if not self.frame then return end
+	local tab = self.frame.ProfessionsTab
+	local source, recipe = tab.RecipeSource, self.selectedRecipe
+	if not source then return end
+	local show = recipe and #recipe.crafters == 0
+	if not show then source:Hide(); tab.CrafterList:Show(); return end
+	tab.CrafterList:Hide()
+	source:Show()
+	if source.recipeID ~= recipe.id then
+		source.recipeID = recipe.id
+		source:SetVerticalScroll(0)
+	end
+	local saved = CraftRosterDB.recipes[recipe.id] or {}
+	source.Status:SetText("No synced crafter knows this recipe.\nGuild data may be incomplete; try Refresh.")
+	source.Text:SetText("|cffffd100Where to get it|r\n" .. (saved.sourceText or "Source unknown: this client has not provided acquisition details.")
+		.. (saved.description and ("\n\n" .. saved.description) or ""))
+	local width = math.max(80, source:GetWidth() - 8)
+	source.Child:SetWidth(width)
+	source.Status:SetWidth(width - 8)
+	source.Status:SetHeight(40)
+	source.Link:SetWidth(width - 8)
+	source.Text:SetWidth(width - 8)
+	local height = source.Text.GetStringHeight and source.Text:GetStringHeight() or 130
+	source.Text:SetHeight(math.max(40, height))
+	source.Child:SetHeight(96 + math.max(40, height))
+	if source.GetVerticalScroll then
+		local maximum = math.max(0, source.Child:GetHeight() - source:GetHeight())
+		if source:GetVerticalScroll() > maximum then source:SetVerticalScroll(maximum) end
+	end
+end
+
 function Directory:RefreshCrafters()
 	if not self.frame or not self.frame:IsShown() then return end
 	local child = self.frame.ProfessionsTab.CrafterListChild
@@ -742,6 +828,8 @@ function Directory:RefreshCrafters()
 		if key == self.selectedCrafter then selectedValid = true end
 	end
 	if not selectedValid then self.selectedCrafter = nil end
+	self:RefreshRecipeSource()
+	if self.selectedRecipe and #self.selectedRecipe.crafters == 0 then return end
 
 	if self.selectedRecipe then
 		local onlineOnly = CraftRosterDB.settings.onlineOnly
@@ -774,6 +862,10 @@ function Directory:RefreshCrafters()
 		table.sort(offline, function(a, b) return a.characterKey < b.characterKey end)
 		if onlineOnly then
 			for _, entry in ipairs(online) do table.insert(entries, entry) end
+			if #online == 0 and #offline > 0 then
+				table.insert(entries, { isHeader = true, text = "Known crafters are offline.",
+					tooltipLines = { "Uncheck Online only to see saved crafters." } })
+			end
 		else
 			for _, entry in ipairs(online) do table.insert(entries, entry) end
 			for _, entry in ipairs(offline) do table.insert(entries, entry) end
@@ -916,3 +1008,4 @@ rosterFrame:SetScript("OnEvent", function(_, event)
 
 	if Directory.activeTab == 1 then Directory:RefreshCrafters() end
 end)
+

@@ -193,10 +193,14 @@ end
 local function ImportForeverRecipes(character, profession)
 	local added, changed = 0, false
 	local recipeIDs = C_TradeSkillUI.GetAllRecipeIDs and C_TradeSkillUI.GetAllRecipeIDs() or {}
+	local base = C_TradeSkillUI.GetBaseProfessionInfo and C_TradeSkillUI.GetBaseProfessionInfo()
+	local skillLine = base and (base.parentProfessionID or base.professionID)
 
 	for _, recipeID in ipairs(recipeIDs) do
 		local info = C_TradeSkillUI.GetRecipeInfo and C_TradeSkillUI.GetRecipeInfo(recipeID)
-		if info and info.learned then
+		local belongs = not skillLine or not C_TradeSkillUI.IsRecipeInSkillLine
+			or C_TradeSkillUI.IsRecipeInSkillLine(recipeID, skillLine)
+		if info and belongs and info.learned then
 			local schematic = C_TradeSkillUI.GetRecipeSchematic
 				and C_TradeSkillUI.GetRecipeSchematic(recipeID, false)
 			local materials = ExtractMaterialsFromSchematic(schematic)
@@ -214,6 +218,44 @@ local function ImportForeverRecipes(character, profession)
 
 			if isNew then added = added + 1 end
 			if updated then changed = true end
+		elseif info and belongs and info.learned == false and type(info.name) == "string" then
+			-- Catalogue metadata is separate from ownership: never advertise an
+			-- unlearned recipe as craftable or put it in a guild ownership payload.
+			local saved = CraftRosterDB.recipes[recipeID]
+			if not saved then
+				saved = { name = info.name, profession = profession,
+					icon = info.icon or GetRecipeIcon(recipeID, profession) }
+				CraftRosterDB.recipes[recipeID] = saved
+				changed = true
+			end
+			if saved.name ~= info.name or saved.profession ~= profession then
+				saved.name, saved.profession = info.name, profession
+				changed = true
+			end
+			if C_TradeSkillUI.GetRecipeSchematic then
+				local ok, schematic = pcall(C_TradeSkillUI.GetRecipeSchematic, recipeID, false)
+				local materials = ok and ExtractMaterialsFromSchematic(schematic)
+				if materials and not SameMaterials(saved.materials, materials) then
+					saved.materials = materials
+					changed = true
+				end
+			end
+		end
+		if info and belongs and CraftRosterDB.recipes[recipeID] then
+			local saved = CraftRosterDB.recipes[recipeID]
+			local function Capture(field, method)
+				if type(method) ~= "function" then return end
+				local ok, value = pcall(method, recipeID)
+				if ok and type(value) == "string" and value:find("%S") and saved[field] ~= value then
+					saved[field] = value
+					changed = true
+				end
+			end
+			Capture("recipeLink", C_TradeSkillUI.GetRecipeLink)
+			Capture("sourceText", C_TradeSkillUI.GetRecipeSourceText)
+			if C_TradeSkillUI.GetRecipeDescription then
+				Capture("description", function(id) return C_TradeSkillUI.GetRecipeDescription(id, {}) end)
+			end
 		end
 	end
 
@@ -334,3 +376,4 @@ function RecipeTracker:GetKnownRecipeCount()
 	for _ in pairs(character.recipes or {}) do count = count + 1 end
 	return count
 end
+
