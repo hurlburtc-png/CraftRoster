@@ -55,7 +55,7 @@
 
 ## Development checks
 
-Current candidate: **0.8.0-beta.7**. See [TESTING.md](../TESTING.md) for readiness,
+Current candidate: **0.8.0-beta.8**. See [TESTING.md](../TESTING.md) for readiness,
 known limits and the in-game acceptance checklist.
 
 Install Python 3.12 and run:

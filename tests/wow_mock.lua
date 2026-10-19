@@ -1,5 +1,7 @@
 
 function print() end
+function GetBuildInfo() return '1.60.1', '70450', 'today', 16001 end
+function GetLocale() return 'enUS' end
 clock = 100000; frames = {}; sent = {}; timers = {}; SlashCmdList = {}; StaticPopupDialogs = {}
 local methods = {}
 function methods:SetBackdrop(data)
@@ -122,3 +124,4 @@ function inventoryFixture(locked, splitAvailable)
  function AcceptTrade() error('must not accept trade') end
  function SendMail() error('must not send mail') end
 end
+

@@ -1,4 +1,4 @@
-# CraftRoster 0.8.0-beta.7 test candidate
+# CraftRoster 0.8.0-beta.8 test candidate
 
 Status: ready for controlled in-game testing; release approval still requires a real client run.
 Target client reported by the user: Forever **1.60.1, build 70450, interface 16001**.
@@ -30,10 +30,16 @@ GuildRoster API. An unavailable recipe tooltip has a readable fallback, and hidi
 the minimap button stops its drag update handler.
 
 Beta 7 ships teaching-recipe item links, item binding and four starter Classic
-source/rate estimates. They are explicitly unconfirmed for Forever. Optional
-LibProfessionDB enriches recipe-item mappings and source names when a ready
-Forever database is installed. It does not supply percentages. See
+source/rate estimates. They are explicitly unconfirmed for Forever. Bundled
+LibProfessionDB enriches recipe-item mappings and source names. It does not supply percentages. See
 [coverage and provenance](docs/RECIPE_SOURCES.md) and [remaining plans](docs/ROADMAP.md).
+
+Beta 8 bundles the pinned LibProfessionDB v1.9.1 Forever payload and licenses.
+Tests load the real 2,511-recipe database in all 12 shipped locales on Lua 5.1
+and LuaJIT, reject other client interfaces, verify repeated shared-library loads,
+check pinned file hashes and exercise the offline update importer. Ace3 and a
+standalone ProfessionDB installation are not required. Full catalogue search
+import is still pending; bundling adds lookup coverage to existing entries.
 
 ### Recipe-source acceptance checks
 
@@ -57,7 +63,7 @@ python -m unittest discover -s tests -v
 python tests/benchmark.py
 ```
 
-Current review: 481 tests executed, 471 passed and 10 explicitly skipped for APIs
+Current review: 486 tests executed, 476 passed and 10 explicitly skipped for APIs
 absent from the chosen profile. Both Lua 5.1 and LuaJIT 2.1 run modern, legacy and
 minimal API scenarios. Isolated peer tests cover sync and request/status exchange.
 Syntax and ZIP membership/integrity checks also pass.

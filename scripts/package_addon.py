@@ -18,6 +18,9 @@ def package(destination):
     entries = [line.strip() for line in manifest.read_text().splitlines()
                if line.strip() and not line.startswith('#')]
     paths = [manifest] + [source / entry for entry in entries]
+    # Redistributed library notices and the pinned version record travel with
+    # the addon; every runtime vendor file is listed explicitly in its TOC.
+    paths += [source / 'vendor/ProfessionDB/LICENSE', source / 'vendor/ProfessionDB/manifest.json']
     with ZipFile(destination, 'w', ZIP_DEFLATED) as archive:
         for path in sorted(set(paths)):
             archive.write(path, 'CraftRoster/' + path.relative_to(source).as_posix())

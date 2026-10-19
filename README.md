@@ -19,9 +19,9 @@ Find a guild crafter, gather your materials, and arrange the craft from one ligh
 - Search recipes and professions, find saved guild crafters, and see online status.
 - Keep favorites and a pinned shopping list showing bag quantities and missing materials.
 - Prepare crafting whispers and mail; offer available material quantities when you open a trade.
-- Browse locally discovered unlearned recipes. If no synced crafter knows one, view the teaching-item tooltip, binding, and **Where to get it** details. Four starter references include clearly labeled Classic drop estimates; optional LibProfessionDB adds mappings and source names.
+- Browse locally discovered unlearned recipes. If no synced crafter knows one, view the teaching-item tooltip, binding, and **Where to get it** details. Four starter references include clearly labeled Classic drop estimates; bundled LibProfessionDB adds mappings and source names, with no separate install.
 
-Open each profession to collect its available recipe data, then use **Refresh** to sync with guildmates running CraftRoster. No synced crafter is not proof nobody in the guild knows a recipe. Recipe/source coverage depends on the client; missing sources say **Source unknown**. A complete recipe/source database is not bundled. [Source coverage and accuracy](docs/RECIPE_SOURCES.md).
+Open each profession to collect its available recipe data, then use **Refresh** to sync with guildmates running CraftRoster. No synced crafter is not proof nobody in the guild knows a recipe. Recipe/source coverage depends on the client; missing sources say **Source unknown**. The Forever database is bundled for lookups; the directory currently lists scanned/synced recipes and four starter entries rather than importing its entire catalogue. [Source coverage and accuracy](docs/RECIPE_SOURCES.md).
 
 Whispers remain drafts. You confirm trades and send mail yourself.
 

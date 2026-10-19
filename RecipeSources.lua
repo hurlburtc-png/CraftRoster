@@ -54,7 +54,7 @@ function Sources:Get(recipeID)
 	local saved = CraftRosterDB.recipes[recipeID] or {}
 	local reference = references[recipeID]
 	-- External curated entries may explicitly provide a teaching-item ID/link.
-	local itemID = saved.recipeItemID or (reference and reference.itemID)
+	local itemID = saved.recipeItemID
 	if not itemID and type(saved.recipeItemLink) == "string" then
 		itemID = tonumber(saved.recipeItemLink:match("item:(%d+)"))
 	end
@@ -62,6 +62,7 @@ function Sources:Get(recipeID)
 		local mapped, rankBook = libraryCall("GetRecipeItem", recipeID)
 		if not rankBook then itemID = mapped end
 	end
+	itemID = itemID or (reference and reference.itemID)
 	if type(itemID) ~= "number" or itemID <= 0 or itemID ~= math.floor(itemID) then itemID = nil end
 	local result = { itemID = itemID, reference = reference }
 	if not itemID then return result end

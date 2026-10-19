@@ -3,11 +3,39 @@
 ## IconTexture: Interface\Icons\INV_Potion_97
 ## Notes: Find the right guild crafter for any recipe.
 ## Author: hurlburtc-png
-## Version: 0.8.0-beta.7
+## Version: 0.8.0-beta.8
 ## SavedVariables: CraftRosterDB
-## OptionalDeps: ProfessionDB
 
 ErrorReporter.lua
+vendor/ProfessionDB/libs/LibStub/LibStub.lua
+vendor/ProfessionDB/LibProfessionDB-1.0.lua
+vendor/ProfessionDB/Data/Forever/_core/Alchemy.lua
+vendor/ProfessionDB/Data/Forever/_core/Blacksmithing.lua
+vendor/ProfessionDB/Data/Forever/_core/Cooking.lua
+vendor/ProfessionDB/Data/Forever/_core/Enchanting.lua
+vendor/ProfessionDB/Data/Forever/_core/Engineering.lua
+vendor/ProfessionDB/Data/Forever/_core/Firstaid.lua
+vendor/ProfessionDB/Data/Forever/_core/Fishing.lua
+vendor/ProfessionDB/Data/Forever/_core/Leatherworking.lua
+vendor/ProfessionDB/Data/Forever/_core/Mining.lua
+vendor/ProfessionDB/Data/Forever/_core/Tailoring.lua
+vendor/ProfessionDB/Data/Forever/_core/RecipeItems.lua
+vendor/ProfessionDB/Data/Forever/_core/HiddenRecipes.lua
+vendor/ProfessionDB/Data/Forever/_core/AcquireMethods.lua
+vendor/ProfessionDB/Data/Forever/_core/Sources.lua
+vendor/ProfessionDB/Data/Forever/_core/SourceNames.lua
+vendor/ProfessionDB/Data/Forever/deDE.lua
+vendor/ProfessionDB/Data/Forever/enGB.lua
+vendor/ProfessionDB/Data/Forever/enUS.lua
+vendor/ProfessionDB/Data/Forever/esES.lua
+vendor/ProfessionDB/Data/Forever/esMX.lua
+vendor/ProfessionDB/Data/Forever/frFR.lua
+vendor/ProfessionDB/Data/Forever/itIT.lua
+vendor/ProfessionDB/Data/Forever/koKR.lua
+vendor/ProfessionDB/Data/Forever/ptBR.lua
+vendor/ProfessionDB/Data/Forever/ruRU.lua
+vendor/ProfessionDB/Data/Forever/zhCN.lua
+vendor/ProfessionDB/Data/Forever/zhTW.lua
 Core.lua
 Recipes.lua
 ShoppingList.lua

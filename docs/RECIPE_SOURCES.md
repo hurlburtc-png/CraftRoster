@@ -29,14 +29,28 @@ share underlying data; agreement between sites does not independently confirm a
 rate. Beta patches can change loot, requirements and binding. Requirements in
 this starter set are Classic references too; the native item tooltip wins.
 
-## Optional LibProfessionDB support
+## Bundled LibProfessionDB
 
-Install [LibProfessionDB](https://www.curseforge.com/wow/addons/libprofessiondb)
-(standalone addon: ProfessionDB) for teaching-item mappings and acquisition-source
-names beyond the starter set. CraftRoster only reads a ready **Forever** database,
-feature-detects each method, excludes profession rank books and tolerates errors.
-It does not download the database or require it to run. It enriches recipes already
-in CraftRoster; it does not import the library's entire catalogue.
+CraftRoster includes the Forever payload from the official **ProfessionDB-v1.9.1**
+release (CurseForge file **9095167**). Its client data is built from
+**1.60.1.69977**, with later captured trainer corrections; this is older than the
+current target build 70450. Updates remain necessary as the beta changes.
+
+Only LibStub, the library engine, and Forever core/localized data are bundled.
+The standalone ProfessionDB bootstrap, other game versions, Ace3 and guild
+version-check dependencies are omitted. The MIT license and public-domain
+LibStub notice are retained. Locale chunks are combined into do/end blocks;
+the original chunks retain their bytes, order, local scope and locale guards.
+
+The actual payload contains **2,511 recipes across 10 professions**. It enriches
+teaching-item mappings and acquisition-source names for recipes already in
+CraftRoster. It **does not import the entire database into directory search**.
+Scanned/synced recipes and four starter entries still determine that list.
+Scanned metadata and guild ownership stay separate from the bundled lookup data.
+
+The importer, pinned archive checksum, per-file hashes, load order and provenance
+are recorded in `scripts/update_profession_db.py` and
+`vendor/ProfessionDB/manifest.json`. See [database maintenance](DATABASE_UPDATES.md).
 
 Borrowed sources are labeled with their original game version. The library's
 source API does not supply drop percentages; absent estimates remain unknown.

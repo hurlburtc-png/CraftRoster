@@ -4,7 +4,7 @@ These are gaps identified against the requests discussed so far, not implemented
 features. In-game testing remains required for the current candidate.
 
 - Expand the four-entry starter source/rate set, prioritizing Forever-confirmed
-  data with provenance and update dates. Optional LibProfessionDB currently
+  data with provenance and update dates. Bundled LibProfessionDB currently
   enriches mapped recipe items and source names, not percentages or the entire catalogue.
 - Add incoming request Accept/Decline UI. Existing request/status commands do not
   provide a complete popup workflow or decline state.
