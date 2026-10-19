@@ -1,5 +1,9 @@
 # CraftRoster
 
+[**Download CraftRoster.zip**](https://github.com/hurlburtc-png/wow-forever-addons/raw/refs/heads/main/CraftRoster.zip)
+
+Extract the ZIP to get one **CraftRoster** folder, ready for `Interface/AddOns`.
+
 Find the right guild crafter for any recipe.
 
 CraftRoster is a lightweight World of Warcraft addon for tracking professions and recipes, with a foundation for a guild-wide recipe directory.
@@ -11,10 +15,18 @@ in-game. Beta 2 corrects the Retail interface declaration that caused Forever to
 mark the previous package incompatible. Actual UI/API behavior still needs testing
 in Forever; matching the manifest removes the loader mismatch only.
 
-1. Go to **Releases** and download the latest **CraftRoster.zip**.
-2. Extract the zip.
+1. [**Download CraftRoster.zip directly**](https://github.com/hurlburtc-png/wow-forever-addons/raw/refs/heads/main/CraftRoster.zip).
+2. Extract the zip. It contains only the **CraftRoster** addon folder.
 3. Copy the **CraftRoster** folder into your WoW `Interface\AddOns` folder.
 4. Restart WoW, or type `/reload` in-game.
+
+The folder should be `Interface/AddOns/CraftRoster`, with `CraftRoster.toc` directly
+inside it. GitHub's green **Code → Download ZIP** button downloads the entire
+development repository; use the direct download above for installation.
+
+The addon-only ZIP is a tested development build; see [TESTING.md](TESTING.md)
+for remaining in-game checks. Maintainers rebuild it with
+`python scripts/package_addon.py CraftRoster.zip` when updating the download.
 
 ## Commands
 
