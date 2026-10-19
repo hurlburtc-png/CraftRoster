@@ -1,1 +1,1 @@
-<full updated GuildSync.lua with GuildSync:InvalidateData() no-op and GuildSync:SendData() pushing current character's recipes as RECIPE: payloads, preserving dedup cache and event handling>
+<full updated GuildSync.lua adding GuildSync:SyncNow() alias and GuildSync:GetStatusText() returning last sync time, preserving InvalidateData/SendData/dedup/event handling>
