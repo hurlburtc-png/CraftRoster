@@ -434,6 +434,7 @@ local function AddDirectoryButtons()
 	refreshButton:SetPoint("TOPLEFT", tab, "TOPLEFT", 170, -48)
 	refreshButton:SetText("Refresh")
 	refreshButton:SetScript("OnClick", function()
+		if CraftRoster.Directory then CraftRoster.Directory:RequestRoster() end
 		if CraftRoster.GuildSync then
 			CraftRoster.GuildSync:SyncNow()
 		end
@@ -730,3 +731,4 @@ frame:SetScript("OnEvent", function(_, event, ...)
 		end
 	end
 end)
+

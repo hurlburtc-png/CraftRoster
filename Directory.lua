@@ -607,14 +607,18 @@ function Directory:Initialize()
 	source.Link = CreateFrame("Button", nil, source.Child, "GameMenuButtonTemplate")
 	source.Link:SetPoint("TOPLEFT", 4, -48)
 	source.Link:SetHeight(26)
-	source.Link:SetText("View recipe link")
+	source.Link:SetText("View crafting spell")
 	local function ShowRecipeTooltip(button)
 		local recipe = Directory.selectedRecipe
 		if not recipe then return end
 		local saved = CraftRosterDB.recipes[recipe.id] or {}
 		local link = saved.recipeLink or ("spell:" .. recipe.id)
 		GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-		GameTooltip:SetHyperlink(link)
+		local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, link)
+		if not ok then
+			GameTooltip:SetText(recipe.name)
+			GameTooltip:AddLine("Recipe tooltip unavailable; open the profession and try again.", 1, 1, 1, true)
+		end
 		GameTooltip:Show()
 	end
 	source.Link:SetScript("OnEnter", ShowRecipeTooltip)
@@ -825,7 +829,9 @@ function Directory:RefreshCrafters()
 	local entries = {}
 	local selectedValid = false
 	for _, key in ipairs(self.selectedRecipe and self.selectedRecipe.crafters or {}) do
-		if key == self.selectedCrafter then selectedValid = true end
+		if key == self.selectedCrafter and (not CraftRosterDB.settings.onlineOnly or IsCharacterOnline(key)) then
+			selectedValid = true
+		end
 	end
 	if not selectedValid then self.selectedCrafter = nil end
 	self:RefreshRecipeSource()
@@ -967,18 +973,24 @@ function Directory:Toggle()
 	end
 end
 
+function Directory:RequestRoster()
+	if C_GuildInfo and C_GuildInfo.GuildRoster then
+		pcall(C_GuildInfo.GuildRoster)
+	elseif C_GuildInfo and C_GuildInfo.RequestGuildRoster then
+		pcall(C_GuildInfo.RequestGuildRoster)
+	elseif RequestGuildRoster then
+		pcall(RequestGuildRoster)
+	elseif GuildRoster then
+		pcall(GuildRoster)
+	end
+end
+
 local rosterFrame = CreateFrame("Frame")
 rosterFrame:RegisterEvent("GUILD_ROSTER_UPDATE")
 rosterFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 rosterFrame:SetScript("OnEvent", function(_, event)
 	if event == "PLAYER_ENTERING_WORLD" then
-		if C_GuildInfo and C_GuildInfo.GuildRoster then
-			pcall(C_GuildInfo.GuildRoster)
-		elseif C_GuildInfo and C_GuildInfo.RequestGuildRoster then
-			pcall(C_GuildInfo.RequestGuildRoster)
-		elseif RequestGuildRoster then
-			pcall(RequestGuildRoster)
-		end
+		Directory:RequestRoster()
 		return
 	end
 

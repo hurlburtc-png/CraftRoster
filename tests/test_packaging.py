@@ -9,6 +9,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class PackageTests(unittest.TestCase):
+    def test_checked_in_download_matches_all_current_addon_files(self):
+        with ZipFile(ROOT / 'CraftRoster.zip') as archive:
+            self.assertIsNone(archive.testzip())
+            files = ['CraftRoster.toc'] + [line.strip() for line in
+                     (ROOT / 'CraftRoster.toc').read_text().splitlines()
+                     if line.strip() and not line.startswith('#')]
+            self.assertEqual(set(archive.namelist()), {'CraftRoster/' + name for name in files})
+            for name in files:
+                self.assertEqual(archive.read('CraftRoster/' + name), (ROOT / name).read_bytes(),
+                                 'Rebuild CraftRoster.zip: stale or damaged file ' + name)
+
     def test_archive_has_only_one_addon_folder_and_all_modules(self):
         spec = importlib.util.spec_from_file_location('package_addon', ROOT / 'scripts/package_addon.py')
         module = importlib.util.module_from_spec(spec)

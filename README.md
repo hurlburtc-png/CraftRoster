@@ -43,8 +43,8 @@ Addon files live at the repository root. Run simulated API checks and rebuild th
 
 ```sh
 python -m pip install -r tests/requirements.txt
-python -m unittest discover -s tests -v
 python scripts/package_addon.py CraftRoster.zip
+python -m unittest discover -s tests -v
 ```
 
 Made by Triggles · [MIT license](LICENSE)

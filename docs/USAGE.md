@@ -55,13 +55,14 @@
 
 ## Development checks
 
-Current candidate: **0.8.0-beta.5**. See [TESTING.md](../TESTING.md) for readiness,
+Current candidate: **0.8.0-beta.6**. See [TESTING.md](../TESTING.md) for readiness,
 known limits and the in-game acceptance checklist.
 
 Install Python 3.12 and run:
 
 ```sh
 python -m pip install -r tests/requirements.txt
+python scripts/package_addon.py CraftRoster.zip
 python -m unittest discover -s tests -v
 ```
 

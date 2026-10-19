@@ -1,4 +1,4 @@
-# CraftRoster 0.8.0-beta.5 test candidate
+# CraftRoster 0.8.0-beta.6 test candidate
 
 Status: ready for controlled in-game testing; release approval still requires a real client run.
 Target client reported by the user: Forever **1.60.1, build 70450, interface 16001**.
@@ -22,6 +22,19 @@ chat edit box. A known but offline owner remains a crafter, even with Online onl
 enabled. Optional client source APIs may return nothing: that state is explicit.
 No complete external catalogue or Forever acquisition database is bundled.
 
+Beta 6 preserves complete material lists when required reagent slots are still
+loading, tolerates transient schematic API errors, and reads the real schematic's
+outputItemID. Filtering a selected offline crafter out now clears that action
+target. Refresh requests an updated roster, including on clients using the global
+GuildRoster API. An unavailable recipe tooltip has a readable fallback, and hiding
+the minimap button stops its drag update handler.
+
+The later conversation previews show proposed recipe-scroll item links, binding
+labels and drop percentages. Those are not shipped yet: this candidate's source
+pane links the crafting spell, and uses source text only when the client provides
+it. The spell ID and crafted output item ID do not identify the learnable recipe
+scroll. That requires a separate verified mapping and acquisition dataset.
+
 ### Recipe-source acceptance checks
 
 1. Open each profession and scan. Check an unlearned recipe appears without
@@ -39,11 +52,12 @@ No complete external catalogue or Forever acquisition database is bundled.
 
 ```sh
 python -m pip install -r tests/requirements.txt
+python scripts/package_addon.py CraftRoster.zip
 python -m unittest discover -s tests -v
 python tests/benchmark.py
 ```
 
-Current review: 457 tests executed, 447 passed and 10 explicitly skipped for APIs
+Current review: 463 tests executed, 453 passed and 10 explicitly skipped for APIs
 absent from the chosen profile. Both Lua 5.1 and LuaJIT 2.1 run modern, legacy and
 minimal API scenarios. Isolated peer tests cover sync and request/status exchange.
 Syntax and ZIP membership/integrity checks also pass.

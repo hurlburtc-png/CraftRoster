@@ -35,12 +35,18 @@ button:SetScript("OnDragStart", function(self)
 		local mx, my = Minimap:GetCenter()
 		local cx, cy = GetCursorPosition()
 		local scale = Minimap:GetEffectiveScale()
+		if not mx or not my or not cx or not cy or not scale or scale <= 0 then return end
 		local angle = math.atan2(cy / scale - my, cx / scale - mx)
 		if CraftRosterDB and CraftRosterDB.settings then
 			CraftRosterDB.settings.minimapAngle = angle
 		end
 		UpdatePosition()
 	end)
+end)
+
+button:SetScript("OnHide", function(self)
+	self:SetScript("OnUpdate", nil)
+	if self.UnlockHighlight then self:UnlockHighlight() end
 end)
 
 button:SetScript("OnDragStop", function(self)
@@ -79,3 +85,4 @@ initFrame:SetScript("OnEvent", function(self, event, loadedAddon)
 		self:UnregisterEvent("ADDON_LOADED")
 	end
 end)
+

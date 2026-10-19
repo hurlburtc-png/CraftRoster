@@ -71,7 +71,9 @@ local function ExtractMaterialsFromSchematic(schematic)
 	for _, slot in ipairs(schematic.reagentSlotSchematics) do
 		local quantity = slot.quantityRequired or slot.quantity or 0
 		local reagent = (slot.reagents or {})[1]
-		if slot.required ~= false and reagent and quantity > 0 then
+		if slot.required ~= false and quantity > 0 then
+			-- A loading required slot is not a complete, zero-reagent recipe.
+			if not reagent then return nil end
 			local itemID = reagent.itemID or (reagent.item and reagent.item.itemID)
 			local name = reagent.name
 			local getItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
@@ -81,6 +83,22 @@ local function ExtractMaterialsFromSchematic(schematic)
 		end
 	end
 	return materials
+end
+
+local function GetSchematic(recipeID)
+	if not C_TradeSkillUI or type(C_TradeSkillUI.GetRecipeSchematic) ~= "function" then return nil end
+	local ok, schematic = pcall(C_TradeSkillUI.GetRecipeSchematic, recipeID, false)
+	return ok and type(schematic) == "table" and schematic or nil
+end
+
+local function GetOutputLink(recipeID, schematic, info)
+	if C_TradeSkillUI and type(C_TradeSkillUI.GetRecipeItemLink) == "function" then
+		local ok, link = pcall(C_TradeSkillUI.GetRecipeItemLink, recipeID)
+		if ok and type(link) == "string" and link ~= "" then return link end
+	end
+	-- The real schematic supplies outputItemID, not outputItemLink.
+	if schematic and type(schematic.outputItemID) == "number" then return "item:" .. schematic.outputItemID end
+	return schematic and schematic.outputItemLink or info.hyperlink
 end
 
 local function SameMaterials(a, b)
@@ -201,10 +219,9 @@ local function ImportForeverRecipes(character, profession)
 		local belongs = not skillLine or not C_TradeSkillUI.IsRecipeInSkillLine
 			or C_TradeSkillUI.IsRecipeInSkillLine(recipeID, skillLine)
 		if info and belongs and info.learned then
-			local schematic = C_TradeSkillUI.GetRecipeSchematic
-				and C_TradeSkillUI.GetRecipeSchematic(recipeID, false)
+			local schematic = GetSchematic(recipeID)
 			local materials = ExtractMaterialsFromSchematic(schematic)
-			local itemLink = schematic and schematic.outputItemLink or info.hyperlink
+			local itemLink = GetOutputLink(recipeID, schematic, info)
 
 			local isNew, updated = SaveRecipe(
 				character,
@@ -233,8 +250,7 @@ local function ImportForeverRecipes(character, profession)
 				changed = true
 			end
 			if C_TradeSkillUI.GetRecipeSchematic then
-				local ok, schematic = pcall(C_TradeSkillUI.GetRecipeSchematic, recipeID, false)
-				local materials = ok and ExtractMaterialsFromSchematic(schematic)
+				local materials = ExtractMaterialsFromSchematic(GetSchematic(recipeID))
 				if materials and not SameMaterials(saved.materials, materials) then
 					saved.materials = materials
 					changed = true
