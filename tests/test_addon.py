@@ -795,6 +795,63 @@ CASES.update({
     """,
 })
 
+CASES.update({
+    'roster_errors_fall_back_without_breaking_directory': """
+        C_GuildInfo={GetGuildRoster=function() error('unsupported roster API') end,
+          GuildRoster=function() error('roster unavailable') end}
+        function GetNumGuildMembers() return 2 end
+        function GetGuildRosterInfo(index)
+          if index==1 then error('member unavailable') end
+          return 'Bob-Realm',nil,nil,nil,nil,nil,nil,nil,true
+        end
+        CraftRosterDB.characters['Bob-Realm']={recipes={[42]={}}}
+        CraftRosterDB.recipes[42]={name='Potion',profession='Alchemy'}
+        SlashCmdList.CRAFTROSTER('')
+        addon.Directory.selectedRecipe=addon.Directory.professionCache.entries[1].recipe
+        dispatch('PLAYER_ENTERING_WORLD'); dispatch('GUILD_ROSTER_UPDATE')
+        local found=false
+        for _,row in ipairs(frames) do
+          if row.parent==addon.Directory.frame.ProfessionsTab.CrafterListChild and row:IsShown()
+            and row.tooltipLines and row.tooltipLines[1]=='Bob-Realm' then found=true end
+        end
+        assert(found)
+    """,
+    'crafter_tooltip_preserves_profession_skill_and_recipe': """
+        CraftRosterDB.settings.onlineOnly=false
+        CraftRosterDB.characters['Crafter-Realm']={recipes={[42]={}},professions={Alchemy={skill=100,max=150}}}
+        CraftRosterDB.recipes[42]={name='Potion',profession='Alchemy'}
+        SlashCmdList.CRAFTROSTER('')
+        addon.Directory.selectedRecipe=addon.Directory.professionCache.entries[1].recipe
+        addon.Directory:RefreshCrafters()
+        local found=false
+        for _,row in ipairs(frames) do
+          if row.parent==addon.Directory.frame.ProfessionsTab.CrafterListChild and row:IsShown()
+            and row.tooltipLines and row.tooltipLines[1]=='Crafter-Realm' then
+            assert(row.tooltipLines[2]=='Alchemy: 100/150' and row.tooltipLines[3]=='Potion')
+            row.scripts.OnMouseUp(row,'LeftButton'); found=true; break
+          end
+        end
+        assert(found and addon.Directory.selectedCrafter=='Crafter-Realm')
+    """,
+    'five_hundred_recipe_sync_is_paced_bounded_and_deduplicated': """
+        if not C_Timer or not (C_ChatInfo or SendAddonMessage) then return end
+        for id=1,500 do
+          CraftRosterDB.characters['Tester-Realm'].recipes[id]={learnedAt=100}
+          CraftRosterDB.recipes[id]={name='Potion '..id,profession='Alchemy'}
+        end
+        addon.GuildSync:SendData(); assert(#sent==1)
+        flushTimers(); local count=#sent; assert(count>1)
+        for _,message in ipairs(sent) do assert(#message[2]<=255) end
+        clock=clock+31; addon.GuildSync:SendData(); assert(#sent==count)
+        for i=count,1,-1 do
+          local message=sent[i][2]:gsub('Tester%-Realm','Helper-Realm')
+          dispatch('CHAT_MSG_ADDON','CRAFTROSTER',message,'GUILD','Helper-Realm')
+        end
+        assert(CraftRosterDB.characters['Helper-Realm'].recipes[500])
+        assert(CraftRosterDB.recipes[500].name=='Potion 500')
+    """,
+})
+
 class AddonTests(unittest.TestCase):
     pass
 
