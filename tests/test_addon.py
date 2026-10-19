@@ -6,6 +6,79 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 
 CASES = {
+    'teaching_item_binding_and_reference_rates': """
+        addon.RecipeSources:SeedCatalog()
+        assert(not CraftRosterDB.characters['Tester-Realm'].recipes[19054])
+        CraftRosterDB.recipes[19054].itemLink='item:15047'
+        local d=addon.RecipeSources:Get(19054)
+        assert(d.itemID==15730 and d.link:find('item:15730',1,true))
+        assert(d.binding:find('picked up',1,true) and d.binding:find('Classic reference',1,true))
+        local text=addon.RecipeSources:Format(19054,d)
+        assert(text:find('~4.95%',1,true) and text:find('Forever source/rate unconfirmed',1,true))
+        assert(addon.RecipeSources:Format(20034):find('Mob drop: Scarlet Spellbinder',1,true))
+        assert(addon.RecipeSources:Format(20034):find('~0.43%',1,true))
+        C_Item={GetItemInfo=function(id)
+          assert(id==15730)
+          return 'Pattern: Test','item:15730',4,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,2
+        end}
+        d=addon.RecipeSources:Get(19054)
+        assert(d.binding=='Binds when equipped' and d.quality==4)
+        local unknown=addon.RecipeSources:Get(99999)
+        assert(not unknown.itemID and not unknown.binding)
+        assert(addon.RecipeSources:Format(99999):find('Drop chance: unknown',1,true))
+    """,
+    'optional_forever_database_and_safe_fallback': """
+        local version='Vanilla'
+        local db={IsReady=function() return true end,GetGameVersion=function() return version end,
+          GetRecipeItem=function() return 98765,false end,
+          GetRecipeSources=function() return {drop={{id=123,name='Example Boss'}}} end,
+          IsBorrowed=function() return 'Vanilla' end}
+        LibStub=setmetatable({}, {__call=function() return db end})
+        assert(not addon.RecipeSources:Get(99999).itemID)
+        version='Forever'
+        assert(addon.RecipeSources:Get(99999).itemID==98765)
+        local text=addon.RecipeSources:Format(99999)
+        assert(text:find('Example Boss',1,true) and text:find('Vanilla reference',1,true))
+        assert(text:find('Drop chance: unknown',1,true))
+        db.GetRecipeItem=function() error('database temporarily unavailable') end
+        assert(not addon.RecipeSources:Get(99999).itemID)
+        db.GetRecipeItem=function() return 98765,true end
+        assert(not addon.RecipeSources:Get(99999).itemID)
+    """,
+    'teaching_item_cache_and_native_link': """
+        local loads=0
+        C_Item={RequestLoadItemDataByID=function() loads=loads+1 end}
+        addon.RecipeSources:Get(19054); addon.RecipeSources:Get(19054)
+        assert(loads==1)
+        SlashCmdList.CRAFTROSTER('')
+        for _,entry in ipairs(addon.Directory.professionCache.entries) do
+          if entry.id==19054 then addon.Directory.selectedRecipe=entry.recipe end
+        end
+        addon.Directory:RefreshDetails()
+        addon.Directory:RefreshRecipeSource()
+        local link, found
+        GameTooltip.SetHyperlink=function(_,value) link=value end
+        local source=addon.Directory.frame.ProfessionsTab.RecipeSource
+        -- Find the teaching-item button without relying on its parent field name.
+        for _,f in ipairs(frames) do
+          if f.scripts.OnEnter and f:GetText():find('Pattern: Red Dragonscale',1,true) then
+            found=true
+            f.scripts.OnEnter(f); assert(link:find('item:15730',1,true))
+            IsShiftKeyDown=function() return true end
+            ChatEdit_InsertLink=function(value) link=value; return true end
+            f.scripts.OnClick(f); assert(link:find('item:15730',1,true))
+          end
+        end
+        assert(found)
+        local refreshes=0
+        addon.Directory.RefreshRecipeSource=function() refreshes=refreshes+1 end
+        dispatch('GET_ITEM_INFO_RECEIVED',15730,true)
+        assert(refreshes==1)
+        addon.Directory.frame:Hide()
+        dispatch('GET_ITEM_INFO_RECEIVED',15730,true)
+        assert(refreshes==1)
+    """,
+
     'fresh_and_existing_settings': '''
         assert(CraftRosterDB.settings.enabled and CraftRosterDB.settings.autoUpdateRecipes)
         assert(not addon.Directory.frame and not addon.Panel.frame)
@@ -214,7 +287,7 @@ CASES.update({
         for index=1,20 do CraftRosterDB.characters['Crafter'..index..'-Realm']={recipes=own} end
         local before=#frames
         SlashCmdList.CRAFTROSTER('')
-        assert(#addon.Directory.recipeIndex==5000)
+        assert(#addon.Directory.recipeIndex==5004)
         assert(#frames-before<100, 'offscreen recipes must not allocate UI rows')
         local tab=addon.Directory.frame.ProfessionsTab
         local count=#frames
@@ -261,7 +334,7 @@ CASES.update({
         CraftRosterDB.favorites={[42]=true}; CraftRosterDB.settings.favoritesOnly=true
         SlashCmdList.CRAFTROSTER('')
         assert(#addon.Directory.professionCache.entries==1 and addon.Directory.professionCache.entries[1].id==42)
-        addon.Directory.selectedRecipe=addon.Directory.professionCache.entries[1].recipe
+        for _,entry in ipairs(addon.Directory.professionCache.entries) do if entry.id==42 then addon.Directory.selectedRecipe=entry.recipe end end
         addon.Directory.frame.ProfessionsTab.CraftRosterFavoriteButton.scripts.OnClick()
         assert(#addon.Directory.professionCache.entries==0 and addon.Directory.selectedRecipe==nil)
     """,
@@ -301,7 +374,7 @@ CASES.update({
         function GetGuildRosterInfo() return 'Bob-Realm',nil,nil,nil,nil,nil,nil,nil,true end
         CraftRosterDB.settings.onlineOnly=true
         SlashCmdList.CRAFTROSTER('')
-        addon.Directory.selectedRecipe=addon.Directory.professionCache.entries[1].recipe
+        for _,entry in ipairs(addon.Directory.professionCache.entries) do if entry.id==42 then addon.Directory.selectedRecipe=entry.recipe end end
         dispatch('GUILD_ROSTER_UPDATE')
         local child=addon.Directory.frame.ProfessionsTab.CrafterListChild
         local rows=0
@@ -455,7 +528,7 @@ CASES.update({
         inventoryFixture(false,true)
         CraftRosterDB.characters['Tester-Realm'].recipes[42]={}
         SlashCmdList.CRAFTROSTER('')
-        addon.Directory.selectedRecipe=addon.Directory.professionCache.entries[1].recipe
+        for _,entry in ipairs(addon.Directory.professionCache.entries) do if entry.id==42 then addon.Directory.selectedRecipe=entry.recipe end end
         addon.Directory.frame.ProfessionsTab.CraftRosterShoppingButton.scripts.OnClick()
         local list=addon.ShoppingList
         assert(list.frame.parent==UIParent and list.frame:IsShown())
@@ -576,7 +649,7 @@ CASES.update({
         inventoryFixture(false,true)
         CraftRosterDB.characters['Crafter-Realm']={recipes={[42]={}}}
         SlashCmdList.CRAFTROSTER('')
-        addon.Directory.selectedRecipe=addon.Directory.professionCache.entries[1].recipe
+        for _,entry in ipairs(addon.Directory.professionCache.entries) do if entry.id==42 then addon.Directory.selectedRecipe=entry.recipe end end
         addon.Directory:RefreshCrafters()
         local child=addon.Directory.frame.ProfessionsTab.CrafterListChild
         for _,row in ipairs(frames) do
@@ -807,7 +880,7 @@ CASES.update({
         CraftRosterDB.characters['Bob-Realm']={recipes={[42]={}}}
         CraftRosterDB.recipes[42]={name='Potion',profession='Alchemy'}
         SlashCmdList.CRAFTROSTER('')
-        addon.Directory.selectedRecipe=addon.Directory.professionCache.entries[1].recipe
+        for _,entry in ipairs(addon.Directory.professionCache.entries) do if entry.id==42 then addon.Directory.selectedRecipe=entry.recipe end end
         dispatch('PLAYER_ENTERING_WORLD'); dispatch('GUILD_ROSTER_UPDATE')
         local found=false
         for _,row in ipairs(frames) do
@@ -821,7 +894,7 @@ CASES.update({
         CraftRosterDB.characters['Crafter-Realm']={recipes={[42]={}},professions={Alchemy={skill=100,max=150}}}
         CraftRosterDB.recipes[42]={name='Potion',profession='Alchemy'}
         SlashCmdList.CRAFTROSTER('')
-        addon.Directory.selectedRecipe=addon.Directory.professionCache.entries[1].recipe
+        for _,entry in ipairs(addon.Directory.professionCache.entries) do if entry.id==42 then addon.Directory.selectedRecipe=entry.recipe end end
         addon.Directory:RefreshCrafters()
         local found=false
         for _,row in ipairs(frames) do
@@ -985,7 +1058,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.6')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.7')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)

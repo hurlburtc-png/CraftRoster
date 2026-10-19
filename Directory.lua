@@ -185,6 +185,7 @@ function Directory:InvalidateIndex()
 end
 
 local function BuildRecipeIndex()
+	if CraftRoster.RecipeSources then CraftRoster.RecipeSources:SeedCatalog() end
 	local index = {}
 
 	for characterKey, character in pairs(CraftRosterDB.characters or {}) do
@@ -606,17 +607,23 @@ function Directory:Initialize()
 	source.Status:SetWordWrap(true)
 	source.Link = CreateFrame("Button", nil, source.Child, "GameMenuButtonTemplate")
 	source.Link:SetPoint("TOPLEFT", 4, -48)
-	source.Link:SetHeight(26)
+	source.Link:SetHeight(42)
 	source.Link:SetText("View crafting spell")
+	local linkFont = source.Link.GetFontString and source.Link:GetFontString()
+	if linkFont then
+		if linkFont.SetWordWrap then linkFont:SetWordWrap(true) end
+		if linkFont.SetMaxLines then linkFont:SetMaxLines(2) end
+	end
 	local function ShowRecipeTooltip(button)
 		local recipe = Directory.selectedRecipe
 		if not recipe then return end
 		local saved = CraftRosterDB.recipes[recipe.id] or {}
-		local link = saved.recipeLink or ("spell:" .. recipe.id)
+		local data = CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipe.id)
+		local link = data and data.link or saved.recipeLink or ("spell:" .. recipe.id)
 		GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
 		local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, link)
 		if not ok then
-			GameTooltip:SetText(recipe.name)
+			GameTooltip:SetText(data and data.name or recipe.name)
 			GameTooltip:AddLine("Recipe tooltip unavailable; open the profession and try again.", 1, 1, 1, true)
 		end
 		GameTooltip:Show()
@@ -627,14 +634,15 @@ function Directory:Initialize()
 		local recipe = Directory.selectedRecipe
 		if not recipe then return end
 		local saved = CraftRosterDB.recipes[recipe.id] or {}
-		local link = saved.recipeLink or ("|cff71d5ff|Hspell:" .. recipe.id .. "|h[" .. recipe.name .. "]|h|r")
+		local data = CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipe.id)
+		local link = data and data.link or saved.recipeLink or ("|cff71d5ff|Hspell:" .. recipe.id .. "|h[" .. recipe.name .. "]|h|r")
 		if IsShiftKeyDown and IsShiftKeyDown() and ChatEdit_InsertLink then
 			if ChatEdit_InsertLink(link) then return end
 		end
 		ShowRecipeTooltip(button)
 	end)
 	source.Text = source.Child:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	source.Text:SetPoint("TOPLEFT", 4, -84)
+	source.Text:SetPoint("TOPLEFT", 4, -104)
 	source.Text:SetJustifyH("LEFT")
 	source.Text:SetWordWrap(true)
 	source:HookScript("OnSizeChanged", function() Directory:RefreshRecipeSource() end)
@@ -805,9 +813,11 @@ function Directory:RefreshRecipeSource()
 		source:SetVerticalScroll(0)
 	end
 	local saved = CraftRosterDB.recipes[recipe.id] or {}
+	local data = CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipe.id)
 	source.Status:SetText("No synced crafter knows this recipe.\nGuild data may be incomplete; try Refresh.")
-	source.Text:SetText("|cffffd100Where to get it|r\n" .. (saved.sourceText or "Source unknown: this client has not provided acquisition details.")
-		.. (saved.description and ("\n\n" .. saved.description) or ""))
+	source.Link:SetText(data and data.label or "Recipe item unknown (view spell)")
+	source.Text:SetText(CraftRoster.RecipeSources and CraftRoster.RecipeSources:Format(recipe.id, data)
+		or (saved.sourceText or "Source unknown"))
 	local width = math.max(80, source:GetWidth() - 8)
 	source.Child:SetWidth(width)
 	source.Status:SetWidth(width - 8)
@@ -816,7 +826,7 @@ function Directory:RefreshRecipeSource()
 	source.Text:SetWidth(width - 8)
 	local height = source.Text.GetStringHeight and source.Text:GetStringHeight() or 130
 	source.Text:SetHeight(math.max(40, height))
-	source.Child:SetHeight(96 + math.max(40, height))
+	source.Child:SetHeight(116 + math.max(40, height))
 	if source.GetVerticalScroll then
 		local maximum = math.max(0, source.Child:GetHeight() - source:GetHeight())
 		if source:GetVerticalScroll() > maximum then source:SetVerticalScroll(maximum) end

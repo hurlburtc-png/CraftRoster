@@ -55,7 +55,7 @@ class FrameLayoutTests(unittest.TestCase):
                                 assert(addon.Directory.activeTab==i and button.enabled==false)
                             end
                             frame.TabButtons[1].scripts.OnClick()
-                            addon.Directory.selectedRecipe=addon.Directory.professionCache.entries[1].recipe
+                            for _,entry in ipairs(addon.Directory.professionCache.entries) do if entry.id==42 then addon.Directory.selectedRecipe=entry.recipe end end
                             addon.Directory:RefreshDetails()
                             inside(tab.DetailsName,tab.Details)
                             apart(tab.DetailsName,tab.DetailsProfession)

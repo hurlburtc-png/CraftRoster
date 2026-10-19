@@ -1,4 +1,4 @@
-# CraftRoster 0.8.0-beta.6 test candidate
+# CraftRoster 0.8.0-beta.7 test candidate
 
 Status: ready for controlled in-game testing; release approval still requires a real client run.
 Target client reported by the user: Forever **1.60.1, build 70450, interface 16001**.
@@ -29,17 +29,17 @@ target. Refresh requests an updated roster, including on clients using the globa
 GuildRoster API. An unavailable recipe tooltip has a readable fallback, and hiding
 the minimap button stops its drag update handler.
 
-The later conversation previews show proposed recipe-scroll item links, binding
-labels and drop percentages. Those are not shipped yet: this candidate's source
-pane links the crafting spell, and uses source text only when the client provides
-it. The spell ID and crafted output item ID do not identify the learnable recipe
-scroll. That requires a separate verified mapping and acquisition dataset.
+Beta 7 ships teaching-recipe item links, item binding and four starter Classic
+source/rate estimates. They are explicitly unconfirmed for Forever. Optional
+LibProfessionDB enriches recipe-item mappings and source names when a ready
+Forever database is installed. It does not supply percentages. See
+[coverage and provenance](docs/RECIPE_SOURCES.md) and [remaining plans](docs/ROADMAP.md).
 
 ### Recipe-source acceptance checks
 
 1. Open each profession and scan. Check an unlearned recipe appears without
    increasing your learned count or being advertised as your known recipe.
-2. Select a recipe with no saved crafter. Check the link/tooltip and Shift-click
+2. Search Red Dragonscale Breastplate, Crusader, Flask of the Titans, and Hyper-Radiant Flame Reflector. Check the actual Pattern/Formula/Recipe/Schematic item tooltip, binding, source and labeled percentage. The pattern binding must describe the scroll, not the crafted armor. Select a recipe with no saved crafter. Check the link/tooltip and Shift-click
    into an open chat draft. Confirm no message is sent automatically.
 3. Check a recipe with client source text and one without it. Missing details
    must say Source unknown, and prior source text must survive an incomplete scan.
@@ -57,12 +57,12 @@ python -m unittest discover -s tests -v
 python tests/benchmark.py
 ```
 
-Current review: 463 tests executed, 453 passed and 10 explicitly skipped for APIs
+Current review: 481 tests executed, 471 passed and 10 explicitly skipped for APIs
 absent from the chosen profile. Both Lua 5.1 and LuaJIT 2.1 run modern, legacy and
 minimal API scenarios. Isolated peer tests cover sync and request/status exchange.
 Syntax and ZIP membership/integrity checks also pass.
 
-The 5,000-recipe / 105,000-link workload keeps startup at 8 mocked UI objects,
+The 5,000-recipe / 105,000-link workload keeps startup at 9 mocked UI objects,
 adds 60 on first directory open, and adds only 4 more after 100 scrolls. A 20-event
 recipe burst schedules one scan. Timings measure the mock runtime, not game FPS
 or memory. Lua error storms retain at most 10 distinct reports, reuse the stack

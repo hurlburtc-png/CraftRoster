@@ -19,9 +19,9 @@ Find a guild crafter, gather your materials, and arrange the craft from one ligh
 - Search recipes and professions, find saved guild crafters, and see online status.
 - Keep favorites and a pinned shopping list showing bag quantities and missing materials.
 - Prepare crafting whispers and mail; offer available material quantities when you open a trade.
-- Browse locally discovered unlearned recipes. If no synced crafter knows one, view its recipe link and **Where to get it** details when the client supplies them.
+- Browse locally discovered unlearned recipes. If no synced crafter knows one, view the teaching-item tooltip, binding, and **Where to get it** details. Four starter references include clearly labeled Classic drop estimates; optional LibProfessionDB adds mappings and source names.
 
-Open each profession to collect its available recipe data, then use **Refresh** to sync with guildmates running CraftRoster. No synced crafter is not proof nobody in the guild knows a recipe. Recipe/source coverage depends on the client; missing sources say **Source unknown**. A complete recipe/source database is not bundled.
+Open each profession to collect its available recipe data, then use **Refresh** to sync with guildmates running CraftRoster. No synced crafter is not proof nobody in the guild knows a recipe. Recipe/source coverage depends on the client; missing sources say **Source unknown**. A complete recipe/source database is not bundled. [Source coverage and accuracy](docs/RECIPE_SOURCES.md).
 
 Whispers remain drafts. You confirm trades and send mail yourself.
 
@@ -35,7 +35,7 @@ Whispers remain drafts. You confirm trades and send mail yourself.
 | `/cr reset` | Restore window size and position |
 | `/cr bug` | Copy a Lua error report |
 
-[Full usage and commands](docs/USAGE.md) · [Testing and known limits](TESTING.md) · [Report a bug](https://github.com/hurlburtc-png/CraftRoster/issues)
+[Full usage and commands](docs/USAGE.md) · [Testing and known limits](TESTING.md) · [Remaining plans](docs/ROADMAP.md) · [Report a bug](https://github.com/hurlburtc-png/CraftRoster/issues)
 
 ## Development
 
