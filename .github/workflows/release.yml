@@ -25,14 +25,11 @@ jobs:
         run: python -m unittest discover -s tests -v
 
       - name: Package addon
-        run: |
-          mkdir -p packaging
-          cp -r CraftRoster packaging/
-          cd packaging
-          zip -r ../CraftRoster.zip CraftRoster
+        run: python scripts/package_addon.py CraftRoster.zip
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: CraftRoster.zip
           generate_release_notes: true
+

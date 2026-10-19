@@ -28,6 +28,12 @@ The addon-only ZIP is a tested development build; see [TESTING.md](TESTING.md)
 for remaining in-game checks. Maintainers rebuild it with
 `python scripts/package_addon.py CraftRoster.zip` when updating the download.
 
+## Repository layout
+
+This repository is dedicated to CraftRoster. The addon Lua files and `CraftRoster.toc` live directly at the root. Tests and packaging tools stay in their own development folders. Other addons belong in separate repositories.
+
+If installing from **Code → Download ZIP**, rename the extracted folder to **CraftRoster** before copying it into `Interface/AddOns`. The direct addon ZIP above already has the correct folder name and contains only addon files.
+
 ## Commands
 
 - `/cr` — open the directory
@@ -184,3 +190,4 @@ initialization are merged with saved history. Repeated messages reuse the stored
 stack and capture notices are throttled. The original Lua error handler still runs.
 No report is uploaded or sent automatically. Errors before this addon's reporter
 loads, unrelated addon errors, and errors swallowed by other handlers may not appear.
+

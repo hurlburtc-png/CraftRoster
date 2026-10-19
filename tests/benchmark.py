@@ -12,9 +12,9 @@ def run(runtime):
     lua.globals().configure('modern')
     fixture_frames = len(lua.globals().frames)
     addon = lua.table(); lua.globals().addon = addon
-    for name in (ROOT/'CraftRoster/CraftRoster.toc').read_text().splitlines():
+    for name in (ROOT/'CraftRoster.toc').read_text().splitlines():
         if name.endswith('.lua'):
-            lua.compile((ROOT/'CraftRoster'/name).read_text(), name=name)('CraftRoster', addon)
+            lua.compile((ROOT/name).read_text(), name=name)('CraftRoster', addon)
     lua.execute("dispatch('ADDON_LOADED','CraftRoster')")
     startup_frames = len(lua.globals().frames) - fixture_frames
     lua.execute("""
@@ -52,3 +52,4 @@ def run(runtime):
 
 if __name__ == '__main__':
     print(json.dumps([run(name) for name in ('lua51', 'luajit21')], indent=2))
+

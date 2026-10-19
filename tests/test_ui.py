@@ -17,9 +17,9 @@ class FrameLayoutTests(unittest.TestCase):
                     lua.execute((ROOT / 'tests/layout_mock.lua').read_text())
                     addon = lua.table()
                     lua.globals().addon = addon
-                    for name in (ROOT / 'CraftRoster/CraftRoster.toc').read_text().splitlines():
+                    for name in (ROOT / 'CraftRoster.toc').read_text().splitlines():
                         if name.endswith('.lua'):
-                            lua.compile((ROOT / 'CraftRoster' / name).read_text(), name=name)('CraftRoster', addon)
+                            lua.compile((ROOT / name).read_text(), name=name)('CraftRoster', addon)
                     lua.execute("dispatch('ADDON_LOADED','CraftRoster')")
                     lua.execute('''
                         inventoryFixture(false,true)
@@ -111,3 +111,4 @@ class FrameLayoutTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

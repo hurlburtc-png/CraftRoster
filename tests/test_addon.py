@@ -867,9 +867,9 @@ for runtime in ('lua51', 'luajit21'):
                 # A partial old settings table should acquire missing defaults.
                 lua.execute('CraftRosterDB={settings={onlineOnly=false}}')
                 addon = lua.table(); lua.globals().addon = addon
-                for name in (ROOT/'CraftRoster/CraftRoster.toc').read_text().splitlines():
+                for name in (ROOT/'CraftRoster.toc').read_text().splitlines():
                     if name.endswith('.lua'):
-                        lua.compile((ROOT/'CraftRoster'/name).read_text(), name=name)('CraftRoster', addon)
+                        lua.compile((ROOT/name).read_text(), name=name)('CraftRoster', addon)
                 lua.execute("dispatch('ADDON_LOADED','CraftRoster')")
                 lua.execute(code)
             setattr(AddonTests, f'test_{runtime}_{profile}_{name}', test)
@@ -886,9 +886,9 @@ class PeerTests(unittest.TestCase):
                         lua.globals().player = player
                         lua.execute("function UnitName(unit) return player end")
                         addon = lua.table(); lua.globals().addon = addon
-                        for name in (ROOT/'CraftRoster/CraftRoster.toc').read_text().splitlines():
+                        for name in (ROOT/'CraftRoster.toc').read_text().splitlines():
                             if name.endswith('.lua'):
-                                lua.compile((ROOT/'CraftRoster'/name).read_text(), name=name)('CraftRoster', addon)
+                                lua.compile((ROOT/name).read_text(), name=name)('CraftRoster', addon)
                         lua.execute("dispatch('ADDON_LOADED','CraftRoster')")
                         return lua
                     sender, receiver = peer(sender_profile, 'Tester'), peer(receiver_profile, 'Crafter')
@@ -933,9 +933,9 @@ class ShoppingPersistenceTests(unittest.TestCase):
                             lua.globals().savedShopping = lua.table_from(saved, recursive=True)
                             lua.execute("CraftRosterDB={characters={['Tester-Realm']={shoppingList=savedShopping}},recipes={[42]={name='Potion',materials={{name='Herb',count=3}}}}}")
                         addon=lua.table(); lua.globals().addon=addon
-                        for name in (ROOT/'CraftRoster/CraftRoster.toc').read_text().splitlines():
+                        for name in (ROOT/'CraftRoster.toc').read_text().splitlines():
                             if name.endswith('.lua'):
-                                lua.compile((ROOT/'CraftRoster'/name).read_text(),name=name)('CraftRoster',addon)
+                                lua.compile((ROOT/name).read_text(),name=name)('CraftRoster',addon)
                         lua.execute("dispatch('ADDON_LOADED','CraftRoster')")
                         return lua
                     first=fresh()
@@ -966,12 +966,12 @@ class ErrorPersistenceTests(unittest.TestCase):
                 lua.execute((ROOT/'tests/wow_mock.lua').read_text())
                 lua.globals().configure('modern')
                 addon=lua.table(); lua.globals().addon=addon
-                lua.compile((ROOT/'CraftRoster/ErrorReporter.lua').read_text())('CraftRoster',addon)
+                lua.compile((ROOT/'ErrorReporter.lua').read_text())('CraftRoster',addon)
                 lua.execute("geterrorhandler()('CraftRoster/Core.lua:1: startup failure')")
                 lua.execute("CraftRosterDB={errorReports={{message='CraftRoster/Recipes.lua:2: saved failure',stack='saved stack',count=3}}}")
-                for name in (ROOT/'CraftRoster/CraftRoster.toc').read_text().splitlines():
+                for name in (ROOT/'CraftRoster.toc').read_text().splitlines():
                     if name.endswith('.lua') and name!='ErrorReporter.lua':
-                        lua.compile((ROOT/'CraftRoster'/name).read_text(),name=name)('CraftRoster',addon)
+                        lua.compile((ROOT/name).read_text(),name=name)('CraftRoster',addon)
                 lua.execute("""
                     dispatch('ADDON_LOADED','CraftRoster')
                     assert(#CraftRosterDB.errorReports==2)
@@ -982,13 +982,14 @@ class ErrorPersistenceTests(unittest.TestCase):
 
 class ForeverManifestTests(unittest.TestCase):
     def test_manifest_matches_reported_forever_client(self):
-        lines=(ROOT/'CraftRoster/CraftRoster.toc').read_text().splitlines()
+        lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
         self.assertEqual(metadata['Version'],'0.8.0-beta.4')
         for line in lines:
             if line and not line.startswith('#'):
-                self.assertTrue((ROOT/'CraftRoster'/line).is_file(), 'Missing TOC module: '+line)
+                self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+

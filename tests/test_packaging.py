@@ -20,11 +20,12 @@ class PackageTests(unittest.TestCase):
                 names = archive.namelist()
                 self.assertEqual({name.split('/')[0] for name in names}, {'CraftRoster'})
                 self.assertIn('CraftRoster/CraftRoster.toc', names)
-                for line in (ROOT / 'CraftRoster/CraftRoster.toc').read_text().splitlines():
+                for line in (ROOT / 'CraftRoster.toc').read_text().splitlines():
                     if line.strip() and not line.startswith('#'):
                         self.assertIn('CraftRoster/' + line.strip(), names)
                 addons = Path(temporary) / 'AddOns'
                 archive.extractall(addons)
                 self.assertTrue((addons / 'CraftRoster/CraftRoster.toc').is_file())
                 self.assertEqual((addons / 'CraftRoster/Directory.lua').read_bytes(),
-                                 (ROOT / 'CraftRoster/Directory.lua').read_bytes())
+                                 (ROOT / 'Directory.lua').read_bytes())
+
