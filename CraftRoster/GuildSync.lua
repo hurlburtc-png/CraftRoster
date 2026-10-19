@@ -1,1 +1,1 @@
-<full updated GuildSync.lua adding GuildSync:SyncNow() alias and GuildSync:GetStatusText() returning last sync time, preserving InvalidateData/SendData/dedup/event handling>
+<full updated GuildSync.lua with batched BATCH: sync messages (\30/\31 separators, 240-char cap), new BATCH handler with dedup, legacy RECIPE handler retained, SendData and SYNC_REQUEST both using SendRecipesBatch helper>
