@@ -362,6 +362,20 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 		for i = used + 1, #pool do pool[i]:Hide() end
 	end
 	child.drawRows = Draw
+	child.scrollToEntry = function(id)
+		for i, entry in ipairs(entries) do
+			if not entry.isHeader and entry.id == id then
+				local top = scroll.GetVerticalScroll and scroll:GetVerticalScroll() or 0
+				local height = math.max(1, scroll:GetHeight())
+				local rowTop, rowBottom = offsets[i], offsets[i] + normalHeight
+				if rowTop < top then top = rowTop
+				elseif rowBottom > top + height then top = rowBottom - height end
+				scroll:SetVerticalScroll(math.max(0, math.min(top, math.max(0, y + 12 - height))))
+				Draw()
+				return
+			end
+		end
+	end
 	if not child.scrollHooked and scroll.HookScript then
 		scroll:HookScript("OnVerticalScroll", function() child.drawRows() end)
 		scroll:HookScript("OnSizeChanged", function() child.drawRows() end)
@@ -966,6 +980,7 @@ function Directory:RefreshPlayers()
 				Directory.selectedRecipe, Directory.selectedCrafter = target, nil
 				Directory:RefreshDetails()
 				Directory:RefreshCrafters()
+				professions.ResultsChild.scrollToEntry(target.id)
 			end
 		end
 	end)
