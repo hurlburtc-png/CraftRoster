@@ -46,7 +46,7 @@ local function Contribution(recipeID, target)
 end
 
 function ShoppingList:GetPlayerMaterials(recipeID, target)
-	local entries = Materials(CraftRosterDB.recipes[recipeID]) or {}
+	local entries = Materials({materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipeID)}) or {}
 	local contribution = Contribution(recipeID, target)
 	local materials = {}
 	for _, entry in ipairs(entries) do
@@ -61,7 +61,7 @@ function ShoppingList:SetCrafterShare(recipeID, target, key, count)
 	local crafter = NormalizeTarget(target)
 	if not crafter or type(count) ~= "number" or count < 0 or count ~= math.floor(count) then return false end
 	local found
-	for _, entry in ipairs(Materials(CraftRosterDB.recipes[recipeID]) or {}) do
+	for _, entry in ipairs(Materials({materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipeID)}) or {}) do
 		if (entry.itemID or entry.name) == key then found = entry end
 	end
 	if not found or count > found.required then return false end
@@ -176,7 +176,7 @@ function ShoppingList:Refresh()
 	local title = recipe and recipe.name or ("Recipe " .. tostring(state.recipeID))
 	if state.crafter then title = title .. "\nCrafter: " .. state.crafter end
 	self.frame.Recipe:SetText(title)
-	local entries = Materials(recipe)
+	local entries = Materials({materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(state.recipeID)})
 	self.entries = entries or {}
 	if not entries then
 		self.frame.Message:SetText("No material data yet.\nScan this recipe locally.")
