@@ -13,7 +13,7 @@ local PROFESSION_ICONS = {
 	Enchanting = "Interface\\Icons\\Trade_Engraving",
 	Engineering = "Interface\\Icons\\Trade_Engineering",
 	Herbalism = "Interface\\Icons\\Trade_Herbalism",
-	Inscription = "Interface\\Icons\	rade_inscription",
+	Inscription = "Interface\\\\Icons\\\\trade_inscription",
 	Jewelcrafting = "Interface\\Icons\\Trade_Jewelcrafting",
 	Leatherworking = "Interface\\Icons\\Trade_Leatherworking",
 	Mining = "Interface\\Icons\\Trade_Mining",
@@ -824,8 +824,7 @@ function Directory:RefreshRecipeSource()
 	end
 	local saved = CraftRosterDB.recipes[recipe.id] or {}
 	local data = CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipe.id)
-	source.Status:SetText("No synced crafter knows this recipe.
-Guild data may be incomplete; try Refresh.")
+	source.Status:SetText("No synced crafter knows this recipe.\\nGuild data may be incomplete; try Refresh.")
 	source.Link:SetText(data and data.label or "Recipe item unknown (view spell)")
 	source.Text:SetText(CraftRoster.RecipeSources and CraftRoster.RecipeSources:Format(recipe.id, data)
 		or (saved.sourceText or "Source unknown"))
