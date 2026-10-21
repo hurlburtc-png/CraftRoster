@@ -201,7 +201,7 @@ local function BuildRecipeIndex()
 					name = saved.name or GetRecipeName(recipeID),
 					searchName = (saved.name or GetRecipeName(recipeID)):lower(),
 					profession = profession,
-					icon = saved.icon or GetProfessionIcon(profession),
+					icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession))) or GetProfessionIcon(profession),
 					crafters = {},
 				}
 				index[recipeID] = recipe
@@ -217,7 +217,7 @@ local function BuildRecipeIndex()
 			local profession = saved.profession or "Unknown"
 			index[recipeID] = { id = recipeID, name = saved.name or GetRecipeName(recipeID),
 				searchName = (saved.name or GetRecipeName(recipeID)):lower(), profession = profession,
-				icon = saved.icon or GetProfessionIcon(profession), crafters = {} }
+				icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession))) or GetProfessionIcon(profession), crafters = {} }
 		end
 	end
 
@@ -761,7 +761,7 @@ local function BuildProfessionEntries()
 			text = recipe.name,
 			icon = recipe.icon,
 			rightText = #recipe.crafters == 0 and "No crafter" or ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
-			materials = saved and saved.materials,
+			materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipe.id) or (saved and saved.materials),
 			hyperlink = saved and saved.itemLink,
 			recipe = recipe,
 		})
@@ -801,7 +801,7 @@ function Directory:RefreshDetails()
 	if recipe then
 		tab.DetailsIcon:SetTexture(recipe.icon)
 		tab.DetailsName:SetText(recipe.name)
-		tab.DetailsProfession:SetText(recipe.profession)
+		tab.DetailsProfession:SetText(recipe.profession)\n
 	else
 		tab.DetailsIcon:SetTexture("Interface\\Icons\\Trade_Tailoring")
 		tab.DetailsName:SetText("Select a recipe")
@@ -941,7 +941,7 @@ function Directory:RefreshMyRecipes()
 			local profession = saved.profession or "Unknown"
 			table.insert(entries, {
 				text = GetRecipeName(recipeID),
-				icon = saved.icon or GetProfessionIcon(profession),
+				icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession))) or GetProfessionIcon(profession),
 			})
 		end
 	end
