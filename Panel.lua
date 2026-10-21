@@ -7,6 +7,15 @@ local function FormatTime(timestamp)
 	return timestamp and date("%I:%M %p", timestamp) or "Never"
 end
 
+function Panel:CreateReportButton(parent)
+	local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+	button:SetSize(88, 20)
+	button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -2)
+	button:SetText("Bug Report")
+	button:SetScript("OnClick", function() Panel:ShowError() end)
+	return button
+end
+
 function Panel:Initialize()
 	if self.frame then return end
 
@@ -28,6 +37,10 @@ function Panel:Initialize()
 
 	local title = frame.TitleText or frame.TitleBar.TitleText
 	title:SetText("CraftRoster Settings")
+	title:ClearAllPoints()
+	title:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -5)
+	title:SetWidth(220)
+	title:SetJustifyH("LEFT")
 
 	frame.StatusText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	frame.StatusText:SetPoint("TOPLEFT", 16, -38)
@@ -79,19 +92,7 @@ function Panel:Initialize()
 		print("|cff00ff00CraftRoster|r: directory window position reset.")
 	end)
 
-	local bugButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-	bugButton:SetSize(26, 26)
-	bugButton:SetPoint("TOPRIGHT", -34, -10)
-	bugButton:SetNormalTexture("Interface\\Icons\\INV_Misc_Bug_01")
-	bugButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-	bugButton:SetScript("OnClick", function() Panel:ShowError() end)
-	bugButton:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-		GameTooltip:SetText("CraftRoster Error")
-		GameTooltip:AddLine("Copy a bug report with recent Lua errors and client details.", 1, 1, 1)
-		GameTooltip:Show()
-	end)
-	bugButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	frame.BugReportButton = self:CreateReportButton(frame)
 
 	local autoCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
 	autoCheck:SetPoint("TOPLEFT", 14, -254)

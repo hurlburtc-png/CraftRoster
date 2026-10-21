@@ -40,6 +40,28 @@ end
 
 function Sources:SeedCatalog()
 	local changed = false
+	-- Import the bundled catalogue locally; never claim that a character knows it.
+	if not self.catalogLoaded then
+		local hits = libraryCall("Search", { max = 100000 })
+		if type(hits) == "table" then
+			local professions = { [171] = "Alchemy", [164] = "Blacksmithing",
+				[185] = "Cooking", [333] = "Enchanting", [202] = "Engineering",
+				[129] = "First Aid", [356] = "Fishing", [165] = "Leatherworking",
+				[186] = "Mining", [197] = "Tailoring" }
+			for _, hit in ipairs(hits) do
+				if professions[hit.profId] and type(hit.name) == "string" and hit.name ~= "" then
+					local saved = CraftRosterDB.recipes[hit.recipeId] or {}
+					if not saved.name then saved.name = hit.name; changed = true end
+					if not saved.profession or saved.profession == "Unknown" then
+						saved.profession = professions[hit.profId]; changed = true
+					end
+					if not saved.description then saved.description = hit.effect end
+					CraftRosterDB.recipes[hit.recipeId] = saved
+				end
+			end
+			self.catalogLoaded = true
+		end
+	end
 	for id, reference in pairs(references) do
 		local saved = CraftRosterDB.recipes[id]
 		if not saved then

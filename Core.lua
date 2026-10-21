@@ -2,6 +2,13 @@ local ADDON_NAME, CraftRoster = ...
 local Core = CreateFrame("Frame", ADDON_NAME .. "Core")
 CraftRoster.Core = Core
 
+local lastChatWarning = -60
+function CraftRoster:WarnChatRestricted()
+	if time() - lastChatWarning < 60 then return end
+	lastChatWarning = time()
+	print("|cffffd100CraftRoster|r: the client is blocking addon messages. Guild sync/status cannot send; local search and manual whispers still work. This does not mean guildmates lack CraftRoster.")
+end
+
 Core:RegisterEvent("ADDON_LOADED")
 Core:SetScript("OnEvent", function(self, event, loadedAddon)
 	if event == "ADDON_LOADED" and loadedAddon == ADDON_NAME then

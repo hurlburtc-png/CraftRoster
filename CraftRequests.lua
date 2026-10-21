@@ -71,12 +71,12 @@ local function SendAddonData(message)
 	if not CraftRosterDB.settings.enabled or #message > 255 then return false end
 	if C_ChatInfo and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted
 		and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted() then
-		print("|cffff0000CraftRoster|r: addon chat is restricted; status not sent.")
+		CraftRoster:WarnChatRestricted()
 		return false
 	end
 	if C_ChatInfo and C_ChatInfo.InChatMessagingLockdown
 		and C_ChatInfo.InChatMessagingLockdown() then
-		print("|cffff0000CraftRoster|r: chat is in lockdown; status not sent.")
+		CraftRoster:WarnChatRestricted()
 		return false
 	end
 	if IsInGuild and not IsInGuild() then return false end
@@ -350,7 +350,35 @@ AttachMaterials = function(mode)
 	end
 end
 
+-- Only these CraftRoster dialogs become draggable; pooled Blizzard popups are
+-- restored on hide so unrelated confirmation dialogs retain their behavior.
+local function ShowMovableRequest(self)
+	self.CraftRosterWasMovable = self:IsMovable()
+	self:SetMovable(true)
+	self:SetClampedToScreen(true)
+	local handle = self.CraftRosterDragHandle
+	if not handle then
+		handle = CreateFrame("Frame", nil, self)
+		handle:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 0)
+		handle:SetPoint("TOPRIGHT", self, "TOPRIGHT", 0, 0)
+		handle:SetHeight(24)
+		handle:EnableMouse(true)
+		handle:RegisterForDrag("LeftButton")
+		handle:SetScript("OnDragStart", function() self:StartMoving() end)
+		handle:SetScript("OnDragStop", function() self:StopMovingOrSizing() end)
+		self.CraftRosterDragHandle = handle
+	end
+	handle:Show()
+end
+local function HideMovableRequest(self)
+	self:StopMovingOrSizing()
+	self:SetMovable(self.CraftRosterWasMovable or false)
+	if self.CraftRosterDragHandle then self.CraftRosterDragHandle:Hide() end
+end
+
 StaticPopupDialogs["CRAFTROSTER_TRADE_MATS"] = {
+	OnShow = ShowMovableRequest,
+	OnHide = HideMovableRequest,
 	text = "Enter the character to whisper and trade materials with:",
 	button1 = "Prepare Whisper",
 	button2 = "Cancel",
@@ -374,6 +402,8 @@ StaticPopupDialogs["CRAFTROSTER_TRADE_MATS"] = {
 }
 
 StaticPopupDialogs["CRAFTROSTER_MAIL_MATS"] = {
+	OnShow = ShowMovableRequest,
+	OnHide = HideMovableRequest,
 	text = "Enter the FULL character name including server, for example: Bob-Illidan",
 	button1 = "Prepare Mail",
 	button2 = "Cancel",

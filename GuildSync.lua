@@ -26,12 +26,12 @@ local function SendAddonData(message)
 	if #message > 255 or (IsInGuild and not IsInGuild()) then return false end
 	if C_ChatInfo and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted
 		and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted() then
-		print("|cffff0000CraftRoster|r: addon chat is restricted; sync not sent.")
+		CraftRoster:WarnChatRestricted()
 		return false
 	end
 	if C_ChatInfo and C_ChatInfo.InChatMessagingLockdown
 		and C_ChatInfo.InChatMessagingLockdown() then
-		print("|cffff0000CraftRoster|r: chat is in lockdown; sync not sent.")
+		CraftRoster:WarnChatRestricted()
 		return false
 	end
 	local send = C_ChatInfo and C_ChatInfo.SendAddonMessage or SendAddonMessage

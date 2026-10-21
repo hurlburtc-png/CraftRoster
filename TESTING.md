@@ -143,3 +143,13 @@ For feedback, include the copied `/cr bug` report plus steps, expected/actual
 behavior, recipient/quantity details where relevant, and whether other addons
 were enabled. Avoid publishing account information or unrelated private chat.
 
+
+## Beta 9 in-game feedback checks
+
+- Drag the top edge of Whisper Player and Mail Player target dialogs. Confirm Cancel and Enter still work; unrelated Blizzard popups must retain their normal behavior.
+- Confirm the green flask has a standard round minimap border and sits outside the map; drag it around the edge.
+- Open the profession menu: All must be first, followed by a blank separator and alphabetized professions.
+- Search bundled recipes before any guild sync. A catalogue recipe must never imply a guildmate knows it.
+- Check Bug Report in the title row of both Settings and the main directory, including minimum window width.
+- While outgoing addon messages are restricted, repeated actions must produce at most one explanatory warning per minute. Manual whisper drafts and local search must remain usable.
+- Extract the direct CraftRoster.zip into an empty AddOns directory: only CraftRoster/ should appear, with CraftRoster.toc immediately inside.

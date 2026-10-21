@@ -7,6 +7,7 @@ local DEFAULT_WINDOW = { width = 760, height = 500, x = 0, y = 0 }
 local MIN_WIDTH, MIN_HEIGHT = 620, 420
 
 local PROFESSION_ICONS = {
+	["First Aid"] = "Interface\\Icons\\Spell_Holy_SealOfSacrifice",
 	Alchemy = "Interface\\Icons\\Trade_Alchemy",
 	Blacksmithing = "Interface\\Icons\\Trade_BlackSmithing",
 	Enchanting = "Interface\\Icons\\Trade_Engraving",
@@ -438,6 +439,7 @@ function Directory:Initialize()
 	RestoreGeometry(frame)
 	local title = frame.TitleText or frame.TitleBar.TitleText
 	title:SetText("CraftRoster")
+	frame.BugReportButton = CraftRoster.Panel:CreateReportButton(frame)
 
 	local resize = CreateFrame("Frame", nil, frame)
 	resize:SetSize(16, 16)
@@ -511,9 +513,10 @@ function Directory:Initialize()
 	professionsTab.Dropdown:SetPoint("LEFT", professionsTab.SearchBox, "RIGHT", 4, -4)
 	UIDropDownMenu_SetWidth(professionsTab.Dropdown, 150)
 	UIDropDownMenu_Initialize(professionsTab.Dropdown, function(dropdown, level)
-		local professions = { "All" }
+		local professions = {}
 		for profession in pairs(PROFESSION_ICONS) do table.insert(professions, profession) end
 		table.sort(professions)
+		table.insert(professions, 1, "All")
 
 		for _, profession in ipairs(professions) do
 			local info = UIDropDownMenu_CreateInfo()
@@ -524,6 +527,13 @@ function Directory:Initialize()
 				Directory:RefreshProfessions()
 			end
 			UIDropDownMenu_AddButton(info, level)
+			if profession == "All" then
+				local spacer = UIDropDownMenu_CreateInfo()
+				spacer.text = " "
+				spacer.disabled = true
+				spacer.notCheckable = true
+				UIDropDownMenu_AddButton(spacer, level)
+			end
 		end
 	end)
 	UIDropDownMenu_SetText(professionsTab.Dropdown, "All")

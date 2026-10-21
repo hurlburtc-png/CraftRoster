@@ -279,6 +279,7 @@ CASES.update({
 
 CASES.update({
     'large_directory_bounded_frames_and_scroll_reuse': """
+        addon.RecipeSources.catalogLoaded=true -- isolate the synthetic scrolling fixture
         local own=CraftRosterDB.characters['Tester-Realm'].recipes
         for id=1,5000 do
           CraftRosterDB.recipes[id]={name=('Potion %05d'):format(id),profession='Alchemy'}
@@ -505,6 +506,7 @@ CASES.update({
         assert(CraftRosterDB.recipes[42].materials==old)
     """,
     'end_of_virtual_list_click_uses_current_recipe': """
+        addon.RecipeSources.catalogLoaded=true -- isolate the synthetic scrolling fixture
         for id=1,1000 do
           CraftRosterDB.recipes[id]={name=('Potion %04d'):format(id)}
           CraftRosterDB.characters['Tester-Realm'].recipes[id]={}
@@ -1058,7 +1060,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.8')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.9')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)

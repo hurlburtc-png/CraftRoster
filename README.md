@@ -6,11 +6,11 @@ Find a guild crafter, gather your materials, and arrange the craft from one ligh
 
 ## Install
 
-1. Download and extract **CraftRoster.zip**.
-2. Copy the **CraftRoster** folder into your WoW `Interface/AddOns` folder.
+1. Download **CraftRoster.zip** using the direct download above.
+2. Extract it directly into your WoW `Interface/AddOns` folder. It creates the **CraftRoster** folder automatically.
 3. Restart WoW and type **`/cr`**.
 
-`CraftRoster.toc` should sit directly inside `Interface/AddOns/CraftRoster`. Use the download above for the addon-only package. If using GitHub's **Code → Download ZIP**, rename the extracted folder to **CraftRoster** first.
+`CraftRoster.toc` should sit directly inside `Interface/AddOns/CraftRoster`. Use the download above for the addon-only package. GitHub’s **Code → Download ZIP** downloads the source repository with an extra wrapper folder; use **Download CraftRoster.zip** above for installation.
 
 **Target:** WoW Forever 1.60.1, build 70450 (interface 16001). Development build; in-game compatibility checks are still required.
 
@@ -21,7 +21,7 @@ Find a guild crafter, gather your materials, and arrange the craft from one ligh
 - Prepare crafting whispers and mail; offer available material quantities when you open a trade.
 - Browse locally discovered unlearned recipes. If no synced crafter knows one, view the teaching-item tooltip, binding, and **Where to get it** details. Four starter references include clearly labeled Classic drop estimates; bundled LibProfessionDB adds mappings and source names, with no separate install.
 
-Open each profession to collect its available recipe data, then use **Refresh** to sync with guildmates running CraftRoster. No synced crafter is not proof nobody in the guild knows a recipe. Recipe/source coverage depends on the client; missing sources say **Source unknown**. The Forever database is bundled for lookups; the directory currently lists scanned/synced recipes and four starter entries rather than importing its entire catalogue. [Source coverage and accuracy](docs/RECIPE_SOURCES.md).
+Open each profession to collect its available recipe data, then use **Refresh** to sync with guildmates running CraftRoster. No synced crafter is not proof nobody in the guild knows a recipe. Recipe/source coverage depends on the client; missing sources say **Source unknown**. The Forever database is bundled for lookups; the directory imports its full bundled recipe catalogue for offline searching, even without synced crafters. [Source coverage and accuracy](docs/RECIPE_SOURCES.md).
 
 Whispers remain drafts. You confirm trades and send mail yourself.
 

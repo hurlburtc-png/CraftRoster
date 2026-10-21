@@ -12,6 +12,8 @@ function methods:RegisterEvent(k) self.events[k]=true end
 function methods:UnregisterAllEvents() self.events={} end
 function methods:UnregisterEvent(k) self.events[k]=nil end
 function methods:SetSize(w,h) self.width=w; self.height=h end
+function methods:GetFrameLevel() return 1 end
+function methods:IsMovable() return self.movable == true end
 function methods:GetWidth() return rawget(self,'width') or 100 end
 function methods:GetHeight() return rawget(self,'height') or 100 end
 function methods:SetText(t) self.text=t end
@@ -36,7 +38,8 @@ function methods:GetParent() return self.parent end
 function CreateFrame(kind,name,parent,template)
  local f=setmetatable({scripts={},events={},parent=parent}, {__index=function(_,k) return methods[k] or (k:match('^[A-Z]') and (k:match('^Set') or k:match('^Enable') or k:match('^Register') or k:match('^Clear') or k:match('^Start') or k:match('^Stop')) and function() end) or nil end})
  table.insert(frames,f)
- if apiProfile == "modern" then f.TitleText=f else f.TitleBar={TitleText=f} end
+ local title=setmetatable({scripts={},events={},parent=f},getmetatable(f))
+ if apiProfile == "modern" then f.TitleText=title else f.TitleBar={TitleText=title} end
  f.Inset=f; f.Text=f; f.template=template
  if name then _G[name]=f end
  return f
