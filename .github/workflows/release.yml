@@ -42,7 +42,8 @@ jobs:
 
       - name: Read addon version
         id: metadata
-        run: echo "version=$(sed -n 's/^## Version: //p' CraftRoster.toc)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=$(sed -n 's/^## Version: //p' CraftRoster.toc)" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
