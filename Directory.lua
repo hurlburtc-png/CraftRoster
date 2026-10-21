@@ -824,7 +824,7 @@ function Directory:RefreshRecipeSource()
 	end
 	local saved = CraftRosterDB.recipes[recipe.id] or {}
 	local data = CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipe.id)
-	source.Status:SetText("No synced crafter knows this recipe.\\nGuild data may be incomplete; try Refresh.")
+	source.Status:SetText("No synced crafter knows this recipe.\nGuild data may be incomplete; try Refresh.")
 	source.Link:SetText(data and data.label or "Recipe item unknown (view spell)")
 	source.Text:SetText(CraftRoster.RecipeSources and CraftRoster.RecipeSources:Format(recipe.id, data)
 		or (saved.sourceText or "Source unknown"))
