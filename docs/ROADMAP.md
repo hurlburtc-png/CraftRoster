@@ -8,7 +8,8 @@ features. In-game testing remains required for the current candidate.
   enriches mapped recipe items and source names, not percentages or the entire catalogue.
 - Add incoming request Accept/Decline UI. Existing request/status commands do not
   provide a complete popup workflow or decline state.
-- Add member notes and expandable lists of each player's known recipes.
+- Add member notes. The Players tab now expands each member's synced recipe list;
+  selecting a recipe opens its crafting details and clears conflicting filters.
 - Share complete material schematics between guild clients. Current sync shares
   recipe IDs, names and professions; material details depend on a local scan.
 - Review request transport privacy: addon messages currently use the guild

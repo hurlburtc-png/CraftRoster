@@ -910,23 +910,65 @@ function Directory:RefreshPlayers()
 	if not self.frame or not self.frame:IsShown() then return end
 	local tab = self.frame.PlayersTab
 	local search = (tab.SearchBox:GetText() or ""):lower()
-	local entries = {}
+	local entries, players = {}, {}
+	self.expandedPlayers = self.expandedPlayers or {}
 
 	for characterKey, character in pairs(CraftRosterDB.characters or {}) do
 		if search == "" or characterKey:lower():find(search, 1, true) then
-			table.insert(entries, {
-				text = GetColoredName(characterKey, character),
+			table.insert(players, {
+				text = (self.expandedPlayers[characterKey] and "[-] " or "[+] ") .. GetColoredName(characterKey, character, not IsCharacterOnline(characterKey)),
 				key = characterKey,
 				atlas = GetRaceGenderAtlas(character),
 				icon = "Interface\\Icons\\Achievement_Character_Human_Male",
 				rightText = GetProfessionTotals(character),
-			tooltipLines = { characterKey, GetProfessionTotals(character) },
+			tooltipLines = { characterKey, GetProfessionTotals(character), "Click to show or hide known recipes." },
 			})
 		end
 	end
 
-	table.sort(entries, function(a, b) return a.key < b.key end)
-	RenderList(tab.ResultsChild, entries, 720, 42, 28)
+	table.sort(players, function(a, b) return a.key < b.key end)
+	for _, player in ipairs(players) do
+		table.insert(entries, player)
+		if self.expandedPlayers[player.key] then
+			local recipes = {}
+			local character = CraftRosterDB.characters[player.key]
+			for recipeID in pairs(character.recipes or {}) do
+				local saved = CraftRosterDB.recipes[recipeID] or {}
+				table.insert(recipes, { id = recipeID, text = "    " .. GetRecipeName(recipeID),
+					rightText = saved.profession or "Unknown",
+					icon = GetProfessionIcon(saved.profession),
+					tooltipLines = { GetRecipeName(recipeID), saved.profession or "Unknown", "Click to view this recipe and its crafters." } })
+			end
+			table.sort(recipes, function(a, b)
+				if a.rightText ~= b.rightText then return a.rightText < b.rightText end
+				if a.text ~= b.text then return a.text < b.text end
+				return tostring(a.id) < tostring(b.id)
+			end)
+			for _, recipe in ipairs(recipes) do table.insert(entries, recipe) end
+			if #recipes == 0 then table.insert(entries, { isHeader = true, text = "    No recipes synced yet." }) end
+		end
+	end
+	RenderList(tab.ResultsChild, entries, 720, 42, 28, function(entry)
+		if entry.key then
+			Directory.expandedPlayers[entry.key] = not Directory.expandedPlayers[entry.key]
+			Directory:RefreshPlayers()
+		elseif entry.id then
+			local target
+			for _, recipe in ipairs(GetRecipeIndex()) do if recipe.id == entry.id then target = recipe; break end end
+			if target then
+				local professions = Directory.frame.ProfessionsTab
+				professions.SearchBox:SetText("")
+				Directory.selectedProfession = "All"
+				UIDropDownMenu_SetText(professions.Dropdown, "All")
+				CraftRosterDB.settings.favoritesOnly = false
+				professions.FavoritesCheck:SetChecked(false)
+				Directory:ShowTab(1)
+				Directory.selectedRecipe, Directory.selectedCrafter = target, nil
+				Directory:RefreshDetails()
+				Directory:RefreshCrafters()
+			end
+		end
+	end)
 end
 
 function Directory:RefreshMyRecipes()
@@ -1038,6 +1080,6 @@ rosterFrame:SetScript("OnEvent", function(_, event)
 		end
 	end
 
-	if Directory.activeTab == 1 then Directory:RefreshCrafters() end
+	if Directory.activeTab == 1 then Directory:RefreshCrafters()
+	elseif Directory.activeTab == 2 then Directory:RefreshPlayers() end
 end)
-
