@@ -23,11 +23,11 @@ jobs:
           python-version: '3.12'
       - name: Install test tools
         run: python -m pip install -r tests/requirements.txt
-      - name: Validate addon before packaging
-        run: python -m unittest discover -s tests -v
-
-      - name: Package addon
+      - name: Package addon before validation
         run: python scripts/package_addon.py CraftRoster.zip
+
+      - name: Validate addon and installable ZIP
+        run: python -m unittest discover -s tests -v
 
       - name: Update installable ZIP on main
         if: github.ref == 'refs/heads/main'
