@@ -25,13 +25,13 @@ SlashCmdList["CRAFTROSTERDIAGNOSTICS"] = function()
 	local initialized = CraftRoster.Directory and CraftRoster.Directory.frame ~= nil
 	print(("Initialized: %s"):format(initialized and "|cff00ff00yes|r" or "|cffff0000no|r"))
 
-	local recipeCount = 0
-	for _ in pairs(CraftRosterDB.recipes or {}) do recipeCount = recipeCount + 1 end
+	local db = type(CraftRosterDB) == "table" and CraftRosterDB or {}\n\tif type(CraftRosterDB) ~= "table" then\n\t\tprint("|cffff0000CraftRoster|r: saved database is not initialized.")\n\tend\n\n\tlocal recipeCount = 0
+	for _ in pairs(db.recipes or {}) do recipeCount = recipeCount + 1 end
 	local characterCount = 0
-	for _ in pairs(CraftRosterDB.characters or {}) do characterCount = characterCount + 1 end
+	for _ in pairs(db.characters or {}) do characterCount = characterCount + 1 end
 	print(("Saved recipes: %d · saved characters: %d"):format(recipeCount, characterCount))
 
-	local lastSync = CraftRosterDB.lastGuildSync
+	local lastSync = db.lastGuildSync
 	print(("Last guild sync: %s"):format(lastSync and date("%I:%M %p", lastSync) or "Never"))
 end
 
