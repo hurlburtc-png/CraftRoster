@@ -14,7 +14,7 @@ Core:SetScript("OnEvent", function(self, event, loadedAddon)
 	if event == "ADDON_LOADED" and loadedAddon == ADDON_NAME then
 		CraftRosterDB = CraftRosterDB or {}
 		CraftRosterDB.settings = CraftRosterDB.settings or {}
-		for key, value in pairs({ enabled = true, autoUpdateRecipes = true, onlineOnly = true }) do
+		for key, value in pairs({ enabled = true, autoUpdateRecipes = true, onlineOnly = true, autoLoadItems = true }) do
 			if CraftRosterDB.settings[key] == nil then CraftRosterDB.settings[key] = value end
 		end
 		CraftRosterDB.characters = CraftRosterDB.characters or {}
@@ -52,11 +52,14 @@ SlashCmdList["CRAFTROSTER"] = function(msg)
 
 	if msg == "toggle" then
 		CraftRosterDB.settings.enabled = not CraftRosterDB.settings.enabled
+		if CraftRoster.WorkOrders then CraftRoster.WorkOrders:Refresh() end
 		print(("CraftRoster is now %s."):format(
 			CraftRosterDB.settings.enabled and "|cff00ff00enabled|r" or "|cffff0000disabled|r"
 		))
 	elseif (msg == "bug" or msg == "errors") and CraftRoster.Panel then
 		CraftRoster.Panel:ShowError()
+	elseif (msg == "orders" or msg == "workorders") and CraftRoster.WorkOrders then
+		CraftRoster.WorkOrders:Toggle()
 	elseif msg == "shopping" and CraftRoster.ShoppingList then
 		CraftRoster.ShoppingList:Toggle()
 	elseif msg == "reset" and CraftRoster.Directory then

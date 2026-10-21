@@ -1,6 +1,6 @@
 """Build an installable ZIP containing only the top-level CraftRoster folder."""
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile
+from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 import argparse
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,7 +23,12 @@ def package(destination):
     paths += [source / 'vendor/ProfessionDB/LICENSE', source / 'vendor/ProfessionDB/manifest.json']
     with ZipFile(destination, 'w', ZIP_DEFLATED) as archive:
         for path in sorted(set(paths)):
-            archive.write(path, 'CraftRoster/' + path.relative_to(source).as_posix())
+            # Fixed metadata makes local and GitHub builds byte-identical.
+            entry = ZipInfo('CraftRoster/' + path.relative_to(source).as_posix(), (1980, 1, 1, 0, 0, 0))
+            entry.compress_type = ZIP_DEFLATED
+            entry.create_system = 3
+            entry.external_attr = 0o100644 << 16
+            archive.writestr(entry, path.read_bytes())
     return destination
 
 

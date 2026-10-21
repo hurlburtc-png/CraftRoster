@@ -60,13 +60,14 @@ class RecipeSourceTests(unittest.TestCase):
                         assert(tab.RecipeSource.Text:GetText():find('Test Vendor',1,true))
                         assert(tab.RecipeSource.Text:GetText():find('A recipe description',1,true))
                         tooltipLink=nil
+                        GameTooltip.AddLine=function() end
                         function GameTooltip:SetHyperlink(link) tooltipLink=link end
                         tab.RecipeSource.Link.scripts.OnClick(tab.RecipeSource.Link)
-                        assert(tooltipLink=='spell:99')
+                        assert(tooltipLink:find('|Hspell:99|h',1,true))
                         function IsShiftKeyDown() return true end
                         function ChatEdit_InsertLink(link) insertedLink=link; return true end
                         tab.RecipeSource.Link.scripts.OnClick(tab.RecipeSource.Link)
-                        assert(insertedLink=='spell:99')
+                        assert(insertedLink:find('|Hspell:99|h',1,true))
                         local oldScroll=tab.RecipeSource:GetVerticalScroll()
                         tab.RecipeSource:SetVerticalScroll(9999)
                         directory:RefreshRecipeSource()
@@ -74,7 +75,7 @@ class RecipeSourceTests(unittest.TestCase):
                         for _,size in ipairs({{620,420},{760,500},{1200,800}}) do
                             directory.frame:SetSize(size[1],size[2])
                             directory:RefreshRecipeSource()
-                            inside(tab.RecipeSource,tab)
+                            inside(tab.RecipeSource,tab.SelectedCraftContent)
                             apart(tab.RecipeSource,tab.Details)
                             assert(tab.RecipeSource.Child:GetHeight()>0)
                         end

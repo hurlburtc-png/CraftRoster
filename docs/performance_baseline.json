@@ -1,0 +1,58 @@
+{
+  "directory_stress": [
+    {
+      "runtime": "lua51",
+      "recipes": 5000,
+      "crafter_recipe_links": 105000,
+      "startup_addon_ui_objects": 13,
+      "first_open_added_ui_objects": 94,
+      "additional_ui_objects_after_100_scrolls": 8,
+      "scans_for_20_events": 1,
+      "mock_first_open_ms": 221.13
+    },
+    {
+      "runtime": "luajit21",
+      "recipes": 5000,
+      "crafter_recipe_links": 105000,
+      "startup_addon_ui_objects": 13,
+      "first_open_added_ui_objects": 94,
+      "additional_ui_objects_after_100_scrolls": 8,
+      "scans_for_20_events": 1,
+      "mock_first_open_ms": 118.26
+    }
+  ],
+  "work_order_stress": [
+    {
+      "runtime": "lua51",
+      "bundled_recipes": 2511,
+      "mock_startup_ms": 88.73,
+      "mock_idle_lua_heap_kib": 3987.5,
+      "orders": 500,
+      "mock_queue_added_lua_heap_kib": 446.8,
+      "mock_fill_500_orders_ms": 12.22,
+      "mock_work_orders_open_ms": 1.27,
+      "work_order_visible_row_objects": 4,
+      "work_orders_open_added_ui_objects": 54,
+      "additional_ui_objects_after_100_order_scrolls": 0,
+      "mock_100_order_scrolls_ms": 4.02,
+      "mock_average_full_queue_refresh_ms": 0.787,
+      "onupdate_handlers": 0
+    },
+    {
+      "runtime": "luajit21",
+      "bundled_recipes": 2511,
+      "mock_startup_ms": 80.67,
+      "mock_idle_lua_heap_kib": 2974.2,
+      "orders": 500,
+      "mock_queue_added_lua_heap_kib": 334.4,
+      "mock_fill_500_orders_ms": 2.31,
+      "mock_work_orders_open_ms": 0.65,
+      "work_order_visible_row_objects": 4,
+      "work_orders_open_added_ui_objects": 54,
+      "additional_ui_objects_after_100_order_scrolls": 0,
+      "mock_100_order_scrolls_ms": 2.03,
+      "mock_average_full_queue_refresh_ms": 0.236,
+      "onupdate_handlers": 0
+    }
+  ]
+}

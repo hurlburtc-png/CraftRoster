@@ -234,6 +234,118 @@ local function GetRecipeIndex()
 	return Directory.recipeIndex
 end
 
+local function FullItemLink(itemID,name,existing)
+	if type(existing)=="string" and existing:find("|Hitem:",1,true) then return existing end
+	local getInfo=C_Item and C_Item.GetItemInfo or GetItemInfo
+	if itemID and getInfo then
+		local ok,itemName,link=pcall(getInfo,itemID)
+		if ok and type(link)=="string" and link:find("|Hitem:",1,true) then return link end
+		if ok and type(itemName)=="string" then name=itemName end
+	end
+	if itemID then return "|cffffffff|Hitem:"..itemID..":0:0:0:0:0:0:0|h["..(name or ("Item "..itemID)).."]|h|r" end
+end
+function Directory:GetSearchLinks(recipeID)
+	local saved=CraftRosterDB.recipes[recipeID]
+	if not saved then return end
+	local spell="|cff71d5ff|Hspell:"..recipeID.."|h["..(saved.name or ("Recipe "..recipeID)).."]|h|r"
+	local data=CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipeID)
+	local recipeLink=data and data.itemID and FullItemLink(data.itemID,data.name,data.link) or spell
+	local outputID=CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetOutputItemID(recipeID)
+	local output=FullItemLink(outputID,saved.name,saved.itemLink) or spell
+	return {recipe=recipeLink,craft=output,hasRecipeItem=data and data.itemID~=nil,hasOutputItem=outputID~=nil}
+end
+StaticPopupDialogs.CRAFTROSTER_COPY_LINK={
+	text="Copy this WoW link (Ctrl+C). Paste into chat as needed.",button1="Close",hasEditBox=true,timeout=0,whileDead=true,hideOnEscape=true,
+	OnShow=function(self)
+		local edit=self.editBox or self.EditBox
+		edit:SetNumeric(false); edit:SetMaxLetters(0); edit:SetText(self.data or ""); edit:HighlightText(); edit:SetFocus()
+	end,
+}
+local function ResolveLink(button)
+	local links=button.recipeID and Directory:GetSearchLinks(button.recipeID)
+	return links and links[button.linkKind]
+end
+local function LinkTooltip(button)
+	local link=ResolveLink(button)
+	if not link then return end
+	GameTooltip:SetOwner(button,"ANCHOR_RIGHT")
+	local ok=pcall(GameTooltip.SetHyperlink,GameTooltip,link)
+	if not ok then
+		local saved=CraftRosterDB.recipes[button.recipeID] or {}
+		GameTooltip:SetText(saved.name or "Item information")
+	end
+	GameTooltip:AddLine((not ok and "Tooltip unavailable; open the profession and try again. " or "") .. "Click: inspect · Shift-click: chat · Right-click: copy",1,1,1,true)
+	GameTooltip:Show()
+end
+local function UpdateLinkDisplay(button)
+	local link=ResolveLink(button)
+	if not link then return end
+	local itemID=tonumber(link:match("|Hitem:(%d+)"))
+	local getIcon=C_Item and C_Item.GetItemIconByID or GetItemIcon
+	local icon
+	if itemID and type(getIcon)=="function" then
+		local ok,value=pcall(getIcon,itemID)
+		if ok then icon=value end
+	end
+	local saved=CraftRosterDB.recipes[button.recipeID] or {}
+	if not icon and button.linkKind=="recipe" and itemID then
+		local data=CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(button.recipeID)
+		icon=data and data.icon or "Interface\\Icons\\INV_Scroll_03"
+	end
+	if not icon and CraftRoster.RecipeSources then icon=CraftRoster.RecipeSources:GetRecipeIcon(button.recipeID,GetProfessionIcon(saved.profession)) end
+	button:SetText("|T" .. tostring(icon or GetProfessionIcon(saved.profession)) .. ":16:16|t " .. link)
+end
+local function CreateRecipeLinkButton(parent,kind)
+	local button=CreateFrame("Button",nil,parent)
+	button.linkKind=kind; button:SetSize(100,18); button:RegisterForClicks("LeftButtonUp","RightButtonUp")
+	local label=button:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+	label:SetPoint("TOPLEFT",0,0); label:SetPoint("BOTTOMRIGHT",0,0)
+	label:SetJustifyH("LEFT"); label:SetWordWrap(false)
+	button:SetFontString(label)
+	button:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
+	button:SetScript("OnEnter",LinkTooltip); button:SetScript("OnLeave",function() GameTooltip:Hide() end)
+	button:SetScript("OnClick",function(self,mouseButton)
+		local link=ResolveLink(self)
+		if not link then return end
+		if mouseButton=="RightButton" then StaticPopup_Show("CRAFTROSTER_COPY_LINK",nil,nil,link); return end
+		if IsShiftKeyDown and IsShiftKeyDown() then
+			if ChatEdit_InsertLink then
+				local ok,inserted=pcall(ChatEdit_InsertLink,link)
+				if ok and inserted then return end
+			end
+			if ChatFrame_OpenChat then ChatFrame_OpenChat(link,DEFAULT_CHAT_FRAME); return end
+			StaticPopup_Show("CRAFTROSTER_COPY_LINK",nil,nil,link); return
+		end
+		if SetItemRef then
+			local payload=link:match("|H(.-)|h")
+			local ok=payload and pcall(SetItemRef,payload,link,"LeftButton")
+			if ok then return end
+		end
+		LinkTooltip(self)
+	end)
+	return button
+end
+local function BindRecipeLinks(row,recipeID)
+	row.Label:ClearAllPoints()
+	if recipeID then
+		if not row.RecipeLink then
+			row.RecipeLink=CreateRecipeLinkButton(row,"recipe"); row.RecipeLink:SetPoint("BOTTOMLEFT",39,3)
+			row.CraftLink=CreateRecipeLinkButton(row,"craft"); row.CraftLink:SetPoint("LEFT",row.RecipeLink,"RIGHT",6,0)
+		end
+		row.RecipeLink.recipeID=recipeID; row.CraftLink.recipeID=recipeID
+		local width=math.max(24,(row:GetWidth()-55)/2)
+		row.RecipeLink:SetWidth(width); row.CraftLink:SetWidth(width)
+		UpdateLinkDisplay(row.RecipeLink); UpdateLinkDisplay(row.CraftLink)
+		row.RightLabel:ClearAllPoints(); row.RightLabel:SetPoint("TOPRIGHT",row,"TOPRIGHT",-10,-5)
+		row.RecipeLink:Show(); row.CraftLink:Show()
+		row.Label:SetPoint("TOPLEFT",39,-5); row.Label:SetHeight(16)
+	else
+		if row.RecipeLink then row.RecipeLink:Hide(); row.CraftLink:Hide(); row.RecipeLink.recipeID=nil; row.CraftLink.recipeID=nil end
+		row.Label:SetPoint("LEFT",row.Icon,"RIGHT",8,0); row.Label:SetHeight(16)
+		row.RightLabel:ClearAllPoints(); row.RightLabel:SetPoint("RIGHT",row,"RIGHT",-10,0)
+	end
+end
+
 local function CreateRow(child, width, height)
 	local row = CreateFrame("Frame", nil, child, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	row:SetSize(width, height)
@@ -257,6 +369,7 @@ local function CreateRow(child, width, height)
 
 	row.RightLabel = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	row.RightLabel:SetPoint("RIGHT", -10, 0)
+	row.RightLabel:SetHeight(16)
 	row.RightLabel:SetWordWrap(false)
 	row.RightLabel:SetJustifyH("RIGHT")
 
@@ -288,7 +401,8 @@ local function CreateRow(child, width, height)
 	end)
 
 	row:SetScript("OnMouseUp", function(self, button)
-		if self.listClick and self.listEntry and (not button or button == "LeftButton") then self.listClick(self.listEntry) end
+		if button=="RightButton" and self.listEntry and self.listEntry.onRightClick then self.listEntry.onRightClick()
+		elseif self.listClick and self.listEntry and (not button or button == "LeftButton") then self.listClick(self.listEntry) end
 	end)
 
 	return row
@@ -347,6 +461,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			row.Label:SetFontObject(entry.isHeader and "GameFontNormal" or "GameFontHighlight")
 			row.tooltipTitle, row.tooltipLines = entry.tooltipTitle or entry.text, entry.tooltipLines
 			row.materials, row.hyperlink = entry.materials, entry.hyperlink
+			BindRecipeLinks(row,not entry.isHeader and (entry.linkRecipeID or entry.recipeID or (entry.recipe and entry.recipe.id)) or nil)
 			row:EnableMouse(not entry.isHeader and (onClick ~= nil or row.tooltipLines ~= nil or row.materials ~= nil or row.hyperlink ~= nil))
 			if onClick and not entry.isHeader then
 				row.listClick, row.listEntry = onClick, entry
@@ -356,6 +471,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			local row = Row()
 			row:SetSize(width, 44); row:SetPoint("TOPLEFT", 0, -6)
 			row.Icon:SetTexture("Interface\\Icons\\Trade_Tailoring")
+			BindRecipeLinks(row,nil)
 			row.Label:SetText("No matching entries."); row.RightLabel:SetText("")
 			row:EnableMouse(false)
 		end
@@ -444,6 +560,7 @@ function Directory:Initialize()
 		SaveGeometry()
 	end)
 	frame:SetScript("OnHide", function()
+		frame:StopMovingOrSizing()
 		SaveGeometry()
 		if Directory.refreshTimer then Directory.refreshTimer:Cancel(); Directory.refreshTimer = nil end
 	end)
@@ -455,12 +572,35 @@ function Directory:Initialize()
 	title:SetText("CraftRoster")
 	frame.BugReportButton = CraftRoster.Panel:CreateReportButton(frame)
 
+	frame.MoveHandles={}
+	local function MoveHandle(name,point,relativePoint,x,y,width,height,secondPoint,secondRelative,secondX,secondY)
+		local handle=CreateFrame("Frame",nil,frame)
+		frame.MoveHandles[name]=handle
+		if width then handle:SetWidth(width) end
+		if height then handle:SetHeight(height) end
+		handle:SetPoint(point,frame,relativePoint,x,y)
+		if secondPoint then handle:SetPoint(secondPoint,frame,secondRelative,secondX,secondY) end
+		handle:EnableMouse(true); handle:RegisterForDrag("LeftButton")
+		handle:SetFrameLevel(frame:GetFrameLevel()+5)
+		handle:SetScript("OnDragStart",function() frame:StartMoving() end)
+		handle:SetScript("OnDragStop",function() frame:StopMovingOrSizing(); SaveGeometry() end)
+		return handle
+	end
+	MoveHandle("left","TOPLEFT","TOPLEFT",0,-8,6,nil,"BOTTOMLEFT","BOTTOMLEFT",0,8)
+	MoveHandle("right","TOPRIGHT","TOPRIGHT",0,-8,6,nil,"BOTTOMRIGHT","BOTTOMRIGHT",0,26)
+	MoveHandle("top","TOPLEFT","TOPLEFT",8,0,nil,5,"TOPRIGHT","TOPRIGHT",-145,0)
+	MoveHandle("bottom","BOTTOMLEFT","BOTTOMLEFT",8,0,nil,6,"BOTTOMRIGHT","BOTTOMRIGHT",-26,0)
+	MoveHandle("title","TOPLEFT","TOPLEFT",12,-6,nil,18,"TOPRIGHT","TOPRIGHT",-145,-6)
 	local resize = CreateFrame("Frame", nil, frame)
-	resize:SetSize(16, 16)
-	resize:SetPoint("BOTTOMRIGHT", -4, 4)
+	frame.ResizeHandle=resize
+	resize:SetSize(22, 22)
+	resize:SetPoint("BOTTOMRIGHT", -2, 2)
+	resize:SetFrameLevel(frame:GetFrameLevel()+6)
 	resize:EnableMouse(true)
 	resize:RegisterForDrag("LeftButton")
 	resize:SetScript("OnDragStart", function() frame:StartSizing("BOTTOMRIGHT") end)
+	resize:SetScript("OnEnter",function(self) GameTooltip:SetOwner(self,"ANCHOR_TOP"); GameTooltip:SetText("Drag to resize CraftRoster"); GameTooltip:Show() end)
+	resize:SetScript("OnLeave",function() GameTooltip:Hide() end)
 	resize:SetScript("OnDragStop", function()
 		frame:StopMovingOrSizing()
 		frame:SetSize(math.max(MIN_WIDTH, frame:GetWidth()), math.max(MIN_HEIGHT, frame:GetHeight()))
@@ -482,6 +622,12 @@ function Directory:Initialize()
 		tab:SetScript("OnClick", function() Directory:ShowTab(index) end)
 		frame.TabButtons[index] = tab
 	end
+
+	local ordersButton=CreateFrame("Button",nil,frame,"UIPanelButtonTemplate")
+	ordersButton:SetSize(112,26); ordersButton:SetPoint("BOTTOMLEFT",frame,"BOTTOMLEFT",387,18)
+	ordersButton:SetText("Work Orders")
+	ordersButton:SetScript("OnClick",function() if CraftRoster.WorkOrders then CraftRoster.WorkOrders:Toggle() end end)
+	frame.WorkOrdersButton=ordersButton
 
 	local function CreateTab(name)
 		local tab = CreateFrame("Frame", nil, frame)
@@ -572,7 +718,7 @@ function Directory:Initialize()
 	professionsTab.Details = CreateFrame("Frame", nil, professionsTab, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	professionsTab.Details:SetPoint("TOPLEFT", professionsTab, "TOP", 12, -76)
 	professionsTab.Details:SetPoint("TOPRIGHT", -28, -76)
-	professionsTab.Details:SetHeight(170)
+	professionsTab.Details:SetHeight(168)
 	professionsTab.Details:SetBackdrop({
 		bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
 		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -598,20 +744,21 @@ function Directory:Initialize()
 	professionsTab.DetailsProfession = professionsTab.Details:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	professionsTab.DetailsProfession:SetPoint("TOPLEFT", professionsTab.DetailsIcon, "BOTTOMLEFT", 0, -10)
 	professionsTab.DetailsProfession:SetWordWrap(false)
-	professionsTab.DetailsProfession:SetPoint("TOPRIGHT", professionsTab.Details, "TOPRIGHT", -12, -64)
+	professionsTab.DetailsProfession:SetPoint("TOPRIGHT", professionsTab.Details, "TOPRIGHT", -152, -64)
 	professionsTab.Details:SetScript("OnEnter", function(self)
 		local recipe = Directory.selectedRecipe
 		if not recipe then return end
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		GameTooltip:SetText(recipe.name)
-		GameTooltip:AddLine(recipe.profession or "Unknown", 1, 1, 1)
+		local links=Directory:GetSearchLinks(recipe.id)
+		local ok=links and pcall(GameTooltip.SetHyperlink,GameTooltip,links.craft)
+		if not ok then GameTooltip:SetText(recipe.name) end
 		GameTooltip:Show()
 	end)
 	professionsTab.Details:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	professionsTab.Details:EnableMouse(true)
 
 	professionsTab.CrafterList = CreateFrame("ScrollFrame", nil, professionsTab, "UIPanelScrollFrameTemplate")
-	professionsTab.CrafterList:SetPoint("TOPLEFT", professionsTab, "TOP", 12, -270)
+	professionsTab.CrafterList:SetPoint("TOPLEFT", professionsTab, "TOP", 12, -256)
 	professionsTab.CrafterList:SetPoint("BOTTOMRIGHT", -32, 14)
 	professionsTab.CrafterListChild = CreateFrame("Frame", nil, professionsTab.CrafterList)
 	professionsTab.CrafterListChild:SetSize(350, 1)
@@ -629,48 +776,18 @@ function Directory:Initialize()
 	source.Status:SetPoint("TOPLEFT", 4, -4)
 	source.Status:SetJustifyH("LEFT")
 	source.Status:SetWordWrap(true)
-	source.Link = CreateFrame("Button", nil, source.Child, "GameMenuButtonTemplate")
-	source.Link:SetPoint("TOPLEFT", 4, -48)
-	source.Link:SetHeight(42)
-	source.Link:SetText("View crafting spell")
-	local linkFont = source.Link.GetFontString and source.Link:GetFontString()
-	if linkFont then
-		if linkFont.SetWordWrap then linkFont:SetWordWrap(true) end
-		if linkFont.SetMaxLines then linkFont:SetMaxLines(2) end
-	end
-	local function ShowRecipeTooltip(button)
-		local recipe = Directory.selectedRecipe
-		if not recipe then return end
-		local saved = CraftRosterDB.recipes[recipe.id] or {}
-		local data = CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipe.id)
-		local link = data and data.link or saved.recipeLink or ("spell:" .. recipe.id)
-		GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-		local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, link)
-		if not ok then
-			GameTooltip:SetText(data and data.name or recipe.name)
-			GameTooltip:AddLine("Recipe tooltip unavailable; open the profession and try again.", 1, 1, 1, true)
-		end
-		GameTooltip:Show()
-	end
-	source.Link:SetScript("OnEnter", ShowRecipeTooltip)
-	source.Link:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	source.Link:SetScript("OnClick", function(button)
-		local recipe = Directory.selectedRecipe
-		if not recipe then return end
-		local saved = CraftRosterDB.recipes[recipe.id] or {}
-		local data = CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipe.id)
-		local link = data and data.link or saved.recipeLink or ("|cff71d5ff|Hspell:" .. recipe.id .. "|h[" .. recipe.name .. "]|h|r")
-		if IsShiftKeyDown and IsShiftKeyDown() and ChatEdit_InsertLink then
-			if ChatEdit_InsertLink(link) then return end
-		end
-		ShowRecipeTooltip(button)
-	end)
+	source.Link = CreateRecipeLinkButton(source.Child,"recipe")
+	source.Link:SetPoint("TOPLEFT",4,-48); source.Link:SetHeight(34)
+	source.Output=CreateRecipeLinkButton(source.Child,"craft")
+	source.Output:SetPoint("TOPLEFT",4,-96); source.Output:SetHeight(34)
+	source.Output:SetScript("OnEnter",function(button) button.recipeID=Directory.selectedRecipe and Directory.selectedRecipe.id; LinkTooltip(button) end)
 	source.Text = source.Child:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	source.Text:SetPoint("TOPLEFT", 4, -104)
+	source.Text:SetPoint("TOPLEFT", 4, -144)
 	source.Text:SetJustifyH("LEFT")
 	source.Text:SetWordWrap(true)
 	source:HookScript("OnSizeChanged", function() Directory:RefreshRecipeSource() end)
 	source:Hide()
+	if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:Initialize(professionsTab) end
 
 	local playersTab = CreateTab("PlayersTab")
 	playersTab.SearchBox = CreateFrame("EditBox", nil, playersTab, "SearchBoxTemplate")
@@ -678,6 +795,11 @@ function Directory:Initialize()
 	playersTab.SearchBox:SetPoint("TOPLEFT", 18, -16)
 	playersTab.SearchBox:SetAutoFocus(false)
 	playersTab.SearchBox:HookScript("OnTextChanged", DebouncedRefresh("RefreshPlayers"))
+
+	local myNote=CreateFrame("Button",nil,playersTab,"UIPanelButtonTemplate")
+	myNote:SetSize(100,24); myNote:SetPoint("TOPRIGHT",-20,-16); myNote:SetText("My guild note")
+	myNote:SetScript("OnClick",function() CraftRoster.MemberNotes:Edit(nil,true) end)
+	playersTab.NoteButton=myNote
 
 	playersTab.Results = CreateFrame("ScrollFrame", nil, playersTab, "UIPanelScrollFrameTemplate")
 	playersTab.Results:SetPoint("TOPLEFT", 14, -50)
@@ -776,7 +898,7 @@ local function BuildProfessionEntries()
 			icon = recipe.icon,
 			rightText = #recipe.crafters == 0 and "No crafter" or ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
 			materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipe.id) or (saved and saved.materials),
-			hyperlink = saved and saved.itemLink,
+			hyperlink = (Directory:GetSearchLinks(recipe.id) or {}).craft or (saved and saved.itemLink),
 			recipe = recipe,
 		})
 	end
@@ -796,7 +918,7 @@ function Directory:RefreshProfessions()
 	self.selectedRecipe = selected
 	self:RefreshDetails()
 	self:RefreshCrafters()
-	RenderList(tab.ResultsChild, entries, 320, 34, 28, function(entry)
+	RenderList(tab.ResultsChild, entries, 320, 48, 28, function(entry)
 		Directory.selectedRecipe = entry.recipe
 		Directory.selectedCrafter = nil
 		Directory:RefreshDetails()
@@ -808,6 +930,9 @@ function Directory:RefreshDetails()
 	if not self.frame or not self.frame:IsShown() then return end
 	local tab = self.frame.ProfessionsTab
 	local recipe = self.selectedRecipe
+	if tab.CraftRosterQuantity and CraftRoster.ShoppingList then
+		tab.CraftRosterQuantity:SetText(tostring(recipe and CraftRoster.ShoppingList:GetQuantity(recipe.id) or 1))
+	end
 	if tab.CraftRosterFavoriteButton then
 		tab.CraftRosterFavoriteButton:SetText(recipe and (CraftRosterDB.favorites or {})[recipe.id] and "Unfavorite" or "Favorite")
 	end
@@ -821,6 +946,7 @@ function Directory:RefreshDetails()
 		tab.DetailsName:SetText("Select a recipe")
 		tab.DetailsProfession:SetText("")
 	end
+	if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:Refresh() end
 end
 
 function Directory:RefreshRecipeSource()
@@ -839,7 +965,7 @@ function Directory:RefreshRecipeSource()
 	local saved = CraftRosterDB.recipes[recipe.id] or {}
 	local data = CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipe.id)
 	source.Status:SetText("No synced crafter knows this recipe.\nGuild data may be incomplete; try Refresh.")
-	source.Link:SetText(data and data.label or "Recipe item unknown (view spell)")
+	source.Link.recipeID=recipe.id; UpdateLinkDisplay(source.Link)
 	source.Text:SetText(CraftRoster.RecipeSources and CraftRoster.RecipeSources:Format(recipe.id, data)
 		or (saved.sourceText or "Source unknown"))
 	local width = math.max(80, source:GetWidth() - 8)
@@ -847,10 +973,11 @@ function Directory:RefreshRecipeSource()
 	source.Status:SetWidth(width - 8)
 	source.Status:SetHeight(40)
 	source.Link:SetWidth(width - 8)
+	source.Output.recipeID=recipe.id; source.Output:SetWidth(width-8); UpdateLinkDisplay(source.Output)
 	source.Text:SetWidth(width - 8)
 	local height = source.Text.GetStringHeight and source.Text:GetStringHeight() or 130
 	source.Text:SetHeight(math.max(40, height))
-	source.Child:SetHeight(116 + math.max(40, height))
+	source.Child:SetHeight(156 + math.max(40, height))
 	if source.GetVerticalScroll then
 		local maximum = math.max(0, source.Child:GetHeight() - source:GetHeight())
 		if source:GetVerticalScroll() > maximum then source:SetVerticalScroll(maximum) end
@@ -869,6 +996,7 @@ function Directory:RefreshCrafters()
 	end
 	if not selectedValid then self.selectedCrafter = nil end
 	self:RefreshRecipeSource()
+	if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:RefreshMaterials() end
 	if self.selectedRecipe and #self.selectedRecipe.crafters == 0 then return end
 
 	if self.selectedRecipe then
@@ -912,10 +1040,14 @@ function Directory:RefreshCrafters()
 		end
 	end
 
+	if self.selectedRecipe and self.selectedCrafter and CraftRoster.GuildDetails then
+		CraftRoster.GuildDetails:RequestMaterials(self.selectedRecipe.id,self.selectedCrafter)
+	end
 	RenderList(child, entries, 350, 38, 28, function(entry)
 		if Directory.selectedRecipe then
 			Directory.selectedCrafter = entry.characterKey
 			Directory:RefreshCrafters()
+			if CraftRoster.WhisperComposer then CraftRoster.WhisperComposer:Choose(Directory.selectedRecipe.id,entry.characterKey) end
 		end
 	end)
 end
@@ -929,6 +1061,11 @@ function Directory:RefreshPlayers()
 
 	for characterKey, character in pairs(CraftRosterDB.characters or {}) do
 		if search == "" or characterKey:lower():find(search, 1, true) then
+			local public,private="",""
+			if CraftRoster.MemberNotes then public,private=CraftRoster.MemberNotes:Get(characterKey) end
+			local tooltip={characterKey,GetProfessionTotals(character),"Click: recipes. Right-click: your private note."}
+			if public~="" then table.insert(tooltip,"Guild note: "..public) end
+			if private~="" then table.insert(tooltip,"Your private note: "..private) end
 			table.insert(players, {
 				text = (self.expandedPlayers[characterKey] and "[-] " or "[+] ") .. GetColoredName(characterKey, character, not IsCharacterOnline(characterKey)),
 				key = characterKey,
@@ -997,6 +1134,7 @@ function Directory:RefreshMyRecipes()
 			local saved = CraftRosterDB.recipes[recipeID] or {}
 			local profession = saved.profession or "Unknown"
 			table.insert(entries, {
+				linkRecipeID = recipeID,
 				text = GetRecipeName(recipeID),
 				icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession))) or GetProfessionIcon(profession),
 			})
@@ -1004,7 +1142,7 @@ function Directory:RefreshMyRecipes()
 	end
 
 	table.sort(entries, function(a, b) return a.text < b.text end)
-	RenderList(tab.ResultsChild, entries, 720, 36, 28)
+	RenderList(tab.ResultsChild, entries, 720, 48, 28)
 	tab.Status:SetText(("Your saved recipes: %d"):format(#entries))
 end
 

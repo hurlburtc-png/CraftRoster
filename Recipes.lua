@@ -140,6 +140,12 @@ local function SaveRecipe(character, recipeID, name, profession, icon, itemLink,
 		saved.materials = materials; changed = true
 	end
 
+	if materials and not SameMaterials(character.recipes[recipeID].materials,materials) then
+		local copy={}
+		for _,material in ipairs(materials) do copy[#copy+1]={name=material.name,count=material.count,itemID=material.itemID} end
+		character.recipes[recipeID].materials=copy; changed=true
+	end
+	if itemLink then character.recipes[recipeID].outputItemID=tonumber(itemLink:match("item:(%d+)")) end
 	return isNew, changed
 end
 
@@ -233,6 +239,9 @@ local function ImportForeverRecipes(character, profession)
 				materials
 			)
 
+			if skillLine and CraftRosterDB.recipes[recipeID].professionID~=skillLine then
+				CraftRosterDB.recipes[recipeID].professionID=skillLine; updated=true
+			end
 			if isNew then added = added + 1 end
 			if updated then changed = true end
 		elseif info and belongs and info.learned == false and type(info.name) == "string" then
@@ -295,7 +304,8 @@ local function ImportLegacyRecipes(character, profession)
 				for j = 1, numReagents do
 					local reagentName, _, reagentCount = GetTradeSkillReagentInfo(i, j)
 					if reagentName and reagentCount then
-						table.insert(materials, { name = reagentName, count = reagentCount })
+						local reagentLink=GetTradeSkillReagentItemLink and GetTradeSkillReagentItemLink(i,j)
+						table.insert(materials, { name = reagentName, count = reagentCount, itemID=type(reagentLink)=="string" and tonumber(reagentLink:match("item:(%d+)")) or nil })
 					end
 				end
 

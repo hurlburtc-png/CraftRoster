@@ -40,11 +40,25 @@ end
 
 
 local professionIDs={Alchemy=171,Blacksmithing=164,Cooking=185,Enchanting=333,Engineering=202,["First Aid"]=129,Fishing=356,Leatherworking=165,Mining=186,Tailoring=197}
+function Sources:GetOutputItemID(recipeID)
+ local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
+ if not saved then return end
+ local itemID=type(saved.itemLink)=="string" and tonumber(saved.itemLink:match("item:(%d+)"))
+ return itemID or libraryCall("GetCraftedItemID",(saved.professionID or professionIDs[saved.profession]),recipeID)
+end
+function Sources:IsEnchant(recipeID)
+ local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
+ return saved and libraryCall("GetEnchantId",(saved.professionID or professionIDs[saved.profession]),recipeID)~=nil or false
+end
 function Sources:GetMaterials(recipeID)
  local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
  if not saved then return nil end
  if type(saved.materials)=="table" and #saved.materials>0 then return saved.materials end
- local profID=professionIDs[saved.profession]
+ if CraftRoster.GuildDetails then
+  local peer=CraftRoster.GuildDetails:GetMaterials(recipeID)
+  if peer then return peer end
+ end
+ local profID=(saved.professionID or professionIDs[saved.profession])
  if not profID then return nil end
  local reagents=libraryCall("GetReagents",profID,recipeID)
  if type(reagents)~="table" then return nil end
@@ -82,6 +96,7 @@ function Sources:SeedCatalog()
 			for _, hit in ipairs(hits) do
 				if professions[hit.profId] and type(hit.name) == "string" and hit.name ~= "" then
 					local saved = CraftRosterDB.recipes[hit.recipeId] or {}
+					if saved.professionID~=hit.profId then saved.professionID=hit.profId; changed=true end
 					if not saved.name then saved.name = hit.name; changed = true end
 					if not saved.profession or saved.profession == "Unknown" then
 						saved.profession = professions[hit.profId]; changed = true
@@ -153,27 +168,39 @@ function Sources:Format(recipeID, data)
 	if saved.sourceText then
 		table.insert(lines, saved.sourceText)
 	end
-	if not saved.sourceText then
-		local sources = libraryCall("GetRecipeSources", recipeID)
-		if type(sources) == "table" then
-			local labels = { trainer = "Trainer", vendor = "Vendor", quest = "Quest", container = "Container", drop = "Mob/boss drop" }
-			local added = false
-			for _, kind in ipairs({ "trainer", "vendor", "quest", "container", "drop" }) do
-				if type(sources[kind]) == "table" then
-					for _, source in ipairs(sources[kind]) do
-						if type(source) == "table" and type(source.name) == "string" then
-							table.insert(lines, labels[kind] .. ": " .. source.name)
-							added = true
-						end
+	local sources=libraryCall("GetRecipeSources",recipeID)
+	data.hasLibrarySource=false
+	if type(sources)=="table" then
+		local labels={trainer="Trainer",vendor="Vendor",quest="Quest",container="Container",drop="Mob/boss drop"}
+		if saved.sourceText then table.insert(lines,"\nAdditional database sources:") end
+		for _,kind in ipairs({"trainer","vendor","quest","container","drop"}) do
+			local list=sources[kind]
+			if type(list)=="table" and #list>0 then
+				data.hasLibrarySource=true
+				local total=type(list.total)=="number" and math.max(#list,list.total) or #list
+				table.insert(lines,labels[kind].." sources: "..total)
+				for index,source in ipairs(list) do
+					if index>12 then break end
+					if type(source)=="table" then
+						table.insert(lines,labels[kind]..": "..(type(source.name)=="string" and source.name or "Name unavailable"))
 					end
 				end
+				if total>math.min(12,#list) then table.insert(lines,"and "..(total-math.min(12,#list)).." more (database examples are capped).") end
 			end
-			if added then
-				local borrowed = libraryCall("IsBorrowed", recipeID, "sources")
-				table.insert(lines, borrowed and (tostring(borrowed) .. " reference - Forever source unconfirmed.") or "LibProfessionDB source; verify in game.")
-			else sources = nil end
-			data.hasLibrarySource = sources ~= nil
 		end
+		if data.hasLibrarySource then
+			local borrowed=libraryCall("IsBorrowed",recipeID,"sources")
+			table.insert(lines,borrowed and (tostring(borrowed).." reference - Forever source unconfirmed.") or "LibProfessionDB source; verify in game.")
+			table.insert(lines,"Source names are English. Provenance: bundled LibProfessionDB v1.9.1; emulator reference databases, not verified Forever loot rates.")
+		end
+	end
+	if not data.hasLibrarySource and libraryCall("IsAutoTaughtRecipe",recipeID) then
+		data.hasLibrarySource=true; table.insert(lines,"Learned with profession (database reference; verify in game).")
+	end
+	local skill=libraryCall("GetRequiredSkill",saved.professionID or professionIDs[saved.profession],recipeID)
+	if type(skill)=="number" and skill>0 then
+		local borrowed=libraryCall("IsBorrowed",recipeID,"requiredSkill")
+		table.insert(lines,"Required skill: "..skill..(borrowed and (" ("..tostring(borrowed).." reference; unconfirmed)") or " (database reference)"))
 	end
 	if reference then
 		if saved.sourceText then table.insert(lines, "\nAdditional Classic reference:") end

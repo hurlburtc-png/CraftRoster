@@ -42,10 +42,9 @@ version-check dependencies are omitted. The MIT license and public-domain
 LibStub notice are retained. Locale chunks are combined into do/end blocks;
 the original chunks retain their bytes, order, local scope and locale guards.
 
-The actual payload contains **2,511 recipes across 10 professions**. It enriches
-teaching-item mappings and acquisition-source names for recipes already in
-CraftRoster. It **does not import the entire database into directory search**.
-Scanned/synced recipes and four starter entries still determine that list.
+The actual payload contains **2,511 recipes across 10 professions**. The directory imports the full bundled catalogue for offline search. It also
+enriches teaching-item mappings and acquisition-source names. Native scans and
+guild ownership determine who can actually craft each recipe.
 Scanned metadata and guild ownership stay separate from the bundled lookup data.
 
 The importer, pinned archive checksum, per-file hashes, load order and provenance
@@ -61,3 +60,14 @@ For manual checks use [Wowhead Forever recipes](https://www.wowhead.com/forever/
 and [Forever Codex](https://forever-codex.com/items/). Read each source's provenance:
 Codex explicitly uses Classic cMaNGOS loot data where Forever data is unavailable.
 A comprehensive, confirmed Forever rate database is still pending.
+
+## Beta 11 acquisition display
+
+The source panel includes every supported acquisition category (trainer, vendor,
+quest, container and creature drop), source totals from the library's `.total`,
+up to 12 examples per category and the number omitted by that cap. Entries with
+missing names remain visible. Client source text does not suppress the bundled
+reference details. Required skill and profession auto-taught recipes are included
+when the library supplies them. These changes expand useful coverage beyond the
+four percentage references without presenting emulator data as verified live
+Forever drop rates. The pinned database provenance and checksums are unchanged.

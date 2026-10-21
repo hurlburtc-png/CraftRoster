@@ -114,6 +114,7 @@ function GuildSync:RequestSync()
 end
 
 function GuildSync:SyncNow()
+	if CraftRoster.GuildDetails then CraftRoster.GuildDetails:SendProfile() end
 	local requested = self:RequestSync()
 	self:SendData(true)
 	if requested then

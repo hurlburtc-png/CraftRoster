@@ -218,12 +218,12 @@ CASES.update({
         assert(moved==3 and inventory[1].count==17 and not cursor)
         dispatch('TRADE_SHOW'); assert(moved==3)
     """,
-    'exact_mail_stack_quantity_and_occupied_slot': """
+    'occupied_mail_draft_is_not_modified': """
         inventoryFixture(false,true); attachments[1]=8
         addon.Requests:StartMailRequest(42,'Crafter-Realm')
         dispatch('MAIL_SHOW')
-        assert(moved==3 and attachments[1]==8 and attachments[2]==3 and inventory[1].count==17)
-        dispatch('MAIL_SHOW'); assert(moved==3)
+        assert(moved==0 and attachments[1]==8 and attachments[2]==nil and inventory[1].count==20)
+        dispatch('MAIL_SHOW'); assert(moved==0)
     """,
     'locked_stack_skipped': """
         inventoryFixture(true,true)
@@ -269,11 +269,12 @@ CASES.update({
         assert(moved==0 and not cursor)
     """,
     'popup_receives_recipe_data': """
+        CraftRosterDB.recipes[42]={name='Potion',profession='Alchemy'}
         SlashCmdList.CRAFTROSTER('')
         addon.Directory.selectedRecipe={id=42}
-        function StaticPopup_Show(dialog,a,b,data) assert(data==42); popupData=data end
         addon.Directory.frame.ProfessionsTab.CraftRosterTradeButton.scripts.OnClick()
-        assert(popupData==42)
+        assert(addon.WhisperComposer.recipeID==42 and addon.WhisperComposer.frame:IsShown())
+        assert(not CraftRosterDB.requests)
     """,
 })
 
@@ -513,8 +514,7 @@ CASES.update({
         end
         SlashCmdList.CRAFTROSTER('')
         local tab=addon.Directory.frame.ProfessionsTab
-        tab.Results:SetVerticalScroll(39966)
-        tab.Results.scripts.OnVerticalScroll(tab.Results,39966)
+        tab.ResultsChild.scrollToEntry(1000)
         local found=false
         for _,row in ipairs(frames) do
           if row.parent==tab.ResultsChild and row:IsShown() and row.Label and row.Label:GetText()=='Potion 1000' then
@@ -587,7 +587,7 @@ CASES.update({
         CraftRosterDB.recipes[43]={name='Other',materials={{name='Other',count=1}}}
         addon.Directory.selectedRecipe={id=43}
         addon.ShoppingList:Refresh()
-        assert(addon.ShoppingList.frame.Recipe:GetText()=='Potion')
+        assert(addon.ShoppingList.frame.Recipe:GetText()=='Potion · 1 craft')
         CraftRosterDB.recipes[42].materials={{name='Herb',itemID=7,count=30}}
         addon.ShoppingList:ScheduleRefresh(); flushTimers()
         assert(addon.ShoppingList.entries[1].required==30)
@@ -616,7 +616,7 @@ CASES.update({
         if C_ChatInfo then C_ChatInfo.SendChatMessage=SendChatMessage end
         addon.Requests:WhisperPlayer(42,'Crafter-Realm')
         assert(draft.kind=='WHISPER' and draft.target=='Crafter-Realm')
-        assert(draft.text:find('Could you craft Potion?',1,true) and draft.text:find('[3x Herb]',1,true))
+        assert(draft.text:find('Could you craft Potion?',1,true) and draft.text:find('3x |cffffffff|Hitem:7:',1,true))
     """,
     'long_materials_split_into_bounded_whisper_drafts': """
         local materials={}
@@ -636,7 +636,7 @@ CASES.update({
         addon.Requests:MailPlayer(42,'Thimble-Moon Guard')
         dispatch('MAIL_SHOW')
         assert(SendMailNameEditBox:GetText()=='Thimble-MoonGuard')
-        assert(SendMailSubjectEditBox:GetText()=='CraftRoster: Runecloth Bag')
+        assert(SendMailSubjectEditBox:GetText()=='Runecloth Bag craft requested')
     """,
     'mail_fields_fill_immediately_when_mailbox_open': """
         inventoryFixture(false,true)
@@ -645,7 +645,7 @@ CASES.update({
         SendMailNameEditBox:SetText('Previous-Realm')
         addon.Requests:MailPlayer(42,'Crafter-Realm')
         assert(SendMailNameEditBox:GetText()=='Crafter-Realm')
-        assert(SendMailSubjectEditBox:GetText()=='CraftRoster: Potion' and moved==3)
+        assert(SendMailSubjectEditBox:GetText()=='Potion craft requested' and moved==3)
     """,
     'selected_crafter_buttons_need_no_target_typing': """
         inventoryFixture(false,true)
@@ -662,6 +662,7 @@ CASES.update({
         function ChatFrame_OpenChat(text,frame) assert(text:find('/w Crafter-Realm ',1,true)==1); whisperOpened=true end
         local tab=addon.Directory.frame.ProfessionsTab
         tab.CraftRosterTradeButton.scripts.OnClick()
+        addon.WhisperComposer.frame.Send.scripts.OnClick()
         assert(whisperOpened)
         tab.CraftRosterMailButton.scripts.OnClick()
         SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame()
@@ -716,6 +717,8 @@ CASES.update({
         function ChatFrame_OpenChat(text) draft=text end
         addon.Requests:WhisperPlayer(42,'Crafter-Realm'); dispatch('TRADE_SHOW')
         assert(moved==1 and draft:find('I bring 1; crafter provides 2',1,true))
+        ERR_TRADE_CANCELLED='Trade cancelled.'
+        dispatch('UI_ERROR_MESSAGE',ERR_TRADE_CANCELLED); dispatch('TRADE_CLOSED')
         addon.Requests:Cancel(); attachments={}; moved=0
         addon.Requests:MailPlayer(42,'Crafter-Realm'); dispatch('MAIL_SHOW'); assert(moved==1)
         assert(addon.ShoppingList:GetPlayerMaterials(42,'Other-Realm')[1].count==3)
@@ -832,7 +835,7 @@ CASES.update({
         function SendChatMessage() error('must not send automatically') end
         addon.Requests:WhisperPlayer(42,'Crafter-Realm')
         assert(attributes.chatType=='WHISPER' and attributes.tellTarget=='Crafter-Realm')
-        assert(edit:GetText():find('[3x Herb]',1,true) and edit.focused)
+        assert(edit:GetText():find('3x |cffffffff|Hitem:7:',1,true) and edit.focused)
     """,
     'explicit_addon_send_failures_are_not_reported_as_delivered': """
         Enum={SendAddonMessageResult={Success=0,Failure=1}}
@@ -924,6 +927,279 @@ CASES.update({
         end
         assert(CraftRosterDB.characters['Helper-Realm'].recipes[500])
         assert(CraftRosterDB.recipes[500].name=='Potion 500')
+    """,
+})
+
+CASES.update({
+    'mail_body_and_edits_survive_repeated_mail_events': """
+        inventoryFixture(false,true)
+        SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame(); SendMailBodyEditBox=CreateFrame()
+        addon.Requests:MailPlayer(42,'Crafter-Realm'); dispatch('MAIL_SHOW')
+        local body=SendMailBodyEditBox:GetText()
+        assert(body:find('Requested item: Potion',1,true))
+        assert(body:find('3 x Herb',1,true))
+        SendMailSubjectEditBox:SetText('My edited title'); SendMailBodyEditBox:SetText('My edited body')
+        dispatch('MAIL_SHOW')
+        assert(SendMailSubjectEditBox:GetText()=='My edited title' and SendMailBodyEditBox:GetText()=='My edited body')
+    """,
+    'shopping_click_fills_auction_and_right_click_edits_share': """
+        inventoryFixture(false,true)
+        addon.Directory.selectedRecipe={id=42}; addon.Directory.selectedCrafter='Crafter-Realm'
+        addon.ShoppingList:Open(42)
+        local row=addon.ShoppingList.frame.Rows[1]
+        assert(not addon.ShoppingList:SearchAuctions(row.entry))
+        AuctionFrame=CreateFrame(); AuctionFrame:Show(); BrowseName=CreateFrame()
+        row.scripts.OnClick(row,'LeftButton')
+        assert(BrowseName:GetText()==row.entry.name)
+        local dialog
+        StaticPopup_Show=function(which) dialog=which end
+        row.scripts.OnClick(row,'RightButton')
+        assert(dialog=='CRAFTROSTER_CRAFTER_SHARE')
+    """,
+})
+
+CASES.update({
+    'whispers_link_output_and_materials_without_splitting_links': """
+        inventoryFixture(false,true)
+        CraftRosterDB.recipes[42].itemLink='|cff1eff00|Hitem:123:0:0:0:0:0:0:0|h[Potion]|h|r'
+        local drafts={}
+        function ChatFrame_OpenChat(text) table.insert(drafts,text) end
+        addon.Requests:PrepareWhisper(42,'Crafter-Realm')
+        while #addon.Requests.whisperDrafts>0 do addon.Requests:NextWhisper() end
+        local joined=table.concat(drafts,' ')
+        assert(joined:find(CraftRosterDB.recipes[42].itemLink,1,true))
+        assert(joined:find('|Hitem:7:',1,true) and joined:find('|h[Herb]|h|r',1,true))
+        for _,text in ipairs(drafts) do
+          assert(#text<=255)
+          local _,opens=text:gsub('|Hitem:','')
+          local _,closes=text:gsub('|h|r','')
+          assert(opens==closes)
+        end
+    """,
+})
+
+CASES.update({
+    'quantity_scales_shopping_whispers_mail_and_freezes_prepared_request': """
+        inventoryFixture(false,true)
+        assert(addon.ShoppingList:GetQuantity(42)==1)
+        assert(addon.ShoppingList:SetQuantity(42,3))
+        assert(not addon.ShoppingList:SetQuantity(42,0))
+        assert(not addon.ShoppingList:SetQuantity(42,1.5))
+        assert(not addon.ShoppingList:SetQuantity(42,1000))
+        addon.ShoppingList:Open(42)
+        assert(addon.ShoppingList.entries[1].required==9)
+        assert(CraftRosterDB.recipes[42].materials[1].count==3)
+        assert(addon.ShoppingList:SetCrafterShare(42,'Crafter-Realm',7,2))
+        assert(addon.ShoppingList:GetPlayerMaterials(42,'Crafter-Realm')[1].count==7)
+        local drafts={}
+        function ChatFrame_OpenChat(text) table.insert(drafts,text) end
+        addon.Requests:WhisperPlayer(42,'Crafter-Realm')
+        while #addon.Requests.whisperDrafts>0 do addon.Requests:NextWhisper() end
+        local text=table.concat(drafts,' ')
+        assert(text:find('3 crafts of Potion',1,true) and text:find('9x ',1,true))
+        assert(text:find('I bring 7; crafter provides 2',1,true))
+        addon.Requests:Cancel()
+        SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame(); SendMailBodyEditBox=CreateFrame()
+        addon.Requests:MailPlayer(42,'Crafter-Realm')
+        assert(addon.ShoppingList:SetQuantity(42,5))
+        dispatch('MAIL_SHOW')
+        assert(SendMailSubjectEditBox:GetText()=='3 crafts of Potion craft requested')
+        local body=SendMailBodyEditBox:GetText()
+        assert(body:find('Number of crafts: 3',1,true) and body:find('9 x Herb',1,true))
+        assert(CraftRosterDB.requests[1].quantity==3)
+    """,
+    'quantity_control_saves_and_restores_per_recipe': """
+        inventoryFixture(false,true)
+        addon.Directory:Toggle()
+        addon.Directory.selectedRecipe={id=42,name='Potion',profession='Alchemy',crafters={}}
+        addon.Directory:RefreshDetails()
+        local field=addon.Directory.frame.ProfessionsTab.CraftRosterQuantity
+        assert(field:GetText()=='1')
+        field:SetText('4'); field.scripts.OnTextChanged(field,true)
+        assert(addon.ShoppingList:GetQuantity(42)==4)
+        field:SetText('0'); field.scripts.OnEditFocusLost(field)
+        assert(field:GetText()=='4')
+        CraftRosterDB.recipes[43]={name='Other'}
+        assert(addon.ShoppingList:GetQuantity(43)==1)
+        addon.Directory:RefreshDetails(); assert(field:GetText()=='4')
+    """,
+})
+
+CASES.update({
+    'auto_load_off_blocks_trade_and_mail_items_but_keeps_drafts': """
+        inventoryFixture(false,true)
+        local draft
+        function ChatFrame_OpenChat(text) draft=text end
+        addon.Requests:WhisperPlayer(42,'Crafter-Realm')
+        addon.Requests:SetAutoLoadItems(false)
+        dispatch('TRADE_SHOW'); assert(moved==0 and draft:find('Potion',1,true))
+        ERR_TRADE_CANCELLED='Trade cancelled.'
+        dispatch('UI_ERROR_MESSAGE',ERR_TRADE_CANCELLED); dispatch('TRADE_CLOSED')
+        SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame(); SendMailBodyEditBox=CreateFrame()
+        addon.Requests:MailPlayer(42,'Crafter-Realm'); dispatch('MAIL_SHOW')
+        assert(moved==0 and SendMailNameEditBox:GetText()=='Crafter-Realm')
+        assert(SendMailBodyEditBox:GetText():find('3 x Herb',1,true))
+        addon.Requests:SetAutoLoadItems(true); dispatch('MAIL_SHOW'); assert(moved==3)
+    """,
+    'auto_load_checkbox_saves_setting_and_remains_compact': """
+        addon.Requests:SetAutoLoadItems(false)
+        addon.Directory:Toggle()
+        local box=addon.Directory.frame.ProfessionsTab.CraftRosterAutoLoad
+        local checked
+        box.SetChecked=function(self,value) checked=value end
+        box.GetChecked=function() return checked end
+        checked=true; box.scripts.OnClick(box)
+        assert(CraftRosterDB.settings.autoLoadItems==true and checked==true)
+        checked=false; box.scripts.OnClick(box)
+        assert(CraftRosterDB.settings.autoLoadItems==false and checked==false)
+    """,
+})
+
+CASES.update({
+    'quantity_arrows_step_typed_values_and_clamp_to_valid_range': """
+        inventoryFixture(false,true)
+        addon.Directory:Toggle()
+        addon.Directory.selectedRecipe={id=42,name='Potion',profession='Alchemy',crafters={}}
+        addon.Directory:RefreshDetails()
+        local tab=addon.Directory.frame.ProfessionsTab
+        local field=tab.CraftRosterQuantity
+        local function up() tab.CraftRosterQuantityUp.scripts.OnClick() end
+        local function down() tab.CraftRosterQuantityDown.scripts.OnClick() end
+        down(); assert(field:GetText()=='1' and addon.ShoppingList:GetQuantity(42)==1)
+        up(); assert(field:GetText()=='2' and addon.ShoppingList:GetQuantity(42)==2)
+        field:SetText('15'); up()
+        assert(field:GetText()=='16' and addon.ShoppingList:GetQuantity(42)==16)
+        down(); assert(field:GetText()=='15')
+        field:SetText('999'); up(); assert(field:GetText()=='999')
+        field:SetText(''); down(); assert(field:GetText()=='998')
+        addon.ShoppingList:Open(42); assert(addon.ShoppingList.entries[1].required==2994)
+        addon.Directory.selectedRecipe=nil
+        up(); assert(field:GetText()=='998')
+    """,
+})
+
+CASES.update({
+    'multiple_trades_credit_only_actual_confirmed_materials': """
+        inventoryFixture(false,true)
+        CraftRosterDB.recipes[42].materials[1].count=30
+        ERR_TRADE_COMPLETE='Trade complete.'
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+        dispatch('TRADE_SHOW'); assert(moved==24)
+        dispatch('TRADE_SHOW'); assert(moved==24)
+        local id=CraftRosterDB.requests[1].id
+        assert(addon.Requests:GetTradeProgress(id).remaining==30)
+        dispatch('TRADE_ACCEPT_UPDATE',1,1)
+        dispatch('TRADE_CLOSED'); dispatch('UI_INFO_MESSAGE',ERR_TRADE_COMPLETE)
+        local progress=addon.Requests:GetTradeProgress(id)
+        assert(progress.remaining==6 and progress.delivered==24 and not progress.needsReview)
+        dispatch('UI_INFO_MESSAGE',ERR_TRADE_COMPLETE)
+        assert(addon.Requests:GetTradeProgress(id).delivered==24)
+        attachments={}; inventory[1].count=20; inventory[2].count=0; moved=0
+        dispatch('TRADE_SHOW'); assert(moved==6)
+        dispatch('UI_INFO_MESSAGE',ERR_TRADE_COMPLETE); dispatch('TRADE_CLOSED')
+        assert(addon.Requests:GetTradeProgress(id).remaining==0)
+        attachments={}; moved=0; dispatch('TRADE_SHOW'); assert(moved==0)
+    """,
+    'trade_credit_tracks_manual_removal_and_replacement': """
+        inventoryFixture(false,true); ERR_TRADE_COMPLETE='Trade complete.'
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW')
+        attachments[1]=1
+        dispatch('TRADE_PLAYER_ITEM_CHANGED',1); dispatch('TRADE_ACCEPT_UPDATE',1,1)
+        dispatch('UI_INFO_MESSAGE',ERR_TRADE_COMPLETE); dispatch('TRADE_CLOSED')
+        local p=addon.Requests:GetTradeProgress(CraftRosterDB.requests[1].id)
+        assert(p.delivered==1 and p.remaining==2)
+        attachments={}; inventory[1].count=20; moved=0
+        dispatch('TRADE_SHOW'); assert(moved==2)
+    """,
+    'bag_full_error_and_cancel_preserve_all_requirements': """
+        inventoryFixture(false,true); ERR_TRADE_CANCELLED='Trade cancelled.'
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW')
+        local id=CraftRosterDB.requests[1].id
+        dispatch('UI_ERROR_MESSAGE',99,'Target inventory is full.')
+        assert(addon.Requests:GetTradeProgress(id).delivered==0)
+        dispatch('UI_ERROR_MESSAGE',ERR_TRADE_CANCELLED); dispatch('TRADE_CLOSED')
+        attachments={}; inventory[1].count=20; moved=0
+        dispatch('TRADE_SHOW'); assert(moved==3)
+        assert(addon.Requests:GetTradeProgress(id).remaining==3)
+    """,
+    'unconfirmed_closed_trade_blocks_replay_until_review': """
+        inventoryFixture(false,true)
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW'); dispatch('TRADE_CLOSED')
+        local id=CraftRosterDB.requests[1].id
+        attachments={}; inventory[1].count=20; moved=0
+        dispatch('TRADE_SHOW'); assert(moved==0 and addon.Requests:GetTradeProgress(id).needsReview)
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); assert(#CraftRosterDB.requests==1)
+        StaticPopupDialogs.CRAFTROSTER_TRADE_REVIEW.OnAccept({data=id})
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW')
+        assert(moved==3 and #CraftRosterDB.requests==1)
+    """,
+    'unverifiable_trade_is_paused_and_never_credited': """
+        inventoryFixture(false,true); ERR_TRADE_COMPLETE='Trade complete.'
+        GetTradePlayerItemLink=nil
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW')
+        local id=CraftRosterDB.requests[1].id
+        dispatch('UI_INFO_MESSAGE',ERR_TRADE_COMPLETE); dispatch('TRADE_CLOSED')
+        local p=addon.Requests:GetTradeProgress(id)
+        assert(p.delivered==0 and p.remaining==3 and p.needsReview)
+        attachments={}; moved=0; dispatch('TRADE_SHOW'); assert(moved==0)
+    """,
+    'wrong_partner_and_delayed_success_do_not_advance_ledger': """
+        inventoryFixture(false,true); ERR_TRADE_COMPLETE='Trade complete.'
+        addon.Requests:StartTradeRequest(42,'Other-Realm'); dispatch('TRADE_SHOW')
+        assert(moved==0)
+        addon.Requests:Cancel()
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW'); dispatch('TRADE_CLOSED')
+        clock=clock+3; dispatch('UI_INFO_MESSAGE',ERR_TRADE_COMPLETE)
+        local p=addon.Requests:GetTradeProgress(CraftRosterDB.requests[1].id)
+        assert(p.delivered==0 and p.needsReview)
+    """,
+})
+
+CASES.update({
+    'seven_material_types_continue_after_six_slot_trade': """
+        local bags,offers,hand={}, {},nil
+        local materials={}
+        for i=1,7 do bags[i]=1; materials[i]={name='Mat '..i,itemID=100+i,count=1} end
+        CraftRosterDB.recipes[42]={name='Large craft',materials=materials}
+        local function slots(bag) return bag==0 and 7 or 0 end
+        local function link(bag,slot) return bags[slot]>0 and ('|Hitem:'..(100+slot)..'|h[Mat '..slot..']|h') end
+        local function pickup(bag,slot) hand=slot; bags[slot]=0 end
+        function CursorHasItem() return hand~=nil end
+        function ClickTradeButton(slot) assert(not offers[slot]); offers[slot]=hand; hand=nil end
+        function GetTradePlayerItemInfo(slot) return offers[slot] and ('Mat '..offers[slot]),'icon',offers[slot] and 1 end
+        function GetTradePlayerItemLink(slot) return offers[slot] and ('|Hitem:'..(100+offers[slot])..'|h[Mat '..offers[slot]..']|h') end
+        if C_Container then
+          C_Container.GetContainerNumSlots=slots; C_Container.GetContainerItemLink=link; C_Container.PickupContainerItem=pickup
+          C_Container.GetContainerItemInfo=function(bag,slot) return {stackCount=bags[slot],isLocked=false} end
+        else
+          GetContainerNumSlots=slots; GetContainerItemLink=link; PickupContainerItem=pickup
+          GetContainerItemInfo=function(bag,slot) return 'icon',bags[slot],false end
+        end
+        ERR_TRADE_COMPLETE='Trade complete.'
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW')
+        assert(#offers==6 and bags[7]==1)
+        local id=CraftRosterDB.requests[1].id
+        dispatch('UI_INFO_MESSAGE',ERR_TRADE_COMPLETE); dispatch('TRADE_CLOSED')
+        assert(addon.Requests:GetTradeProgress(id).remaining==1)
+        offers={}; dispatch('TRADE_SHOW'); assert(#offers==1 and offers[1]==7)
+        dispatch('UI_INFO_MESSAGE',ERR_TRADE_COMPLETE); dispatch('TRADE_CLOSED')
+        assert(addon.Requests:GetTradeProgress(id).delivered==7)
+    """,
+    'delivery_ledger_resumes_without_in_memory_request_and_pauses_uncertainty': """
+        inventoryFixture(false,true)
+        CraftRosterDB.recipes[42].materials[1].count=30
+        ERR_TRADE_COMPLETE='Trade complete.'
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW')
+        dispatch('UI_INFO_MESSAGE',ERR_TRADE_COMPLETE); dispatch('TRADE_CLOSED')
+        local id=CraftRosterDB.requests[1].id
+        addon.Requests:Cancel()
+        attachments={}; inventory[1].count=20; inventory[2].count=0; moved=0
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW')
+        assert(moved==6 and #CraftRosterDB.requests==1)
+        dispatch('TRADE_CLOSED'); addon.Requests:Cancel()
+        attachments={}; inventory[1].count=20; moved=0
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm'); dispatch('TRADE_SHOW')
+        assert(moved==0 and addon.Requests:GetTradeProgress(id).needsReview)
     """,
 })
 
@@ -1060,7 +1336,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.9')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.11')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)

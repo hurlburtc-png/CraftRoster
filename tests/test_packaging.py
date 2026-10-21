@@ -21,6 +21,17 @@ class PackageTests(unittest.TestCase):
                 self.assertEqual(archive.read('CraftRoster/' + name), (ROOT / name).read_bytes(),
                                  'Rebuild CraftRoster.zip: stale or damaged file ' + name)
 
+    def test_package_has_stable_metadata_and_repeatable_bytes(self):
+        spec = importlib.util.spec_from_file_location('package_addon', ROOT / 'scripts/package_addon.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with TemporaryDirectory() as temporary:
+            first = module.package(Path(temporary) / 'first.zip')
+            second = module.package(Path(temporary) / 'second.zip')
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            with ZipFile(first) as archive:
+                self.assertTrue(all(info.date_time == (1980, 1, 1, 0, 0, 0) for info in archive.infolist()))
+
     def test_archive_has_only_one_addon_folder_and_all_modules(self):
         spec = importlib.util.spec_from_file_location('package_addon', ROOT / 'scripts/package_addon.py')
         module = importlib.util.module_from_spec(spec)

@@ -14,7 +14,8 @@ local function GetState()
 	return character.shoppingList
 end
 
-local function Materials(recipe)
+local function Materials(recipe, quantity)
+	quantity = quantity or 1
 	if not recipe or type(recipe.materials) ~= "table" or #recipe.materials == 0 then return nil end
 	local entries, byKey = {}, {}
 	for _, material in ipairs(recipe.materials) do
@@ -23,13 +24,31 @@ local function Materials(recipe)
 			or material.count > 1000000 or material.count ~= math.floor(material.count) then return nil end
 		local key = material.itemID or material.name
 		local entry = byKey[key]
-		if entry then entry.required = entry.required + material.count
+		if entry then entry.required = entry.required + material.count * quantity
 		else
-			entry = { name = material.name, itemID = material.itemID, required = material.count }
+			entry = { name = material.name, itemID = material.itemID, required = material.count * quantity }
 			byKey[key] = entry; table.insert(entries, entry)
 		end
 	end
 	return entries
+end
+
+-- Quantities count recipe executions; recipes may produce more than one item per craft.
+function ShoppingList:GetQuantity(recipeID)
+	local state = GetState()
+	local value = state and state.quantities and state.quantities[recipeID]
+	if type(value) ~= "number" or value < 1 or value > 999 or value ~= math.floor(value) then return 1 end
+	return value
+end
+
+function ShoppingList:SetQuantity(recipeID, quantity)
+	if type(quantity) ~= "number" or quantity < 1 or quantity > 999 or quantity ~= math.floor(quantity) then return false end
+	local state = GetState()
+	if not state or not CraftRosterDB.recipes[recipeID] then return false end
+	state.quantities = state.quantities or {}
+	state.quantities[recipeID] = quantity
+	self:ScheduleRefresh()
+	return true
 end
 
 local function NormalizeTarget(target)
@@ -45,8 +64,8 @@ local function Contribution(recipeID, target)
 	return byCrafter and byCrafter[NormalizeTarget(target)] or {}
 end
 
-function ShoppingList:GetPlayerMaterials(recipeID, target)
-	local entries = Materials({materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipeID)}) or {}
+function ShoppingList:GetPlayerMaterials(recipeID, target, quantity)
+	local entries = Materials({materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipeID)}, quantity or self:GetQuantity(recipeID)) or {}
 	local contribution = Contribution(recipeID, target)
 	local materials = {}
 	for _, entry in ipairs(entries) do
@@ -61,7 +80,7 @@ function ShoppingList:SetCrafterShare(recipeID, target, key, count)
 	local crafter = NormalizeTarget(target)
 	if not crafter or type(count) ~= "number" or count < 0 or count ~= math.floor(count) then return false end
 	local found
-	for _, entry in ipairs(Materials({materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipeID)}) or {}) do
+	for _, entry in ipairs(Materials({materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipeID)}, self:GetQuantity(recipeID)) or {}) do
 		if (entry.itemID or entry.name) == key then found = entry end
 	end
 	if not found or count > found.required then return false end
@@ -70,7 +89,8 @@ function ShoppingList:SetCrafterShare(recipeID, target, key, count)
 	state.contributions[recipeID] = state.contributions[recipeID] or {}
 	state.contributions[recipeID][crafter] = state.contributions[recipeID][crafter] or {}
 	state.contributions[recipeID][crafter][key] = count
-	if state.recipeID == recipeID then state.crafter = target; self:ScheduleRefresh() end
+	if state.recipeID == recipeID then state.crafter = target end
+	self:ScheduleRefresh()
 	return true
 end
 
@@ -127,6 +147,23 @@ local function BagCounts()
 	return counts
 end
 
+-- Fill the native auction search field without submitting a query or purchase.
+function ShoppingList:SearchAuctions(entry)
+	local search = AuctionFrameBrowse and AuctionFrameBrowse.SearchBox or BrowseName
+	local auction = AuctionFrame or AuctionHouseFrame
+	if not search and AuctionHouseFrame and AuctionHouseFrame.SearchBar then
+		search = AuctionHouseFrame.SearchBar.SearchBox
+	end
+	if not auction or not auction:IsShown() or not search or not search.SetText then
+		print("|cff00ff00CraftRoster|r: open the Auction House, then click the material again to fill its search field.")
+		return false
+	end
+	search:SetText(entry.name)
+	if search.SetFocus then search:SetFocus() end
+	if search.HighlightText then search:HighlightText() end
+	return true
+end
+
 function ShoppingList:DrawRows()
 	local frame = self.frame
 	local entries = self.entries or {}
@@ -144,13 +181,21 @@ function ShoppingList:DrawRows()
 			local label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 			label:SetAllPoints(); label:SetJustifyH("LEFT"); label:SetWordWrap(false)
 			row:SetFontString(label); row:SetSize(236, ROW_HEIGHT)
-			row:SetScript("OnClick", function(self) ShoppingList:EditCrafterShare(self.entry) end)
+			row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+			row:SetScript("OnClick", function(self, button)
+				if button == "RightButton" then ShoppingList:EditCrafterShare(self.entry)
+				else ShoppingList:SearchAuctions(self.entry) end
+			end)
 			row:SetScript("OnEnter", function(self)
 				local material = self.entry
-				GameTooltip:SetOwner(self, "ANCHOR_RIGHT"); GameTooltip:SetText(material.name)
+				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+				local shown = material.itemID and type(GameTooltip.SetHyperlink)=="function"
+					and pcall(GameTooltip.SetHyperlink, GameTooltip, "item:" .. material.itemID)
+				if not shown then GameTooltip:SetText(material.name) end
 				GameTooltip:AddLine(("Recipe requires: %d · crafter provides: %d"):format(material.recipeRequired, material.crafterProvides or 0), 1, 1, 1)
 				GameTooltip:AddLine(("Your share: %d · in bags: %s"):format(material.required, material.owned and tostring(material.owned) or "?"), 1, 1, 1)
-				GameTooltip:AddLine("Click to set the crafter's share.", 1, 1, 1); GameTooltip:Show()
+				if (material.delivered or 0)>0 then GameTooltip:AddLine("Already delivered: "..material.delivered,1,1,1) end
+				GameTooltip:AddLine("Left-click: auction search. Right-click: crafter share.", 1, 1, 1); GameTooltip:Show()
 			end)
 			row:SetScript("OnLeave", function() GameTooltip:Hide() end)
 			frame.Rows[used] = row
@@ -161,6 +206,7 @@ function ShoppingList:DrawRows()
 		local ready = count and count >= entry.required
 		local text = ("%s  %s/%d"):format(entry.name, count and tostring(count) or "?", entry.required)
 		if count and not ready then text = text .. ("  (need %d)"):format(entry.required - count) end
+		if (entry.delivered or 0)>0 then text=text..("  (delivered %d)"):format(entry.delivered) end
 		if entry.crafterProvides and entry.crafterProvides > 0 then text = text .. ("  (crafter %d)"):format(entry.crafterProvides) end
 		row:SetText((ready and "|cff33ff66" or "|cffffd166") .. text .. "|r")
 		row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -(index - 1) * ROW_HEIGHT)
@@ -169,39 +215,44 @@ function ShoppingList:DrawRows()
 	for index = used + 1, #frame.Rows do frame.Rows[index]:Hide() end
 end
 
+function ShoppingList:GetMaterialStatus(recipeID, crafter)
+	local entries=Materials({materials=CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipeID)},self:GetQuantity(recipeID))
+	if not entries then return nil,0,false end
+	local getCount=C_Item and C_Item.GetItemCount or GetItemCount
+	local counts=not getCount and BagCounts() or nil
+	local ready,unavailable=0,false
+	local contribution=Contribution(recipeID,crafter)
+	local delivered=crafter and CraftRoster.Requests and CraftRoster.Requests:GetDeliveredMaterials(recipeID,crafter,self:GetQuantity(recipeID)) or {}
+	for _,entry in ipairs(entries) do
+		entry.recipeRequired=entry.required
+		entry.crafterProvides=math.min(entry.required,contribution[entry.itemID or entry.name] or 0)
+		entry.delivered=math.min(entry.required-entry.crafterProvides,delivered[entry.itemID or entry.name] or 0)
+		entry.required=math.max(0,entry.required-entry.crafterProvides-entry.delivered)
+		if getCount then
+			local ok,value=pcall(getCount,entry.itemID or entry.name,false,false,false,false)
+			if ok and type(value)=="number" and value>=0 then entry.owned=value end
+		elseif counts then entry.owned=counts[entry.itemID or entry.name] or 0 end
+		if entry.owned==nil then unavailable=true
+		elseif entry.owned>=entry.required then ready=ready+1 end
+	end
+	return entries,ready,unavailable
+end
+
 function ShoppingList:Refresh()
 	local state = GetState()
 	if not state or not self.frame or not self.frame:IsShown() then return end
 	local recipe = CraftRosterDB.recipes[state.recipeID]
-	local title = recipe and recipe.name or ("Recipe " .. tostring(state.recipeID))
+	local title = (recipe and recipe.name or ("Recipe " .. tostring(state.recipeID))) .. " · " .. self:GetQuantity(state.recipeID) .. (self:GetQuantity(state.recipeID) == 1 and " craft" or " crafts")
 	if state.crafter then title = title .. "\nCrafter: " .. state.crafter end
 	self.frame.Recipe:SetText(title)
-	local entries = Materials({materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(state.recipeID)})
-	self.entries = entries or {}
+	local entries,ready,unavailable=self:GetMaterialStatus(state.recipeID,state.crafter)
+	self.entries=entries or {}
 	if not entries then
 		self.frame.Message:SetText("No material data yet.\nScan this recipe locally.")
-		self.frame.Message:Show()
-		self.frame.Summary:SetText("Waiting for recipe data")
+		self.frame.Message:Show(); self.frame.Summary:SetText("Waiting for recipe data")
 	else
 		self.frame.Message:Hide()
-		local getCount = C_Item and C_Item.GetItemCount or GetItemCount
-		local counts = not getCount and BagCounts() or nil
-		local ready, unavailable = 0, false
-		local contribution = Contribution(state.recipeID, state.crafter)
-		for _, entry in ipairs(entries) do
-			entry.recipeRequired = entry.required
-			entry.crafterProvides = math.min(entry.required, contribution[entry.itemID or entry.name] or 0)
-			entry.required = entry.required - entry.crafterProvides
-			if entry.required == 0 then entry.owned = 0
-			elseif getCount then
-				-- Bags only: exclude bank, charges, reagent bank and account bank.
-				local ok, value = pcall(getCount, entry.itemID or entry.name, false, false, false, false)
-				if ok and type(value) == "number" and value >= 0 then entry.owned = value end
-			elseif counts then entry.owned = counts[entry.itemID or entry.name] or 0 end
-			if entry.owned == nil then unavailable = true
-			elseif entry.owned >= entry.required then ready = ready + 1 end
-		end
-		self.frame.Summary:SetText(unavailable and "Inventory counts unavailable" or ("%d of %d materials ready"):format(ready, #entries))
+		self.frame.Summary:SetText(unavailable and "Inventory counts unavailable" or ("%d of %d materials ready"):format(ready,#entries))
 	end
 	self.frame:SetHeight(math.min(312, math.max(160, 130 + #self.entries * ROW_HEIGHT)))
 	self.frame.Content:SetHeight(math.max(1, #self.entries * ROW_HEIGHT))
@@ -209,6 +260,7 @@ function ShoppingList:Refresh()
 end
 
 function ShoppingList:ScheduleRefresh()
+	if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:ScheduleRefresh() end
 	if not self.frame or not self.frame:IsShown() or refreshTimer then return end
 	if C_Timer and C_Timer.NewTimer then
 		refreshTimer = C_Timer.NewTimer(0.1, function() refreshTimer = nil; self:Refresh() end)
@@ -262,7 +314,7 @@ function ShoppingList:Initialize()
 	frame.Summary:SetPoint("BOTTOMLEFT", 12, 24)
 	frame.Hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	frame.Hint:SetPoint("BOTTOMLEFT", 12, 8)
-	frame.Hint:SetText("Click a material to set the crafter share")
+	frame.Hint:SetText("Left: auction search · Right: crafter share")
 	frame:SetScript("OnEvent", function() self:ScheduleRefresh() end)
 	frame:SetScript("OnHide", function()
 		frame:UnregisterAllEvents()

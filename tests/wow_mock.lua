@@ -35,6 +35,7 @@ end
 function methods:SetVerticalScroll(offset) self.scroll=offset end
 function methods:GetVerticalScroll() return rawget(self,'scroll') or 0 end
 function methods:GetParent() return self.parent end
+function methods:SetParent(parent) self.parent=parent end
 function CreateFrame(kind,name,parent,template)
  local f=setmetatable({scripts={},events={},parent=parent}, {__index=function(_,k) return methods[k] or (k:match('^[A-Z]') and (k:match('^Set') or k:match('^Enable') or k:match('^Register') or k:match('^Clear') or k:match('^Start') or k:match('^Stop')) and function() end) or nil end})
  table.insert(frames,f)
@@ -47,6 +48,7 @@ end
 methods.CreateTexture=function(self) return CreateFrame('Texture',nil,self) end
 methods.CreateFontString=methods.CreateTexture
 UIParent=CreateFrame(); Minimap=CreateFrame(); GameTooltip=CreateFrame()
+function GameTooltip:AddLine() end
 function UnitName(unit) return unit == 'NPC' and 'Crafter' or 'Tester' end
 function GetRealmName() return 'Realm' end
 function UnitClass() return 'Mage','MAGE' end
@@ -113,7 +115,8 @@ function inventoryFixture(locked, splitAvailable)
  local function click(slot)
   assert(cursor and not attachments[slot]); attachments[slot]=cursor; moved=moved+cursor; cursor=nil
  end
- function GetTradePlayerItemInfo(slot) return attachments[slot] and 'Herb' end
+ function GetTradePlayerItemInfo(slot) return attachments[slot] and 'Herb', 'icon', attachments[slot] end
+ function GetTradePlayerItemLink(slot) return attachments[slot] and '|Hitem:7|h[Herb]|h' end
  GetSendMailItem=GetTradePlayerItemInfo; ClickTradeButton=click; ClickSendMailItemButton=click
  if apiProfile=='modern' then
   C_Container={GetContainerNumSlots=slots, GetContainerItemLink=link, PickupContainerItem=pickup,

@@ -40,11 +40,13 @@ class FrameLayoutTests(unittest.TestCase):
                                     apart(row.Label,row.RightLabel)
                                 end
                             end
-                            inside(tab,frame); inside(tab.Results,tab); inside(tab.Details,tab)
-                            inside(tab.CrafterList,tab); apart(tab.Results,tab.Details)
+                            inside(tab,frame); inside(tab.Results,tab); inside(tab.SelectedCraftScroll,tab); inside(tab.Details,tab.SelectedCraftContent)
+                            inside(tab.CrafterList,tab.SelectedCraftContent); apart(tab.Results,tab.Details)
                             apart(tab.CrafterList,tab.Details)
                             local buttons={tab.CraftRosterTradeButton,tab.CraftRosterMailButton,
-                                tab.CraftRosterFavoriteButton,tab.CraftRosterShoppingButton}
+                                tab.CraftRosterFavoriteButton,tab.CraftRosterShoppingButton,
+                                tab.CraftRosterQuantity,tab.CraftRosterAutoLoad,
+                                tab.CraftRosterQuantityUp,tab.CraftRosterQuantityDown}
                             for i,button in ipairs(buttons) do
                                 inside(button,tab.Details)
                                 for j=i+1,#buttons do apart(button,buttons[j]) end
@@ -73,6 +75,7 @@ class FrameLayoutTests(unittest.TestCase):
                         shopping.Close.scripts.OnClick(); assert(not shopping:IsShown())
                         function ChatFrame_OpenChat(text) whisperDraft=text end
                         tab.CraftRosterTradeButton.scripts.OnClick()
+                        addon.WhisperComposer.frame.Send.scripts.OnClick()
                         assert(whisperDraft:find('/w Crafter-Realm ',1,true)==1)
                         tab.CraftRosterMailButton.scripts.OnClick()
                         SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame()

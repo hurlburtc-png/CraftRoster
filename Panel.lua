@@ -60,6 +60,7 @@ function Panel:Initialize()
 	toggleButton:SetText("Enable / Disable")
 	toggleButton:SetScript("OnClick", function()
 		CraftRosterDB.settings.enabled = not CraftRosterDB.settings.enabled
+		if CraftRoster.WorkOrders then CraftRoster.WorkOrders:Refresh() end
 		Panel:RefreshStatus()
 	end)
 
