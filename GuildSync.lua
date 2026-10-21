@@ -39,7 +39,11 @@ local function SendAddonData(message)
 		local result = send(PREFIX, message, "GUILD")
 		if result == false then return false end
 		local success = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.Success
-		return result == nil or result == true or success == nil or result == success
+		if success ~= nil then
+			return result == success or result == true
+		end
+		-- Legacy clients may return no value on a successful send.
+		return result == nil or result == true
 	end
 	return false
 end
