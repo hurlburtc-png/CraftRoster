@@ -38,6 +38,37 @@ local function libraryCall(method, ...)
 	if success then return value, extra end
 end
 
+
+local professionIDs={Alchemy=171,Blacksmithing=164,Cooking=185,Enchanting=333,Engineering=202,["First Aid"]=129,Fishing=356,Leatherworking=165,Mining=186,Tailoring=197}
+function Sources:GetMaterials(recipeID)
+ local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
+ if not saved then return nil end
+ if type(saved.materials)=="table" and #saved.materials>0 then return saved.materials end
+ local profID=professionIDs[saved.profession]
+ if not profID then return nil end
+ local reagents=libraryCall("GetReagents",profID,recipeID)
+ if type(reagents)~="table" then return nil end
+ local out={}
+ for itemID,count in pairs(reagents) do
+  if type(itemID)~="number" or type(count)~="number" or count<=0 then return nil end
+  local name
+  if GetItemInfo then local ok,n=pcall(GetItemInfo,itemID); if ok then name=n end end
+  out[#out+1]={itemID=itemID,name=name or ("Item "..itemID),count=count}
+ end
+ table.sort(out,function(a,b) return a.itemID<b.itemID end)
+ return #out>0 and out or nil
+end
+function Sources:GetRecipeIcon(recipeID,fallback)
+ local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
+ if saved and saved.icon then return saved.icon end
+ if C_Spell and C_Spell.GetSpellInfo then
+  local ok,info=pcall(C_Spell.GetSpellInfo,recipeID)
+  if ok and info and info.iconID then return info.iconID end
+ end
+ if GetSpellInfo then local ok,_,_,icon=pcall(GetSpellInfo,recipeID); if ok and icon then return icon end end
+ return fallback
+end
+
 function Sources:SeedCatalog()
 	local changed = false
 	-- Import the bundled catalogue locally; never claim that a character knows it.
