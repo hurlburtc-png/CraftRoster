@@ -22,6 +22,10 @@ def package(destination):
     # the addon; every runtime vendor file is listed explicitly in its TOC.
     paths += [source / 'vendor/ProfessionDB/LICENSE', source / 'vendor/ProfessionDB/manifest.json']
     with ZipFile(destination, 'w', ZIP_DEFLATED) as archive:
+        folder = ZipInfo('CraftRoster/', (1980, 1, 1, 0, 0, 0))
+        folder.create_system = 3
+        folder.external_attr = (0o40755 << 16) | 0x10
+        archive.writestr(folder, b'')
         for path in sorted(set(paths)):
             # Fixed metadata makes local and GitHub builds byte-identical.
             entry = ZipInfo('CraftRoster/' + path.relative_to(source).as_posix(), (1980, 1, 1, 0, 0, 0))

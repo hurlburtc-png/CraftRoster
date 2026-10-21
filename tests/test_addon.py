@@ -59,17 +59,11 @@ CASES = {
         local link, found
         GameTooltip.SetHyperlink=function(_,value) link=value end
         local source=addon.Directory.frame.ProfessionsTab.RecipeSource
-        -- Find the teaching-item button without relying on its parent field name.
-        for _,f in ipairs(frames) do
-          if f.scripts.OnEnter and f:GetText():find('Pattern: Red Dragonscale',1,true) then
-            found=true
-            f.scripts.OnEnter(f); assert(link:find('item:15730',1,true))
-            IsShiftKeyDown=function() return true end
-            ChatEdit_InsertLink=function(value) link=value; return true end
-            f.scripts.OnClick(f); assert(link:find('item:15730',1,true))
-          end
-        end
-        assert(found)
+        local button=addon.SelectedCraft.recipeButton
+        button.scripts.OnEnter(button); assert(link:find('item:15730',1,true))
+        IsShiftKeyDown=function() return true end
+        ChatEdit_InsertLink=function(value) link=value; return true end
+        button.scripts.OnClick(button); assert(link:find('item:15730',1,true))
         local refreshes=0
         addon.Directory.RefreshRecipeSource=function() refreshes=refreshes+1 end
         dispatch('GET_ITEM_INFO_RECEIVED',15730,true)
@@ -600,7 +594,7 @@ CASES.update({
         addon.ShoppingList:Open(42)
         assert(#addon.ShoppingList.frame.Rows<=20)
         local scroll=addon.ShoppingList.frame.Scroll
-        scroll:SetVerticalScroll(99*22); scroll.scripts.OnVerticalScroll()
+        scroll:SetVerticalScroll(99*40); scroll.scripts.OnVerticalScroll()
         local found=false
         for _,row in ipairs(addon.ShoppingList.frame.Rows) do if row:IsShown() and row:GetText():find('Material 100') then found=true end end
         assert(found)
@@ -1336,7 +1330,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.11')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.12')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)

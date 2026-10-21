@@ -2,7 +2,7 @@ local ADDON_NAME, CraftRoster = ...
 local ShoppingList = {}
 CraftRoster.ShoppingList = ShoppingList
 
-local ROW_HEIGHT = 22
+local ROW_HEIGHT = 40
 local refreshTimer
 
 local function GetState()
@@ -26,7 +26,7 @@ local function Materials(recipe, quantity)
 		local entry = byKey[key]
 		if entry then entry.required = entry.required + material.count * quantity
 		else
-			entry = { name = material.name, itemID = material.itemID, required = material.count * quantity }
+			entry = { name = material.name, itemID = material.itemID, required = material.count * quantity, link=material.link, icon=material.icon }
 			byKey[key] = entry; table.insert(entries, entry)
 		end
 	end
@@ -178,13 +178,14 @@ function ShoppingList:DrawRows()
 		local row = frame.Rows[used]
 		if not row then
 			row = CreateFrame("Button", nil, frame.Content)
-			local label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-			label:SetAllPoints(); label:SetJustifyH("LEFT"); label:SetWordWrap(false)
-			row:SetFontString(label); row:SetSize(236, ROW_HEIGHT)
+			local label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+			label:SetPoint("TOPLEFT",38,-3); label:SetPoint("BOTTOMRIGHT",0,3); label:SetJustifyH("LEFT"); label:SetWordWrap(true)
+			row.Icon=row:CreateTexture(nil,"ARTWORK"); row.Icon:SetSize(32,32); row.Icon:SetPoint("LEFT",2,0)
+			row:SetFontString(label); row:SetSize(296, ROW_HEIGHT)
 			row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 			row:SetScript("OnClick", function(self, button)
 				if button == "RightButton" then ShoppingList:EditCrafterShare(self.entry)
-				else ShoppingList:SearchAuctions(self.entry) end
+				else CraftRoster.ItemDisplay:Click(self.entry) end
 			end)
 			row:SetScript("OnEnter", function(self)
 				local material = self.entry
@@ -195,7 +196,7 @@ function ShoppingList:DrawRows()
 				GameTooltip:AddLine(("Recipe requires: %d · crafter provides: %d"):format(material.recipeRequired, material.crafterProvides or 0), 1, 1, 1)
 				GameTooltip:AddLine(("Your share: %d · in bags: %s"):format(material.required, material.owned and tostring(material.owned) or "?"), 1, 1, 1)
 				if (material.delivered or 0)>0 then GameTooltip:AddLine("Already delivered: "..material.delivered,1,1,1) end
-				GameTooltip:AddLine("Left-click: auction search. Right-click: crafter share.", 1, 1, 1); GameTooltip:Show()
+				GameTooltip:AddLine("Click: whisper/chat link, or AH search. Right-click: crafter share.", 1, 1, 1); GameTooltip:Show()
 			end)
 			row:SetScript("OnLeave", function() GameTooltip:Hide() end)
 			frame.Rows[used] = row
@@ -204,10 +205,9 @@ function ShoppingList:DrawRows()
 		row.entry = entry
 		local count = entry.owned
 		local ready = count and count >= entry.required
-		local text = ("%s  %s/%d"):format(entry.name, count and tostring(count) or "?", entry.required)
+		row.Icon:SetTexture(entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+		local text = ("%s\n%s/%d"):format(entry.name, count and tostring(count) or "?", entry.required)
 		if count and not ready then text = text .. ("  (need %d)"):format(entry.required - count) end
-		if (entry.delivered or 0)>0 then text=text..("  (delivered %d)"):format(entry.delivered) end
-		if entry.crafterProvides and entry.crafterProvides > 0 then text = text .. ("  (crafter %d)"):format(entry.crafterProvides) end
 		row:SetText((ready and "|cff33ff66" or "|cffffd166") .. text .. "|r")
 		row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -(index - 1) * ROW_HEIGHT)
 		row:Show()
@@ -277,7 +277,7 @@ function ShoppingList:Initialize()
 	if self.frame then return end
 	local frame = CreateFrame("Frame", "CraftRosterShoppingList", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	self.frame = frame
-	frame:Hide(); frame:SetSize(280, 150)
+	frame:Hide(); frame:SetSize(340, 150)
 	frame:SetFrameStrata("HIGH"); frame:SetMovable(true); frame:SetClampedToScreen(true)
 	frame:EnableMouse(true); frame:RegisterForDrag("LeftButton")
 	frame:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 12})
@@ -294,7 +294,7 @@ function ShoppingList:Initialize()
 	frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	frame.Title:SetPoint("TOPLEFT", 12, -10); frame.Title:SetText("Shopping List")
 	frame.Recipe = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	frame.Recipe:SetPoint("TOPLEFT", 12, -34); frame.Recipe:SetWidth(236)
+	frame.Recipe:SetPoint("TOPLEFT", 12, -34); frame.Recipe:SetWidth(296)
 	frame.Recipe:SetHeight(36)
 	frame.Recipe:SetWordWrap(false)
 	if frame.Recipe.SetMaxLines then frame.Recipe:SetMaxLines(2) end
@@ -304,17 +304,17 @@ function ShoppingList:Initialize()
 	frame.Scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
 	frame.Scroll:SetPoint("TOPLEFT", 12, -78); frame.Scroll:SetPoint("BOTTOMRIGHT", -28, 42)
 	frame.Content = CreateFrame("Frame", nil, frame.Scroll)
-	frame.Content:SetSize(236, 1); frame.Scroll:SetScrollChild(frame.Content)
+	frame.Content:SetSize(296, 1); frame.Scroll:SetScrollChild(frame.Content)
 	frame.Rows = {}
 	frame.Scroll:HookScript("OnVerticalScroll", function() self:DrawRows() end)
 	frame.Scroll:HookScript("OnSizeChanged", function() self:DrawRows() end)
 	frame.Message = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	frame.Message:SetPoint("TOPLEFT", 12, -80); frame.Message:SetWidth(236)
+	frame.Message:SetPoint("TOPLEFT", 12, -80); frame.Message:SetWidth(296)
 	frame.Summary = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	frame.Summary:SetPoint("BOTTOMLEFT", 12, 24)
 	frame.Hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	frame.Hint:SetPoint("BOTTOMLEFT", 12, 8)
-	frame.Hint:SetText("Left: auction search · Right: crafter share")
+	frame.Hint:SetText("Click: chat / AH · Right: crafter share")
 	frame:SetScript("OnEvent", function() self:ScheduleRefresh() end)
 	frame:SetScript("OnHide", function()
 		frame:UnregisterAllEvents()

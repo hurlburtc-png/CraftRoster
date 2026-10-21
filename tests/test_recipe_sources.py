@@ -55,28 +55,29 @@ class RecipeSourceTests(unittest.TestCase):
                         end
                         assert(directory.selectedRecipe.id==99 and #directory.selectedRecipe.crafters==0)
                         directory:RefreshDetails(); directory:RefreshCrafters()
-                        assert(tab.RecipeSource:GetVerticalScroll()==0)
-                        assert(tab.RecipeSource:IsShown() and not tab.CrafterList:IsShown())
+                        assert(tab.SelectedCraftScroll:GetVerticalScroll()==0)
+                        assert(tab.RecipeSource:IsShown() and tab.CrafterList:IsShown())
                         assert(tab.RecipeSource.Text:GetText():find('Test Vendor',1,true))
+                        addon.SelectedCraft.sourceToggle.scripts.OnClick()
                         assert(tab.RecipeSource.Text:GetText():find('A recipe description',1,true))
                         tooltipLink=nil
                         GameTooltip.AddLine=function() end
                         function GameTooltip:SetHyperlink(link) tooltipLink=link end
-                        tab.RecipeSource.Link.scripts.OnClick(tab.RecipeSource.Link)
+                        addon.SelectedCraft.recipeButton.scripts.OnClick(addon.SelectedCraft.recipeButton)
                         assert(tooltipLink:find('|Hspell:99|h',1,true))
                         function IsShiftKeyDown() return true end
                         function ChatEdit_InsertLink(link) insertedLink=link; return true end
-                        tab.RecipeSource.Link.scripts.OnClick(tab.RecipeSource.Link)
+                        addon.SelectedCraft.recipeButton.scripts.OnClick(addon.SelectedCraft.recipeButton)
                         assert(insertedLink:find('|Hspell:99|h',1,true))
-                        local oldScroll=tab.RecipeSource:GetVerticalScroll()
-                        tab.RecipeSource:SetVerticalScroll(9999)
-                        directory:RefreshRecipeSource()
-                        assert(tab.RecipeSource:GetVerticalScroll()<9999)
+                        local oldScroll=tab.SelectedCraftScroll:GetVerticalScroll()
+                        tab.SelectedCraftScroll:SetVerticalScroll(9999)
+                        addon.SelectedCraft:Refresh()
+                        assert(tab.SelectedCraftScroll:GetVerticalScroll()<9999)
                         for _,size in ipairs({{620,420},{760,500},{1200,800}}) do
                             directory.frame:SetSize(size[1],size[2])
-                            directory:RefreshRecipeSource()
+                            addon.SelectedCraft:Refresh()
                             inside(tab.RecipeSource,tab.SelectedCraftContent)
-                            apart(tab.RecipeSource,tab.Details)
+                            inside(tab.RecipeSource,tab.Details)
                             assert(tab.RecipeSource.Child:GetHeight()>0)
                         end
                         -- Missing/throwing optional APIs preserve earlier good data.
@@ -92,5 +93,5 @@ class RecipeSourceTests(unittest.TestCase):
                         directory:InvalidateIndex(); directory.recipeIndex=nil; directory.professionCache=nil
                         directory:RefreshProfessions()
                         assert(#directory.selectedRecipe.crafters==1)
-                        assert(not tab.RecipeSource:IsShown() and tab.CrafterList:IsShown())
+                        assert(tab.RecipeSource:IsShown() and tab.CrafterList:IsShown())
                     ''')

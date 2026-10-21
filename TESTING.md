@@ -1,4 +1,4 @@
-# CraftRoster 0.8.0-beta.11 test candidate
+# CraftRoster 0.8.0-beta.12 test candidate
 
 Status: candidate for controlled in-game testing. Automated API mocks pass; native client compatibility is not yet verified.
 Target client reported by the user: Forever **1.60.1, build 70450, interface 16001**.
@@ -10,6 +10,14 @@ calls. A regression scenario rejects that template and exercises all three tabs.
 Further runtime compatibility on Forever still requires a real client run. Lua 5.1/LuaJIT checks use API mocks, not a WoW installation. Record the actual
 client/flavor/build/interface with `/crdiagnostics`.
 Do not treat the generated mockup images as runtime evidence.
+
+Beta 12 addresses reported in-game display problems: one scroll for selected-craft
+content, source/location beside the recipe preview, larger material icons and text,
+resolved shopping-list names, and contextual links for whispers/chat versus AH search.
+The release download contains an explicit `CraftRoster/` directory. Verify extraction
+at `Interface/AddOns/CraftRoster/CraftRoster.toc`; source-code archives are not installs.
+Retest wheel scrolling over materials, source expansion and crafter rows; resizing;
+cold-cache icons; and material clicks with native whisper, addon draft and AH open.
 
 Beta 4 moves tabs inside the footer, gives content explicit window bounds, fixes
 bottom anchor directions, reserves scrollbar space, and keeps filters on two rows.

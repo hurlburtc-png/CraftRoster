@@ -201,7 +201,7 @@ local function BuildRecipeIndex()
 					name = saved.name or GetRecipeName(recipeID),
 					searchName = (saved.name or GetRecipeName(recipeID)):lower(),
 					profession = profession,
-					icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession))) or GetProfessionIcon(profession),
+					icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession),true)) or GetProfessionIcon(profession),
 					crafters = {},
 				}
 				index[recipeID] = recipe
@@ -217,7 +217,7 @@ local function BuildRecipeIndex()
 			local profession = saved.profession or "Unknown"
 			index[recipeID] = { id = recipeID, name = saved.name or GetRecipeName(recipeID),
 				searchName = (saved.name or GetRecipeName(recipeID)):lower(), profession = profession,
-				icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession))) or GetProfessionIcon(profession), crafters = {} }
+				icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession),true)) or GetProfessionIcon(profession), crafters = {} }
 		end
 	end
 
@@ -330,12 +330,12 @@ local function BindRecipeLinks(row,recipeID)
 	if recipeID then
 		if not row.RecipeLink then
 			row.RecipeLink=CreateRecipeLinkButton(row,"recipe"); row.RecipeLink:SetPoint("BOTTOMLEFT",39,3)
-			row.CraftLink=CreateRecipeLinkButton(row,"craft"); row.CraftLink:SetPoint("LEFT",row.RecipeLink,"RIGHT",6,0)
+			row.CraftLink=CreateRecipeLinkButton(row,"craft"); row.CraftLink:SetPoint("TOPLEFT",row.Icon,"TOPLEFT",0,0)
 		end
 		row.RecipeLink.recipeID=recipeID; row.CraftLink.recipeID=recipeID
-		local width=math.max(24,(row:GetWidth()-55)/2)
-		row.RecipeLink:SetWidth(width); row.CraftLink:SetWidth(width)
-		UpdateLinkDisplay(row.RecipeLink); UpdateLinkDisplay(row.CraftLink)
+		local width=math.max(24,row:GetWidth()-55)
+		row.RecipeLink:SetWidth(width); row.CraftLink:SetSize(24,24)
+		UpdateLinkDisplay(row.RecipeLink); row.CraftLink:SetText("")
 		row.RightLabel:ClearAllPoints(); row.RightLabel:SetPoint("TOPRIGHT",row,"TOPRIGHT",-10,-5)
 		row.RecipeLink:Show(); row.CraftLink:Show()
 		row.Label:SetPoint("TOPLEFT",39,-5); row.Label:SetHeight(16)
@@ -419,13 +419,15 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 	end
 	child:SetHeight(math.max(56, y + 12))
 	local scroll = child:GetParent()
+ local outer=scroll.outerScroll
+ if outer then scroll:SetHeight(child:GetHeight()) end
 	local function Draw()
 		width = math.max(80, scroll:GetWidth() - 4)
 		child:SetWidth(width)
-		local top = scroll.GetVerticalScroll and scroll:GetVerticalScroll() or 0
+		local top = outer and math.max(0,outer:GetVerticalScroll()-(scroll.contentOffset or 0)) or (scroll.GetVerticalScroll and scroll:GetVerticalScroll() or 0)
 		local maximum = math.max(0, y + 12 - math.max(1, scroll:GetHeight()))
-		if top > maximum then top = maximum; scroll:SetVerticalScroll(top) end
-		local bottom = top + math.max(1, scroll:GetHeight()) + normalHeight
+		if not outer and top > maximum then top = maximum; scroll:SetVerticalScroll(top) end
+		local bottom = top + math.max(1, (outer or scroll):GetHeight()) + normalHeight
 		-- Binary search avoids walking thousands of offscreen entries on each scroll.
 		local low, high = 1, #entries
 		while low <= high do
@@ -436,7 +438,10 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 		local function Row()
 			used = used + 1
 			local row = pool[used]
-			if not row then row = CreateRow(child, width, normalHeight); pool[used] = row end
+			if not row then
+			 row = CreateRow(child, width, normalHeight); pool[used] = row
+			 if outer then row:EnableMouseWheel(true); row:SetScript("OnMouseWheel",function(_,delta) CraftRoster.SelectedCraft:Scroll(delta) end) end
+			end
 			row:ClearAllPoints()
 			row.listClick, row.listEntry = nil, nil
 			row.materials, row.tooltipLines, row.hyperlink = nil, nil, nil
@@ -452,7 +457,10 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			row:SetSize(width, entry.isHeader and headerHeight or normalHeight)
 			row:SetPoint("TOPLEFT", 0, -offsets[i])
 			if entry.atlas and row.Icon.SetAtlas then row.Icon:SetAtlas(entry.atlas)
-			else row.Icon:SetTexture(entry.icon or "Interface\\Icons\\Trade_Tailoring") end
+			else
+			 local icon=entry.recipe and CraftRoster.RecipeSources:GetRecipeIcon(entry.recipe.id,entry.icon) or entry.icon
+			 row.Icon:SetTexture(icon or "Interface\\Icons\\Trade_Tailoring")
+			end
 			local rightWidth = entry.rightText and entry.rightText ~= "" and math.max(30, math.min(120, width * 0.35)) or 0
 			row.Label:SetWidth(math.max(1, width - 59 - rightWidth))
 			row.Label:SetText(entry.text or "")
@@ -461,6 +469,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			row.Label:SetFontObject(entry.isHeader and "GameFontNormal" or "GameFontHighlight")
 			row.tooltipTitle, row.tooltipLines = entry.tooltipTitle or entry.text, entry.tooltipLines
 			row.materials, row.hyperlink = entry.materials, entry.hyperlink
+			if entry.recipe then row.hyperlink=(Directory:GetSearchLinks(entry.recipe.id) or {}).craft end
 			BindRecipeLinks(row,not entry.isHeader and (entry.linkRecipeID or entry.recipeID or (entry.recipe and entry.recipe.id)) or nil)
 			row:EnableMouse(not entry.isHeader and (onClick ~= nil or row.tooltipLines ~= nil or row.materials ~= nil or row.hyperlink ~= nil))
 			if onClick and not entry.isHeader then
@@ -493,7 +502,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 		end
 	end
 	if not child.scrollHooked and scroll.HookScript then
-		scroll:HookScript("OnVerticalScroll", function() child.drawRows() end)
+		(outer or scroll):HookScript("OnVerticalScroll", function() child.drawRows() end)
 		scroll:HookScript("OnSizeChanged", function() child.drawRows() end)
 		child.scrollHooked = true
 	end
@@ -757,21 +766,21 @@ function Directory:Initialize()
 	professionsTab.Details:SetScript("OnLeave", function() GameTooltip:Hide() end)
 	professionsTab.Details:EnableMouse(true)
 
-	professionsTab.CrafterList = CreateFrame("ScrollFrame", nil, professionsTab, "UIPanelScrollFrameTemplate")
+	professionsTab.CrafterList = CreateFrame("Frame", nil, professionsTab)
 	professionsTab.CrafterList:SetPoint("TOPLEFT", professionsTab, "TOP", 12, -256)
 	professionsTab.CrafterList:SetPoint("BOTTOMRIGHT", -32, 14)
 	professionsTab.CrafterListChild = CreateFrame("Frame", nil, professionsTab.CrafterList)
 	professionsTab.CrafterListChild:SetSize(350, 1)
-	professionsTab.CrafterList:SetScrollChild(professionsTab.CrafterListChild)
+	professionsTab.CrafterListChild:SetPoint("TOPLEFT",0,0)
 
 	-- Reuse the lower right area; long acquisition descriptions scroll instead
 	-- of pushing the action buttons out of the smallest supported window.
-	local source = CreateFrame("ScrollFrame", nil, professionsTab, "UIPanelScrollFrameTemplate")
+	local source = CreateFrame("Frame", nil, professionsTab)
 	professionsTab.RecipeSource = source
 	source:SetPoint("TOPLEFT", professionsTab.CrafterList, "TOPLEFT", 0, 0)
 	source:SetPoint("BOTTOMRIGHT", professionsTab.CrafterList, "BOTTOMRIGHT", 0, 0)
 	source.Child = CreateFrame("Frame", nil, source)
-	source:SetScrollChild(source.Child)
+	source.Child:SetPoint("TOPLEFT",0,0)
 	source.Status = source.Child:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	source.Status:SetPoint("TOPLEFT", 4, -4)
 	source.Status:SetJustifyH("LEFT")
@@ -785,7 +794,7 @@ function Directory:Initialize()
 	source.Text:SetPoint("TOPLEFT", 4, -144)
 	source.Text:SetJustifyH("LEFT")
 	source.Text:SetWordWrap(true)
-	source:HookScript("OnSizeChanged", function() Directory:RefreshRecipeSource() end)
+
 	source:Hide()
 	if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:Initialize(professionsTab) end
 
@@ -897,8 +906,7 @@ local function BuildProfessionEntries()
 			text = recipe.name,
 			icon = recipe.icon,
 			rightText = #recipe.crafters == 0 and "No crafter" or ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
-			materials = CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipe.id) or (saved and saved.materials),
-			hyperlink = (Directory:GetSearchLinks(recipe.id) or {}).craft or (saved and saved.itemLink),
+			-- Native item links and icons are resolved only for visible rows.
 			recipe = recipe,
 		})
 	end
@@ -938,7 +946,7 @@ function Directory:RefreshDetails()
 	end
 
 	if recipe then
-		tab.DetailsIcon:SetTexture(recipe.icon)
+		tab.DetailsIcon:SetTexture(CraftRoster.RecipeSources:GetRecipeIcon(recipe.id,recipe.icon))
 		tab.DetailsName:SetText(recipe.name)
 		tab.DetailsProfession:SetText(recipe.profession)
 	else
@@ -950,38 +958,7 @@ function Directory:RefreshDetails()
 end
 
 function Directory:RefreshRecipeSource()
-	if not self.frame then return end
-	local tab = self.frame.ProfessionsTab
-	local source, recipe = tab.RecipeSource, self.selectedRecipe
-	if not source then return end
-	local show = recipe and #recipe.crafters == 0
-	if not show then source:Hide(); tab.CrafterList:Show(); return end
-	tab.CrafterList:Hide()
-	source:Show()
-	if source.recipeID ~= recipe.id then
-		source.recipeID = recipe.id
-		source:SetVerticalScroll(0)
-	end
-	local saved = CraftRosterDB.recipes[recipe.id] or {}
-	local data = CraftRoster.RecipeSources and CraftRoster.RecipeSources:Get(recipe.id)
-	source.Status:SetText("No synced crafter knows this recipe.\nGuild data may be incomplete; try Refresh.")
-	source.Link.recipeID=recipe.id; UpdateLinkDisplay(source.Link)
-	source.Text:SetText(CraftRoster.RecipeSources and CraftRoster.RecipeSources:Format(recipe.id, data)
-		or (saved.sourceText or "Source unknown"))
-	local width = math.max(80, source:GetWidth() - 8)
-	source.Child:SetWidth(width)
-	source.Status:SetWidth(width - 8)
-	source.Status:SetHeight(40)
-	source.Link:SetWidth(width - 8)
-	source.Output.recipeID=recipe.id; source.Output:SetWidth(width-8); UpdateLinkDisplay(source.Output)
-	source.Text:SetWidth(width - 8)
-	local height = source.Text.GetStringHeight and source.Text:GetStringHeight() or 130
-	source.Text:SetHeight(math.max(40, height))
-	source.Child:SetHeight(156 + math.max(40, height))
-	if source.GetVerticalScroll then
-		local maximum = math.max(0, source.Child:GetHeight() - source:GetHeight())
-		if source:GetVerticalScroll() > maximum then source:SetVerticalScroll(maximum) end
-	end
+ if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:RefreshSources() end
 end
 
 function Directory:RefreshCrafters()
@@ -997,7 +974,7 @@ function Directory:RefreshCrafters()
 	if not selectedValid then self.selectedCrafter = nil end
 	self:RefreshRecipeSource()
 	if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:RefreshMaterials() end
-	if self.selectedRecipe and #self.selectedRecipe.crafters == 0 then return end
+
 
 	if self.selectedRecipe then
 		local onlineOnly = CraftRosterDB.settings.onlineOnly
@@ -1043,6 +1020,9 @@ function Directory:RefreshCrafters()
 	if self.selectedRecipe and self.selectedCrafter and CraftRoster.GuildDetails then
 		CraftRoster.GuildDetails:RequestMaterials(self.selectedRecipe.id,self.selectedCrafter)
 	end
+	if self.selectedRecipe and #self.selectedRecipe.crafters==0 then
+	 entries={{isHeader=true,text="No synced crafter · try Refresh"}}
+	end
 	RenderList(child, entries, 350, 38, 28, function(entry)
 		if Directory.selectedRecipe then
 			Directory.selectedCrafter = entry.characterKey
@@ -1050,6 +1030,7 @@ function Directory:RefreshCrafters()
 			if CraftRoster.WhisperComposer then CraftRoster.WhisperComposer:Choose(Directory.selectedRecipe.id,entry.characterKey) end
 		end
 	end)
+	if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:RefreshMaterials() end
 end
 
 function Directory:RefreshPlayers()

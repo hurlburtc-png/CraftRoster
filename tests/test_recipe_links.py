@@ -19,8 +19,8 @@ SETUP='''
 CASES={
  'item_links_replace_generic_button_labels': """
     assert(resultRow.RecipeLink:GetText():find('|Hitem:15730',1,true))
-    assert(resultRow.CraftLink:GetText():find('|Hitem:15047',1,true))
-    assert(resultRow.RecipeLink:GetText():find('|T',1,true) and resultRow.CraftLink:GetText():find('|T',1,true))
+    assert(resultRow.CraftLink:GetText()=='' and resultRow.CraftLink:GetWidth()==24)
+    assert(resultRow.RecipeLink:GetText():find('|T',1,true))
     assert(resultRow.RecipeLink:GetText()~='Recipe' and resultRow.CraftLink:GetText()~='Craft')
 """,
 'shopping_hover_uses_native_item_with_progress_and_missing_id_fallback': """

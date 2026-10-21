@@ -61,7 +61,7 @@ class RuntimeEdgeTests(unittest.TestCase):
             CraftRosterDB.settings.onlineOnly=true
             addon.Directory:RefreshCrafters()
             assert(addon.Directory.selectedCrafter==nil)
-            assert(not addon.Directory.frame.ProfessionsTab.RecipeSource:IsShown())
+            assert(addon.Directory.frame.ProfessionsTab.RecipeSource:IsShown())
         ''')
 
     def test_recipe_tooltip_failure_has_a_readable_fallback(self):
@@ -75,10 +75,9 @@ class RuntimeEdgeTests(unittest.TestCase):
             function GameTooltip:SetHyperlink() error('unknown link') end
             function GameTooltip:SetText(text) tooltipTitle=text end
             function GameTooltip:AddLine(text) tooltipLine=text end
-            local button=addon.Directory.frame.ProfessionsTab.RecipeSource.Link
+            local button=addon.SelectedCraft.recipeButton
             button.scripts.OnEnter(button)
-            assert(tooltipTitle=='Uncached potion')
-            assert(tooltipLine:find('unavailable',1,true))
+            assert(tooltipTitle=='Item information is loading')
         ''')
 
     def test_refresh_requests_legacy_roster_and_hiding_minimap_stops_drag(self):

@@ -48,7 +48,7 @@ CASES = {
     assert(addon.SelectedCraft.recipeBody:GetText():find('Use: Teaches you',1,true))
     assert(addon.SelectedCraft.entries[1].required==3)
     local row=addon.SelectedCraft.rows[1]
-    assert(row.Label:GetText():find('|T',1,true) and row.Label:GetText():find('24 / 3',1,true))
+    assert(row.Icon and row.Label:GetText():find('24 / 3',1,true))
     local link
     GameTooltip.SetHyperlink=function(_,value) link=value end
     row.scripts.OnEnter(row); assert(link=='item:7')

@@ -50,7 +50,7 @@ function Sources:IsEnchant(recipeID)
  local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
  return saved and libraryCall("GetEnchantId",(saved.professionID or professionIDs[saved.profession]),recipeID)~=nil or false
 end
-function Sources:GetMaterials(recipeID)
+local function RawMaterials(self,recipeID)
  local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
  if not saved then return nil end
  if type(saved.materials)=="table" and #saved.materials>0 then return saved.materials end
@@ -72,8 +72,24 @@ function Sources:GetMaterials(recipeID)
  table.sort(out,function(a,b) return a.itemID<b.itemID end)
  return #out>0 and out or nil
 end
-function Sources:GetRecipeIcon(recipeID,fallback)
+-- Resolve cached names for every consumer, including whisper and mail drafts.
+function Sources:GetMaterials(recipeID)
+ local raw=RawMaterials(self,recipeID)
+ if not raw then return end
+ local result={}
+ for _,material in ipairs(raw) do
+  local name,link,icon=CraftRoster.ItemDisplay:Resolve(material.itemID,material.name)
+  result[#result+1]={itemID=material.itemID,name=name,count=material.count,link=link,icon=icon}
+ end
+ return result
+end
+function Sources:GetRecipeIcon(recipeID,fallback,cachedOnly)
  local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
+ local itemID=self:GetOutputItemID(recipeID)
+ if not cachedOnly and itemID and CraftRoster.ItemDisplay then
+  local _,_,icon=CraftRoster.ItemDisplay:Resolve(itemID)
+  if icon then return icon end
+ end
  if saved and saved.icon then return saved.icon end
  if C_Spell and C_Spell.GetSpellInfo then
   local ok,info=pcall(C_Spell.GetSpellInfo,recipeID)

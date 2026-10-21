@@ -2,7 +2,7 @@
 
 Find guild crafters, gather materials, and manage crafting requests in **WoW Forever**.
 
-[**Download CraftRoster.zip — beta 11**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — beta 12**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.12/CraftRoster.zip)
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
@@ -12,6 +12,7 @@ Find guild crafters, gather materials, and manage crafting requests in **WoW For
 
 1. Download **CraftRoster.zip** above, rather than GitHub’s **Code → Download ZIP**.
 2. Extract into `Interface/AddOns`, so the file sits at `Interface/AddOns/CraftRoster/CraftRoster.toc`.
+   If your extractor adds an outer folder, move the inner **CraftRoster** folder directly into **AddOns**. The folder containing **CraftRoster.toc** is the addon.
 3. Restart WoW and type `/cr`.
 
 ## Get started
@@ -20,7 +21,7 @@ Open your professions and scan them, then click **Refresh** to share recipes wit
 
 - **Whisper:** edit the request, then click a known crafter or **Send**. Copy the text for someone outside the guild. Long requests use **Send next**.
 - **Mail:** prepare the recipient, subject, materials and attachments; review and send the mail yourself.
-- **Materials:** see icons and live bag counts in the main window or shopping list. Click a material with the Auction House open to fill its search box.
+- **Materials:** see icons and live bag counts in the main window or shopping list. Click to insert its item link into an open whisper draft or active chat; otherwise, with the Auction House open, fill its search box. Shift-click links into chat.
 - **Work Orders:** track requests, choose single crafts or batches, and import recognized crafting mail when read. Orders survive normal logout/reload.
 
 ## Other features

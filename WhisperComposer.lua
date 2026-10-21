@@ -157,3 +157,14 @@ function Composer:CancelRequests(cancelled)
 		end
 	end
 end
+
+-- Insertion edits the draft only; sending remains an explicit player action.
+function Composer:InsertMaterialLink(link)
+ if not self.frame or not self.frame:IsShown() then return false end
+ self.queue=nil; self.pending=nil; self.sentText=nil; self.sentTarget=nil
+ local edit=self.frame.Edit
+ if edit.Insert then edit:Insert(" "..link) else edit:SetText((edit:GetText() or "").." "..link) end
+ self.frame.Send:SetText(self.target and ("Whisper "..self.target) or "Select a crafter")
+ if self.target then self.frame.Send:Enable() end
+ return true
+end
