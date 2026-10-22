@@ -11,20 +11,18 @@ end
 CraftRoster.RecipeTracker = RecipeTracker
 
 local PROFESSION_ICONS = {
+	["First Aid"] = "Interface\\Icons\\Spell_Holy_SealOfSacrifice",
 	Alchemy = "Interface\\Icons\\Trade_Alchemy",
 	Blacksmithing = "Interface\\Icons\\Trade_BlackSmithing",
 	Enchanting = "Interface\\Icons\\Trade_Engraving",
 	Engineering = "Interface\\Icons\\Trade_Engineering",
 	Herbalism = "Interface\\Icons\\Trade_Herbalism",
-	Inscription = "Interface\\Icons\\trade_inscription",
-	Jewelcrafting = "Interface\\Icons\\Trade_Jewelcrafting",
 	Leatherworking = "Interface\\Icons\\Trade_Leatherworking",
 	Mining = "Interface\\Icons\\Trade_Mining",
 	Skinning = "Interface\\Icons\\inv_misc_pelt_wolf_01",
 	Tailoring = "Interface\\Icons\\Trade_Tailoring",
 	Cooking = "Interface\\Icons\\Trade_Cooking",
 	Fishing = "Interface\\Icons\\Trade_Fishing",
-	Archaeology = "Interface\\Icons\\Trade_Archaeology",
 }
 
 local function GetCharacterKey()

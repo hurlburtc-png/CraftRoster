@@ -19,6 +19,19 @@ New directory windows open at 1000 × 680. Existing saved sizes are retained;
 materials; wider windows show them side by side. Recipe, materials, sources and
 crafters share one scroll area, with request actions kept at the bottom.
 
+## Profession filter
+
+The dropdown contains **All**, a separator, and the 12 current Forever professions:
+
+- Crafting: Alchemy, Blacksmithing, Enchanting, Engineering, Leatherworking, Tailoring.
+- Gathering: Herbalism, Mining, Skinning.
+- Secondary: Cooking, First Aid, Fishing.
+
+Archaeology, Inscription and Jewelcrafting are excluded. Camping uses the existing
+professions and is not a separate dropdown entry. This list follows Blizzard's
+[Forever profession explanation](https://news.blizzard.com/en-us/article/24301516/gather-around-the-campfire-in-world-of-warcraft-forever),
+checked on 21 October 2026.
+
 ## Commands
 
 - `/cr` — open the directory

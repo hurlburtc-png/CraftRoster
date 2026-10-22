@@ -27,6 +27,15 @@ class FeedbackTests(unittest.TestCase):
                 assert(dropdownEntries[1].text=='All')
                 assert(dropdownEntries[2].disabled and dropdownEntries[2].text==' ')
                 assert(dropdownEntries[3].text=='Alchemy')
+                local expected={'Alchemy','Blacksmithing','Cooking','Enchanting','Engineering',
+                    'First Aid','Fishing','Herbalism','Leatherworking','Mining','Skinning','Tailoring'}
+                assert(#dropdownEntries==#expected+2,'Only All, its separator, and the 12 Forever professions belong here')
+                for index,name in ipairs(expected) do
+                    local entry=dropdownEntries[index+2]
+                    assert(entry.text==name,'Unexpected or missing profession: '..tostring(entry.text))
+                    entry.func()
+                    assert(addon.Directory.selectedProfession==name)
+                end
                 addon.Panel:Initialize()
                 for _,frame in ipairs({addon.Directory.frame, addon.Panel.frame}) do
                     assert(frame.BugReportButton:GetText()=='Bug Report')
