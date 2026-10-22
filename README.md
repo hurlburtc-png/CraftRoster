@@ -1,8 +1,10 @@
 # CraftRoster
 
-Find guild crafters, gather materials, and manage crafting requests in **WoW Forever**.
+[**Download CraftRoster.zip — latest install version**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-[**Download CraftRoster.zip — beta 13**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.13/CraftRoster.zip)
+**Preferred install download.** Extracts to one **CraftRoster** folder, ready for `Interface/AddOns`. This link stays the same as the addon is updated.
+
+Find guild crafters, gather materials, and manage crafting requests in **WoW Forever**.
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
