@@ -38,6 +38,10 @@ Open your professions and scan them, then click **Refresh** to share recipes wit
   Woodland Nature, Fel Chaos and Ironbound. A sample previews selections immediately,
   with no Apply button or reload. Preferences save automatically;
   **Reset appearance** restores the defaults. Large windows fit the available screen.
+- **Settings → Window controls:** live 40–100% window opacity alongside UI scale.
+  Settings stays solid and opens independently of the main window; use **Open main
+  window** to compare changes, or drag its bottom-right corner to resize the layout.
+  General controls, window controls and all themes fit on one settings page.
 
 You confirm trades, mail and completed orders yourself. Missing guild data does not mean nobody knows a recipe. Acquisition sources and drop estimates are labeled with their provenance.
 

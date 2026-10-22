@@ -211,6 +211,8 @@ function Requests:SetAutoLoadItems(enabled)
 	CraftRosterDB.settings.autoLoadItems = enabled == true
 	local tab = CraftRoster.Directory and CraftRoster.Directory.frame and CraftRoster.Directory.frame.ProfessionsTab
 	if tab and tab.CraftRosterAutoLoad then tab.CraftRosterAutoLoad:SetChecked(enabled == true) end
+	local panel=CraftRoster.Panel
+	if panel and panel.autoLoadCheck then panel.autoLoadCheck:SetChecked(enabled == true) end
 end
 
 function Requests:Cancel()

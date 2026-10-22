@@ -17,7 +17,20 @@ your current WoW UI scale, in 5% steps. This applies to the directory, shopping
 list, whisper composer, work orders, settings and bug-report window. Large
 windows automatically fit the screen; your preferred scale is remembered for
 larger displays. The minimap button and Blizzard windows keep their normal scale.
-**Reset appearance** restores Classic Gold and the default scale.
+
+Settings is a single page grouped into **General & recipes**, **Window controls**
+and **Appearance**. **Window opacity** adjusts transparency from 40–100% in 5% steps,
+immediately affecting the directory, shopping list, whisper composer and work orders,
+including windows opened later. Lower opacity fades text as well as backgrounds.
+Settings and the bug report stay solid so the controls remain readable.
+**Reset appearance** restores Classic Gold, the default scale and 100% opacity.
+
+Click **Open main window** to view the actual directory while leaving Settings open.
+Opening an already visible main window never closes it. Both windows move independently,
+and closing either one leaves the other open. Drag their title bars to arrange them;
+drag the main window's bottom-right corner to resize its layout independently of scale.
+Recipe auto-updates, minimap visibility and **Auto-load items** are also on this page;
+the auto-load checkbox stays synchronized with the main window's request controls.
 
 New directory windows open at 1000 × 680. Existing saved sizes are retained;
 `/cr reset` applies the new default size. Narrow windows stack the recipe and

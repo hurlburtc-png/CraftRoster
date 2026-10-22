@@ -69,15 +69,36 @@ function Theme:ApplyScale(frame)
 	frame:SetClampedToScreen(true)
 end
 
-function Theme:Window(frame,title)
+function Theme:Opacity()
+	local value=tonumber(CraftRosterDB.settings.windowOpacity)
+	if not value or value~=value then return 1 end
+	return math.max(0.4,math.min(1,value))
+end
+
+function Theme:ApplyOpacity(frame)
+	frame:SetAlpha(windows[frame]=="solid" and 1 or self:Opacity())
+end
+
+function Theme:SetOpacity(value)
+	if type(value)~="number" or value~=value then return false end
+	CraftRosterDB.settings.windowOpacity=math.max(0.4,math.min(1,math.floor(value*100+0.5)/100))
+	for frame in pairs(windows) do self:ApplyOpacity(frame) end
+	if CraftRoster.Panel and CraftRoster.Panel.themePreview then
+		CraftRoster.Panel.themePreview:SetAlpha(self:Opacity())
+	end
+	return true
+end
+
+function Theme:Window(frame,title,keepSolid)
 	if not windows[frame] then
-		windows[frame]=true
-		frame:HookScript("OnShow",function() Theme:ApplyScale(frame) end)
+		windows[frame]=keepSolid and "solid" or true
+		frame:HookScript("OnShow",function() Theme:ApplyScale(frame); Theme:ApplyOpacity(frame) end)
 		frame:HookScript("OnSizeChanged",function() Theme:ApplyScale(frame) end)
 	end
 	if title then self:Heading(title) end
 	self:PaintWindow(frame)
 	self:ApplyScale(frame)
+	self:ApplyOpacity(frame)
 end
 
 local displayEvents=CreateFrame("Frame")

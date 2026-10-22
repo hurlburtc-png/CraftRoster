@@ -26,7 +26,7 @@ function Panel:Initialize()
 	local frame = CreateFrame("Frame", "CraftRosterPanel", UIParent, "BasicFrameTemplateWithInset")
 	frame:SetSize(680, 558)
 	frame:SetClampedToScreen(true)
-	frame:SetPoint("CENTER")
+	frame:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-24,-72)
 	frame:SetMovable(true)
 	frame:EnableMouse(true)
 	frame:RegisterForDrag("LeftButton")
@@ -43,21 +43,25 @@ function Panel:Initialize()
 	title:SetJustifyH("LEFT")
 
 	frame.StatusText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	frame.StatusText:SetPoint("TOPLEFT", 16, -38)
+	frame.StatusText:SetPoint("TOPLEFT", 16, -66)
 
 	frame.RecipeCountText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	frame.RecipeCountText:SetPoint("TOPLEFT", 16, -58)
+	frame.RecipeCountText:SetPoint("TOPLEFT", 16, -86)
 
 	frame.LastUpdatedText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	frame.LastUpdatedText:SetPoint("TOPLEFT", 16, -78)
+	frame.LastUpdatedText:SetPoint("TOPLEFT", 16, -106)
 
 	frame.SyncStatusText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	frame.SyncStatusText:SetPoint("TOPLEFT", 16, -98)
+	frame.SyncStatusText:SetPoint("TOPLEFT", 16, -126)
 	frame.SyncStatusText:SetWidth(330)
+	frame.SyncStatusText:SetHeight(20)
+	local general=frame:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
+	general:SetPoint("TOPLEFT",16,-38); general:SetText("General & recipes")
+	CraftRoster.Theme:Heading(general)
 
 	local toggleButton = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate")
 	toggleButton:SetSize(170, 26)
-	toggleButton:SetPoint("TOPLEFT", 16, -124)
+	toggleButton:SetPoint("TOPLEFT", 16, -156)
 	toggleButton:SetText("Enable / Disable")
 	toggleButton:SetScript("OnClick", function()
 		CraftRosterDB.settings.enabled = not CraftRosterDB.settings.enabled
@@ -66,8 +70,8 @@ function Panel:Initialize()
 	end)
 
 	local updateButton = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate")
-	updateButton:SetSize(170, 26)
-	updateButton:SetPoint("TOPLEFT", 16, -156)
+	updateButton:SetSize(156, 26)
+	updateButton:SetPoint("TOPLEFT", 16, -190)
 	updateButton:SetText("Update My Recipes")
 	updateButton:SetScript("OnClick", function()
 		local added = CraftRoster.RecipeTracker:UpdateKnownRecipes()
@@ -75,8 +79,8 @@ function Panel:Initialize()
 	end)
 
 	local syncButton = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate")
-	syncButton:SetSize(170, 26)
-	syncButton:SetPoint("TOPLEFT", 16, -188)
+	syncButton:SetSize(156, 26)
+	syncButton:SetPoint("TOPLEFT", 182, -190)
 	syncButton:SetText("Sync Guild Recipes")
 	syncButton:SetScript("OnClick", function()
 		if CraftRoster.GuildSync then
@@ -86,8 +90,8 @@ function Panel:Initialize()
 	end)
 
 	local resetButton = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate")
-	resetButton:SetSize(170, 26)
-	resetButton:SetPoint("TOPLEFT", 16, -220)
+	resetButton:SetSize(156, 26)
+	resetButton:SetPoint("TOPLEFT", 182, -512)
 	resetButton:SetText("Reset Window Position")
 	resetButton:SetScript("OnClick", function()
 		if CraftRoster.Directory then CraftRoster.Directory:ResetWindow() end
@@ -97,14 +101,16 @@ function Panel:Initialize()
 	frame.BugReportButton = self:CreateReportButton(frame)
 
 	local autoCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	autoCheck:SetPoint("TOPLEFT", 14, -254)
+	autoCheck:SetPoint("TOPLEFT", 14, -224)
+	autoCheck:SetSize(32,32)
 	autoCheck.Text:SetText("Auto-update new recipes")
 	autoCheck:SetScript("OnClick", function(button)
 		CraftRosterDB.settings.autoUpdateRecipes = button:GetChecked()
 	end)
 
 	local minimapCheck = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-	minimapCheck:SetPoint("TOPLEFT", 14, -286)
+	minimapCheck:SetPoint("TOPLEFT", 14, -260)
+	minimapCheck:SetSize(32,32)
 	minimapCheck.Text:SetText("Show minimap icon")
 	minimapCheck:SetScript("OnClick", function(button)
 		CraftRosterDB.settings.showMinimap = button:GetChecked()
@@ -112,17 +118,31 @@ function Panel:Initialize()
 			CraftRoster.MinimapButton:UpdateVisibility()
 		end
 	end)
+	local autoLoad=CreateFrame("CheckButton",nil,frame,"UICheckButtonTemplate")
+	autoLoad:SetPoint("TOPLEFT",180,-260); autoLoad:SetSize(32,32)
+	autoLoad.Text:SetText("Auto-load items")
+	autoLoad:SetScript("OnClick",function(button)
+		CraftRoster.Requests:SetAutoLoadItems(button:GetChecked())
+	end)
+	self.autoLoadCheck=autoLoad
 
 	local appearance=frame:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
 	appearance:SetPoint("TOPLEFT",372,-38); appearance:SetText("Appearance")
 	CraftRoster.Theme:Heading(appearance)
+	local themeHelp=frame:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+	themeHelp:SetPoint("TOPLEFT",372,-66); themeHelp:SetWidth(276)
+	themeHelp:SetText("Pick a look. Your open windows change immediately.")
+	local windowHeading=frame:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
+	windowHeading:SetPoint("TOPLEFT",16,-300); windowHeading:SetText("Window controls")
+	CraftRoster.Theme:Heading(windowHeading)
 	local scaleCheck=CreateFrame("CheckButton",nil,frame,"UICheckButtonTemplate")
-	scaleCheck:SetPoint("TOPLEFT",370,-66); scaleCheck.Text:SetText("Use custom addon scale")
+	scaleCheck:SetPoint("TOPLEFT",14,-324); scaleCheck.Text:SetText("Use custom addon scale")
+	scaleCheck:SetSize(32,32)
 	self.scaleCheck=scaleCheck
 	local scaleText=frame:CreateFontString(nil,"OVERLAY","GameFontHighlight")
-	scaleText:SetPoint("TOPLEFT",390,-104); self.scaleText=scaleText
+	scaleText:SetPoint("TOPLEFT",32,-360); self.scaleText=scaleText
 	local slider=CreateFrame("Slider","CraftRosterScaleSlider",frame,"OptionsSliderTemplate")
-	slider:SetPoint("TOPLEFT",390,-134); slider:SetSize(248,18)
+	slider:SetPoint("TOPLEFT",32,-382); slider:SetSize(284,18)
 	slider:SetMinMaxValues(75,150); slider:SetValueStep(5)
 	if slider.SetObeyStepOnDrag then slider:SetObeyStepOnDrag(true) end
 	local low=slider.Low or _G.CraftRosterScaleSliderLow
@@ -146,12 +166,39 @@ function Panel:Initialize()
 		local percent=math.max(75,math.min(150,math.floor(value/5+0.5)*5))
 		CraftRoster.Theme:SetScale(true,percent/100); ScaleLabel()
 	end)
+	local opacityText=frame:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+	opacityText:SetPoint("TOPLEFT",32,-420); self.opacityText=opacityText
+	local opacity=CreateFrame("Slider","CraftRosterOpacitySlider",frame,"OptionsSliderTemplate")
+	opacity:SetPoint("TOPLEFT",32,-444); opacity:SetSize(284,18)
+	opacity:SetMinMaxValues(40,100); opacity:SetValueStep(5)
+	if opacity.SetObeyStepOnDrag then opacity:SetObeyStepOnDrag(true) end
+	local opacityLow=opacity.Low or _G.CraftRosterOpacitySliderLow
+	local opacityHigh=opacity.High or _G.CraftRosterOpacitySliderHigh
+	if opacityLow then opacityLow:SetText("40%") end
+	if opacityHigh then opacityHigh:SetText("100%") end
+	opacity:SetScript("OnValueChanged",function(_,value)
+		if Panel.updatingAppearance then return end
+		local percent=math.max(40,math.min(100,math.floor(value/5+0.5)*5))
+		CraftRoster.Theme:SetOpacity(percent/100)
+		opacityText:SetText("Window opacity: "..percent.."%")
+	end)
+	self.opacitySlider=opacity
+	local opacityHelp=frame:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+	opacityHelp:SetPoint("TOPLEFT",16,-480); opacityHelp:SetWidth(322)
+	opacityHelp:SetText("Lower opacity fades windows and text. Settings stays solid.")
+	local openMain=CreateFrame("Button",nil,frame,"UIPanelButtonTemplate")
+	openMain:SetPoint("TOPLEFT",16,-512); openMain:SetSize(156,26)
+	openMain:SetText("Open main window")
+	openMain:SetScript("OnClick",function() Panel:ShowMainWindow() end)
+	self.openMainButton=openMain
+	self.resetWindowButton=resetButton
+	self.generalButtons={toggleButton,updateButton,syncButton,resetButton,openMain}
 	local themeLabel=frame:CreateFontString(nil,"OVERLAY","GameFontHighlight")
-	themeLabel:SetPoint("TOPLEFT",372,-180); self.themeNameText=themeLabel
+	themeLabel:SetPoint("TOPLEFT",372,-108); self.themeNameText=themeLabel
 	self.themeButtons={}
 	for index,palette in ipairs(CraftRoster.Theme.palettes) do
 		local tile=CreateFrame("Button",nil,frame,BackdropTemplateMixin and "BackdropTemplate" or nil)
-		tile:SetSize(134,30); tile:SetPoint("TOPLEFT",372+((index-1)%2)*142,-202-math.floor((index-1)/2)*34)
+		tile:SetSize(134,30); tile:SetPoint("TOPLEFT",372+((index-1)%2)*142,-132-math.floor((index-1)/2)*34)
 		tile.themeKey=palette.key
 		tile.Label=tile:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
 		tile.Label:SetPoint("LEFT",8,0); tile.Label:SetWidth(106); tile.Label:SetJustifyH("LEFT")
@@ -170,7 +217,7 @@ function Panel:Initialize()
 		self.themeButtons[index]=tile
 	end
 	local preview=CreateFrame("Frame",nil,frame,BackdropTemplateMixin and "BackdropTemplate" or nil)
-	preview:SetPoint("TOPLEFT",372,-382); preview:SetSize(276,90)
+	preview:SetPoint("TOPLEFT",372,-318); preview:SetSize(276,90)
 	preview.Title=preview:CreateFontString(nil,"OVERLAY","GameFontNormal")
 	preview.Title:SetPoint("TOPLEFT",10,-10); preview.Title:SetText("Theme preview")
 	CraftRoster.Theme:Heading(preview.Title,true)
@@ -184,13 +231,15 @@ function Panel:Initialize()
 	self.themePreview=preview
 	CraftRoster.Theme:TrackPanel(preview)
 	local resetAppearance=CreateFrame("Button",nil,frame,"UIPanelButtonTemplate")
-	resetAppearance:SetPoint("TOPLEFT",372,-486); resetAppearance:SetSize(170,24); resetAppearance:SetText("Reset appearance")
+	resetAppearance:SetPoint("TOPLEFT",372,-424); resetAppearance:SetSize(170,24); resetAppearance:SetText("Reset appearance")
 	resetAppearance:SetScript("OnClick",function()
-		CraftRoster.Theme:SetScale(false,1); CraftRoster.Theme:SetPalette("gold"); Panel:RefreshStatus()
+		CraftRoster.Theme:SetScale(false,1); CraftRoster.Theme:SetOpacity(1)
+		CraftRoster.Theme:SetPalette("gold"); Panel:RefreshStatus()
 	end)
 	self.resetAppearance=resetAppearance
-	local hint=frame:CreateFontString(nil,"OVERLAY","GameFontDisableSmall")
-	hint:SetPoint("TOPLEFT",372,-520); hint:SetWidth(276); hint:SetText("Click a theme: instant preview, saved automatically.")
+	local hint=frame:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+	hint:SetPoint("TOPLEFT",372,-466); hint:SetWidth(276)
+	hint:SetText("Drag either window to compare changes. Resize the main window with its bottom-right corner. All preferences save automatically.")
 
 	local errorFrame = CreateFrame("Frame", "CraftRosterErrorPopup", UIParent, "BasicFrameTemplateWithInset")
 	errorFrame:SetSize(560, 320)
@@ -232,9 +281,9 @@ function Panel:Initialize()
 	self.errorFrame = errorFrame
 	self.autoCheck = autoCheck
 	self.minimapCheck = minimapCheck
-	CraftRoster.Theme:Window(frame,title)
-	CraftRoster.Theme:Window(errorFrame,errorTitle)
-	for _,button in ipairs({toggleButton,updateButton,syncButton,resetButton,resetAppearance}) do CraftRoster.Theme:Button(button) end
+	CraftRoster.Theme:Window(frame,title,true)
+	CraftRoster.Theme:Window(errorFrame,errorTitle,true)
+	for _,button in ipairs({toggleButton,updateButton,syncButton,resetButton,resetAppearance,openMain}) do CraftRoster.Theme:Button(button) end
 	self:RefreshStatus()
 end
 
@@ -254,6 +303,12 @@ function Panel:Toggle()
 	if self.frame:IsShown() then self.frame:Hide() else self:RefreshStatus() self.frame:Show() end
 end
 
+function Panel:ShowMainWindow()
+	local directory=CraftRoster.Directory
+	if not directory then return end
+	if not directory.frame or not directory.frame:IsShown() then directory:Toggle() end
+end
+
 function Panel:RefreshAppearance()
 	local theme=CraftRoster.Theme
 	local current=theme:Palette()
@@ -270,6 +325,7 @@ function Panel:RefreshAppearance()
 	end
 	theme:PaintPanel(self.themePreview)
 	theme:Selection(self.themePreview.Selected,true)
+	self.themePreview:SetAlpha(theme:Opacity())
 end
 
 function Panel:RefreshStatus()
@@ -292,6 +348,7 @@ function Panel:RefreshStatus()
 
 	self.autoCheck:SetChecked(settings.autoUpdateRecipes)
 	self.minimapCheck:SetChecked(settings.showMinimap ~= false)
+	self.autoLoadCheck:SetChecked(settings.autoLoadItems ~= false)
 	if self.scaleCheck then
 		self.updatingAppearance=true
 		self.scaleCheck:SetChecked(settings.uiScaleEnabled==true)
@@ -299,6 +356,9 @@ function Panel:RefreshStatus()
 		self.scaleSlider:SetAlpha(settings.uiScaleEnabled and 1 or 0.45)
 		self.scaleSlider:EnableMouse(settings.uiScaleEnabled and true or false)
 		self.scaleText:SetText(settings.uiScaleEnabled and ("Addon scale: "..math.floor((tonumber(settings.uiScale) or 1)*100+0.5).."%") or "Addon scale: game default")
+		local opacity=math.floor(CraftRoster.Theme:Opacity()*100+0.5)
+		self.opacitySlider:SetValue(opacity)
+		self.opacityText:SetText("Window opacity: "..opacity.."%")
 		self:RefreshAppearance()
 		self.updatingAppearance=false
 	end

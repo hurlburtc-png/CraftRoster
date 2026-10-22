@@ -13,6 +13,8 @@ function methods:UnregisterAllEvents() self.events={} end
 function methods:UnregisterEvent(k) self.events[k]=nil end
 function methods:SetSize(w,h) self.width=w; self.height=h end
 function methods:SetScale(value) self.scale=value end
+function methods:SetAlpha(value) self.alpha=value end
+function methods:GetAlpha() return rawget(self,'alpha') or 1 end
 function methods:GetScale() return rawget(self,'scale') or 1 end
 function methods:SetChecked(value) self.checked=value end
 function methods:GetChecked() return rawget(self,'checked') or false end
