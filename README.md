@@ -10,6 +10,8 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Status:** Beta. Automated checks pass; in-game verification is still required.
 
+**Location tools:** Reviewed vendor, trainer and mob records can show NPC names, zones and coordinates, with copy controls and compatible TomTom/native map markers. Trainers show the required profession skill and are limited to verified trainers for your faction or neutral trainers. Unverified references cannot create waypoints. Coordinate coverage is still limited; missing positions are never guessed.
+
 ## Install
 
 1. Download **CraftRoster.zip** above, rather than GitHub’s **Code → Download ZIP**.

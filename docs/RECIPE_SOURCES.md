@@ -93,3 +93,66 @@ reference details. Required skill and profession auto-taught recipes are include
 when the library supplies them. These changes expand useful coverage beyond the
 four percentage references without presenting emulator data as verified live
 Forever drop rates. The pinned database provenance and checksums are unchanged.
+
+
+## Coordinate records and navigation (beta 19)
+
+`RecipeLocations.lua` stores location records separately from the library's NPC
+names. A record must match an exact craft spell or teaching-item ID and provide
+an NPC ID, acquisition kind (`vendor`, `trainer`, `mob`), zone and numeric
+coordinates from 0 to 100. Mob positions describe spawn points/areas, not a
+promise that a creature is currently standing there. Multiple locations remain
+separate; coordinates are never inferred from NPC names or copied from another
+recipe with a similar name.
+
+A location becomes navigable only after its status is explicitly `confirmed`
+and its evidence URL, immutable revision and review date (`checked`, YYYY-MM-DD)
+are recorded. Reviewers must confirm the recipe-to-NPC relationship AND the
+NPC-to-zone/coordinate relationship for Forever, including faction, stock,
+reputation, quest and other requirements. A Forever folder name alone is not
+confirmation. Conflicting, borrowed, incomplete or changed evidence stays a
+reference pending review. There are currently **no confirmed coordinate
+records** in the bundle. Granny Finespindle remains an ATT reference; beta 19
+does not silently approve it. The existing source-name catalogue remains
+available even when coordinates are unknown.
+
+Confirmed records offer a selectable copy popup. Records with a reviewed
+`uiMapID` produce `/way #mapID x y NPC` for modern compatible TomTom versions;
+otherwise the popup supplies plain zone, coordinates and NPC text for manual
+entry into the user's coordinate addon. Clipboard access is user-driven Ctrl+C.
+No command is executed automatically and no chat is sent.
+
+On a click, navigation checks API availability: modern TomTom with a known
+client map ID, the native user-waypoint API when supported, or legacy TomTom's
+own zone-to-continent/index resolver. Numeric modern map IDs are never passed
+to the legacy API. Invalid/unresolved maps and API errors fail safely. TomTom
+markers are temporary (`persistent=false`). Native markers use the player's
+single user waypoint. No map hooks, per-frame polling or added map library are
+needed. TomTom is optional; no coordinate addon is bundled. Actual Forever
+client compatibility still requires in-game testing.
+
+For maintenance, daily source checks are an alert, not an import. Review only
+changed source files and the records that cite them. Recheck affected confirmed
+records, downgrade uncertain records, record the evidence revision/date, run
+location tests and rebuild the ZIP. Ship approved changes in normal releases,
+or a correction release for a material error. The addon never auto-promotes a
+source's new coordinates to confirmed.
+
+
+### Trainer requirements and faction filtering
+
+Trainer coordinate records also require an explicit profession, numeric
+`requiredSkill` for this exact recipe, and reviewed `faction` (`Alliance`,
+`Horde`, or `Neutral`, meaning available to both). Only confirmed trainers
+matching the current character's faction or neutral trainers are displayed.
+Skill is shown per trainer as `Requires <profession> <skill>`; a general trainer
+skill cap is not a recipe's training requirement. Low-skill characters can see
+what they need to reach. Additional prerequisites remain visible.
+
+Unclassified, opposing-faction, unconfirmed or skill-unknown trainers are
+withheld. The bundled library's unclassified trainer names and totals are not
+shown as eligible options. Opaque source text is also withheld for identified
+trainer recipes because its embedded trainer names cannot be safely filtered.
+Other acquisition categories remain visible. A message explains when no
+verified eligible trainer is listed; it does not claim that no trainer exists.
+Faction checks run again when copying or creating a marker.

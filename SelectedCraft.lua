@@ -93,6 +93,7 @@ function View:Initialize(tab)
 	CraftRoster.Theme:Heading(self.materialTitle)
 	self.crafterTitle=Text(content); self.crafterTitle:SetText("Crafters"); CraftRoster.Theme:Heading(self.crafterTitle)
 	self.rows={}
+ self.locationRows={}
 	self.craftButton=CreateFrame("Button",nil,tab.Details,"UIPanelButtonTemplate")
 	CraftRoster.Theme:Button(self.craftButton)
 	self.craftButton:SetScript("OnClick",function()
@@ -121,6 +122,8 @@ function View:Initialize(tab)
 	local events=CreateFrame("Frame")
 	pcall(events.RegisterEvent,events,"BAG_UPDATE_DELAYED"); events:RegisterEvent("BAG_UPDATE")
 	pcall(events.RegisterEvent,events,"GET_ITEM_INFO_RECEIVED")
+ pcall(events.RegisterEvent,events,"NEUTRAL_FACTION_SELECT_RESULT")
+ events:RegisterEvent("PLAYER_ENTERING_WORLD")
 	events:SetScript("OnEvent",function(_,event,_,success)
 		if event=="GET_ITEM_INFO_RECEIVED" then
 			if not success then return end
@@ -294,5 +297,49 @@ function View:RefreshSources()
  text=text:gsub("^|cffffd100Where to get it|r\n","")
  source.Text:ClearAllPoints(); source.Text:SetPoint("TOPLEFT",0,-26)
  local height=Height(source.Text,text,column); source.Text:SetHeight(height)
- self.sourceHeight=height+36; source:SetHeight(self.sourceHeight); source.Child:SetHeight(self.sourceHeight)
+ local y=height+32
+ local locations=CraftRoster.RecipeLocations:Get(recipe.id)
+ for index,record in ipairs(locations) do
+  local row=self.locationRows[index]
+  if not row then
+   row=CreateFrame("Frame",nil,source); self.locationRows[index]=row
+   row.Label=Text(row); row.Label:SetPoint("TOPLEFT",0,0)
+   row.Copy=CreateFrame("Button",nil,row,"UIPanelButtonTemplate")
+   row.Map=CreateFrame("Button",nil,row,"UIPanelButtonTemplate")
+   CraftRoster.Theme:Button(row.Copy); CraftRoster.Theme:Button(row.Map)
+   row.Copy:SetText("Copy coords"); row.Map:SetText("Map marker")
+   row.Copy:SetScript("OnClick",function()
+    local value=CraftRoster.RecipeLocations:CopyText(row.record)
+    if value then StaticPopup_Show("CRAFTROSTER_COPY_LOCATION",nil,nil,value) end
+   end)
+   row.Map:SetScript("OnClick",function()
+    local ok,message=CraftRoster.RecipeLocations:Navigate(row.record)
+    if not ok then DEFAULT_CHAT_FRAME:AddMessage("CraftRoster: "..message) end
+   end)
+   for _,button in ipairs({row.Copy,row.Map}) do
+    button:SetScript("OnEnter",function(owner)
+     GameTooltip:SetOwner(owner,"ANCHOR_RIGHT")
+     GameTooltip:SetText(row.record.source or "Recipe location")
+     GameTooltip:AddLine(row.record.confirmed and "Copy coordinates, or place a waypoint using compatible map support." or "This reference has not been confirmed. Navigation is disabled.",1,1,1,true)
+     GameTooltip:AddLine("Revision: "..(row.record.revision or "unknown"),1,1,1,true)
+     GameTooltip:AddLine(row.record.url or "",1,1,1,true); GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave",function() GameTooltip:Hide() end)
+    button:EnableMouseWheel(true); button:SetScript("OnMouseWheel",function(_,delta) View:Scroll(delta) end)
+   end
+  end
+  row.record=record; row:ClearAllPoints(); row:SetPoint("TOPLEFT",source,"TOPLEFT",0,-y); row:SetWidth(column)
+  local labelHeight=0
+  row.Label:SetText("")
+  if #locations>1 then labelHeight=Height(row.Label,record.name.." · "..record.zone,column) end
+  row.Label:SetHeight(labelHeight)
+  row.Copy:SetSize(math.min(104,(column-6)/2),24); row.Map:SetSize(math.min(104,(column-6)/2),24)
+  row.Copy:ClearAllPoints(); row.Copy:SetPoint("TOPLEFT",0,-labelHeight-4)
+  row.Map:ClearAllPoints(); row.Map:SetPoint("LEFT",row.Copy,"RIGHT",6,0)
+  row.Copy:SetEnabled(record.confirmed)
+  row.Map:SetEnabled(CraftRoster.RecipeLocations:Backend(record)~=nil)
+  local rowHeight=labelHeight+36; row:SetHeight(rowHeight); row:Show(); y=y+rowHeight+4
+ end
+ for index=#locations+1,#self.locationRows do self.locationRows[index]:Hide() end
+ self.sourceHeight=y+4; source:SetHeight(self.sourceHeight); source.Child:SetHeight(self.sourceHeight)
 end

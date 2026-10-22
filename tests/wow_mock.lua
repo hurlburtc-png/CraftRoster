@@ -36,6 +36,8 @@ function methods:Hide() self.shown=false; if self.scripts.OnHide then self.scrip
 function methods:IsShown() return self.shown ~= false end
 function methods:SetID(id) self.id=id end
 function methods:GetID() return self.id end
+function methods:SetEnabled(enabled) self.enabled=not not enabled end
+function methods:IsEnabled() return self.enabled~=false end
 function methods:HookScript(name, callback)
  local old=self.scripts[name]
  self.scripts[name]=function(...) if old then old(...) end; callback(...) end

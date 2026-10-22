@@ -188,23 +188,37 @@ function Sources:Format(recipeID, data, compact)
 	local reference = data.reference
 	local acquisition=acquisitionReferences[recipeID] or (grannyPatterns[data.itemID] and granny)
 	local lines = { "|cffffd100Where to get it|r" }
-	if saved.sourceText then
+ local sources=libraryCall("GetRecipeSources",recipeID)
+ local hasTrainers=(type(sources)=="table" and type(sources.trainer)=="table" and #sources.trainer>0)
+  or (CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:HasTrainerData(recipeID))
+ -- Free-form text cannot be faction-filtered safely for trainer recipes.
+ if saved.sourceText and not hasTrainers then
 		table.insert(lines, saved.sourceText)
 	end
-	if acquisition and not saved.sourceText then
-		table.insert(lines,"Vendor: "..acquisition.vendor)
-		table.insert(lines,"Location: "..acquisition.zone.." ("..acquisition.coordinates..")")
-		table.insert(lines,"Availability: "..acquisition.faction)
-		table.insert(lines,"ATT Forever reference; verify vendor stock in game.")
-	end
-	local sources=libraryCall("GetRecipeSources",recipeID)
-	data.hasLibrarySource=false
+ local locations=CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:Get(recipeID) or {}
+ if #locations>0 then
+  for _,location in ipairs(locations) do
+   table.insert(lines,CraftRoster.RecipeLocations:Label(location))
+   table.insert(lines,(location.source or "Database")..(location.confirmed and " · confirmed source record" or " reference; verify vendor stock in game."))
+  end
+ elseif acquisition and not saved.sourceText then
+  table.insert(lines,"Vendor: "..acquisition.vendor)
+  table.insert(lines,"Location: "..acquisition.zone.." ("..acquisition.coordinates..")")
+  table.insert(lines,"Availability: "..acquisition.faction)
+  table.insert(lines,"ATT Forever reference; verify vendor stock in game.")
+ end
+ if hasTrainers then
+  local listed=false
+  for _,location in ipairs(locations) do if location.kind=="trainer" then listed=true end end
+  if not listed then table.insert(lines,"Trainer listings withheld: faction or training skill not verified for your character.") end
+ end
+	data.hasLibrarySource=not not hasTrainers
 	if type(sources)=="table" then
 		local labels={trainer="Trainer",vendor="Vendor",quest="Quest",container="Container",drop="Mob/boss drop"}
 		if saved.sourceText then table.insert(lines,"\nAdditional database sources:") end
 		for _,kind in ipairs({"trainer","vendor","quest","container","drop"}) do
 			local list=sources[kind]
-			if type(list)=="table" and #list>0 then
+			if type(list)=="table" and #list>0 and kind~="trainer" then
 				data.hasLibrarySource=true
 				local total=type(list.total)=="number" and math.max(#list,list.total) or #list
 				table.insert(lines,labels[kind].." sources: "..total)
@@ -224,6 +238,9 @@ function Sources:Format(recipeID, data, compact)
 			if not compact then table.insert(lines,"Source names are English. Provenance: bundled LibProfessionDB v1.9.1; emulator reference databases, not verified Forever loot rates.") end
 		end
 	end
+ if data.hasLibrarySource and #locations==0 then
+  table.insert(lines,"Coordinates unavailable: no confirmed Forever position recorded.")
+ end
 	if not data.hasLibrarySource and libraryCall("IsAutoTaughtRecipe",recipeID) then
 		data.hasLibrarySource=true; table.insert(lines,"Learned with profession (database reference; verify in game).")
 	end
