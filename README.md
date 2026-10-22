@@ -2,7 +2,7 @@
 
 Find guild crafters, gather materials, and manage crafting requests in **WoW Forever**.
 
-[**Download CraftRoster.zip — beta 12**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.12/CraftRoster.zip)
+[**Download CraftRoster.zip — beta 13**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.13/CraftRoster.zip)
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
@@ -30,6 +30,10 @@ Open your professions and scan them, then click **Refresh** to share recipes wit
 - Partial delivery tracking, an **Auto-load items** toggle, and **Cancel request** to update connected crafters.
 - Public crafting notes, private member notes and missing material details fetched from a crafter’s scan.
 - Movable, resizable windows with scrolling for longer recipe details.
+- Dark-and-gold styling, a wider craft detail pane and highlighted recipe/crafter selections.
+- **Settings → Appearance:** live 75–150% addon scaling and Classic Gold, Frost Blue,
+  Emerald, Arcane Violet or High Contrast colours. Preferences save automatically;
+  **Reset appearance** restores the defaults. Large windows fit the available screen.
 
 You confirm trades, mail and completed orders yourself. Missing guild data does not mean nobody knows a recipe. Acquisition sources and drop estimates are labeled with their provenance.
 

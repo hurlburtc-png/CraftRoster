@@ -33,6 +33,7 @@ class FrameLayoutTests(unittest.TestCase):
                         assert(frame.clamped and frame.minWidth==620 and frame.minHeight==420)
                         for _,size in ipairs({{620,420},{760,500},{1200,800}}) do
                             frame:SetSize(size[1],size[2])
+                            frame.scripts.OnSizeChanged(frame)
                             tab.Details.scripts.OnSizeChanged(tab.Details)
                             addon.Directory:RefreshProfessions()
                             for _,row in ipairs(frames) do
@@ -48,7 +49,7 @@ class FrameLayoutTests(unittest.TestCase):
                                 tab.CraftRosterQuantity,tab.CraftRosterAutoLoad,
                                 tab.CraftRosterQuantityUp,tab.CraftRosterQuantityDown}
                             for i,button in ipairs(buttons) do
-                                inside(button,tab.Details)
+                                inside(button,button:GetParent())
                                 for j=i+1,#buttons do apart(button,buttons[j]) end
                             end
                             for _,button in ipairs(frame.TabButtons) do inside(button,frame) end
@@ -108,7 +109,7 @@ class FrameLayoutTests(unittest.TestCase):
                         addon.Panel.minimapCheck.scripts.OnClick(addon.Panel.minimapCheck)
                         assert(CraftRosterMinimapButton:IsShown())
                         addon.Panel:ShowError(); assert(addon.Panel.errorFrame:IsShown() and addon.Panel.errorFrame.clamped)
-                        addon.Directory:ResetWindow(); assert(frame:GetWidth()==760 and frame:GetHeight()==500)
+                        addon.Directory:ResetWindow(); assert(frame:GetWidth()==1000 and frame:GetHeight()==680)
                     ''')
 
 

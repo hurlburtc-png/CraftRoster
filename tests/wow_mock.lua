@@ -12,6 +12,12 @@ function methods:RegisterEvent(k) self.events[k]=true end
 function methods:UnregisterAllEvents() self.events={} end
 function methods:UnregisterEvent(k) self.events[k]=nil end
 function methods:SetSize(w,h) self.width=w; self.height=h end
+function methods:SetScale(value) self.scale=value end
+function methods:GetScale() return rawget(self,'scale') or 1 end
+function methods:SetChecked(value) self.checked=value end
+function methods:GetChecked() return rawget(self,'checked') or false end
+function methods:SetBackdropColor(...) self.backdropColor={...} end
+function methods:SetBackdropBorderColor(...) self.borderColor={...} end
 function methods:GetFrameLevel() return 1 end
 function methods:IsMovable() return self.movable == true end
 function methods:GetWidth() return rawget(self,'width') or 100 end

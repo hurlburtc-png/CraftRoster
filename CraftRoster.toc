@@ -3,7 +3,7 @@
 ## IconTexture: Interface\Icons\INV_Potion_97
 ## Notes: Find the right guild crafter for any recipe.
 ## Author: hurlburtc-png
-## Version: 0.8.0-beta.12
+## Version: 0.8.0-beta.13
 ## SavedVariables: CraftRosterDB
 
 ErrorReporter.lua
@@ -37,6 +37,7 @@ vendor/ProfessionDB/Data/Forever/ruRU.lua
 vendor/ProfessionDB/Data/Forever/zhCN.lua
 vendor/ProfessionDB/Data/Forever/zhTW.lua
 Core.lua
+Theme.lua
 Recipes.lua
 ShoppingList.lua
 Panel.lua

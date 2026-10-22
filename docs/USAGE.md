@@ -1,5 +1,24 @@
 # CraftRoster usage and development notes
 
+## Appearance
+
+Open `/cr settings` and use **Appearance** to choose Classic Gold, Frost Blue,
+Emerald, Arcane Violet or High Contrast. Colours update immediately and save
+between sessions. Item-quality colours, class colours and material readiness
+indicators retain their in-game meaning.
+
+Enable **Use custom addon scale** to resize CraftRoster windows from 75–150% of
+your current WoW UI scale, in 5% steps. This applies to the directory, shopping
+list, whisper composer, work orders, settings and bug-report window. Large
+windows automatically fit the screen; your preferred scale is remembered for
+larger displays. The minimap button and Blizzard windows keep their normal scale.
+**Reset appearance** restores Classic Gold and the default scale.
+
+New directory windows open at 1000 × 680. Existing saved sizes are retained;
+`/cr reset` applies the new default size. Narrow windows stack the recipe and
+materials; wider windows show them side by side. Recipe, materials, sources and
+crafters share one scroll area, with request actions kept at the bottom.
+
 ## Commands
 
 - `/cr` — open the directory

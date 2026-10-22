@@ -24,7 +24,7 @@ function Panel:Initialize()
 	end
 
 	local frame = CreateFrame("Frame", "CraftRosterPanel", UIParent, "BasicFrameTemplateWithInset")
-	frame:SetSize(380, 340)
+	frame:SetSize(380, 558)
 	frame:SetClampedToScreen(true)
 	frame:SetPoint("CENTER")
 	frame:SetMovable(true)
@@ -112,6 +112,61 @@ function Panel:Initialize()
 		end
 	end)
 
+	local appearance=frame:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
+	appearance:SetPoint("TOPLEFT",16,-326); appearance:SetText("Appearance")
+	CraftRoster.Theme:Heading(appearance)
+	local scaleCheck=CreateFrame("CheckButton",nil,frame,"UICheckButtonTemplate")
+	scaleCheck:SetPoint("TOPLEFT",14,-350); scaleCheck.Text:SetText("Use custom addon scale")
+	self.scaleCheck=scaleCheck
+	local scaleText=frame:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+	scaleText:SetPoint("TOPLEFT",32,-386); self.scaleText=scaleText
+	local slider=CreateFrame("Slider","CraftRosterScaleSlider",frame,"OptionsSliderTemplate")
+	slider:SetPoint("TOPLEFT",32,-416); slider:SetSize(292,18)
+	slider:SetMinMaxValues(75,150); slider:SetValueStep(5)
+	if slider.SetObeyStepOnDrag then slider:SetObeyStepOnDrag(true) end
+	local low=slider.Low or _G.CraftRosterScaleSliderLow
+	local high=slider.High or _G.CraftRosterScaleSliderHigh
+	if low then low:SetText("75%") end
+	if high then high:SetText("150%") end
+	self.scaleSlider=slider
+	local function ScaleLabel()
+		local settings=CraftRosterDB.settings
+		local percent=math.floor((tonumber(settings.uiScale) or 1)*100+0.5)
+		scaleText:SetText(settings.uiScaleEnabled and ("Addon scale: "..percent.."%") or "Addon scale: game default")
+		slider:SetAlpha(settings.uiScaleEnabled and 1 or 0.45)
+		slider:EnableMouse(settings.uiScaleEnabled and true or false)
+	end
+	scaleCheck:SetScript("OnClick",function(button)
+		CraftRoster.Theme:SetScale(button:GetChecked(),tonumber(CraftRosterDB.settings.uiScale) or 1)
+		ScaleLabel()
+	end)
+	slider:SetScript("OnValueChanged",function(_,value)
+		if Panel.updatingAppearance or not CraftRosterDB.settings.uiScaleEnabled then return end
+		local percent=math.max(75,math.min(150,math.floor(value/5+0.5)*5))
+		CraftRoster.Theme:SetScale(true,percent/100); ScaleLabel()
+	end)
+	local themeLabel=frame:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+	themeLabel:SetPoint("TOPLEFT",16,-462); themeLabel:SetText("Colour theme")
+	local dropdown=CreateFrame("Frame",nil,frame,"UIDropDownMenuTemplate")
+	dropdown:SetPoint("TOPLEFT",116,-450); UIDropDownMenu_SetWidth(dropdown,190)
+	self.themeDropdown=dropdown
+	UIDropDownMenu_Initialize(dropdown,function(_,level)
+		for _,palette in ipairs(CraftRoster.Theme.palettes) do
+			local info=UIDropDownMenu_CreateInfo()
+			info.text=palette.name; info.checked=CraftRoster.Theme:Palette().key==palette.key
+			info.func=function() CraftRoster.Theme:SetPalette(palette.key); UIDropDownMenu_SetText(dropdown,palette.name) end
+			UIDropDownMenu_AddButton(info,level)
+		end
+	end)
+	local resetAppearance=CreateFrame("Button",nil,frame,"UIPanelButtonTemplate")
+	resetAppearance:SetPoint("TOPLEFT",16,-492); resetAppearance:SetSize(170,24); resetAppearance:SetText("Reset appearance")
+	resetAppearance:SetScript("OnClick",function()
+		CraftRoster.Theme:SetScale(false,1); CraftRoster.Theme:SetPalette("gold"); Panel:RefreshStatus()
+	end)
+	self.resetAppearance=resetAppearance
+	local hint=frame:CreateFontString(nil,"OVERLAY","GameFontDisableSmall")
+	hint:SetPoint("TOPLEFT",16,-526); hint:SetWidth(344); hint:SetText("Applies to CraftRoster windows; fits your screen.")
+
 	local errorFrame = CreateFrame("Frame", "CraftRosterErrorPopup", UIParent, "BasicFrameTemplateWithInset")
 	errorFrame:SetSize(560, 320)
 	errorFrame:SetClampedToScreen(true)
@@ -152,6 +207,9 @@ function Panel:Initialize()
 	self.errorFrame = errorFrame
 	self.autoCheck = autoCheck
 	self.minimapCheck = minimapCheck
+	CraftRoster.Theme:Window(frame,title)
+	CraftRoster.Theme:Window(errorFrame,errorTitle)
+	for _,button in ipairs({toggleButton,updateButton,syncButton,resetButton,resetAppearance}) do CraftRoster.Theme:Button(button) end
 	self:RefreshStatus()
 end
 
@@ -191,4 +249,14 @@ function Panel:RefreshStatus()
 
 	self.autoCheck:SetChecked(settings.autoUpdateRecipes)
 	self.minimapCheck:SetChecked(settings.showMinimap ~= false)
+	if self.scaleCheck then
+		self.updatingAppearance=true
+		self.scaleCheck:SetChecked(settings.uiScaleEnabled==true)
+		self.scaleSlider:SetValue((tonumber(settings.uiScale) or 1)*100)
+		self.scaleSlider:SetAlpha(settings.uiScaleEnabled and 1 or 0.45)
+		self.scaleSlider:EnableMouse(settings.uiScaleEnabled and true or false)
+		self.scaleText:SetText(settings.uiScaleEnabled and ("Addon scale: "..math.floor((tonumber(settings.uiScale) or 1)*100+0.5).."%") or "Addon scale: game default")
+		UIDropDownMenu_SetText(self.themeDropdown,CraftRoster.Theme:Palette().name)
+		self.updatingAppearance=false
+	end
 end

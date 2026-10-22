@@ -758,6 +758,7 @@ local function AddDirectoryButtons()
 	quantity:SetText("1")
 	tab.CraftRosterQuantity = quantity
 	local quantityLabel = tab.Details:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	tab.CraftRosterQuantityLabel=quantityLabel
 	quantityLabel:SetPoint("RIGHT", quantity, "LEFT", -8, 0); quantityLabel:SetText("Crafts:")
 	local function SaveQuantity(self)
 		local recipe = directory.selectedRecipe
@@ -884,6 +885,7 @@ local function AddDirectoryButtons()
 	end)
 	tab.CraftRosterShoppingButton = shoppingButton
 	local function ResizeActions()
+		if CraftRoster.SelectedCraft and tab.ActionBar then CraftRoster.SelectedCraft:LayoutActions(); return end
 		local width = math.max(90, (tab.Details:GetWidth() - 28) / 2)
 		tab.CraftRosterTradeButton:SetWidth(width)
 		tab.CraftRosterMailButton:SetWidth(width)
@@ -893,6 +895,12 @@ local function AddDirectoryButtons()
 	tab.CraftRosterResizeActions=ResizeActions
 	tab.Details:HookScript("OnSizeChanged", ResizeActions)
 	ResizeActions()
+	for _,button in ipairs({tab.CraftRosterTradeButton,tab.CraftRosterMailButton,tab.CraftRosterFavoriteButton,tab.CraftRosterShoppingButton,refreshButton,cancelRequest}) do
+		CraftRoster.Theme:Button(button)
+	end
+	tab.CraftRosterTradeButton:SetText("Whisper Player")
+	tab.CraftRosterMailButton:SetText("Mail Player")
+	CraftRoster.Theme:LayoutDirectory(directory.frame)
 
 	local credit = directory.frame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
 	credit:SetPoint("BOTTOMLEFT", directory.frame, "BOTTOMLEFT", 8, 4)

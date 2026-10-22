@@ -27,6 +27,7 @@ function Composer:Initialize()
 	if position and valid[position.point] then frame:ClearAllPoints(); frame:SetPoint(position.point,UIParent,position.point,tonumber(position.x) or 0,tonumber(position.y) or 0) end
 	frame.Title=frame:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
 	frame.Title:SetPoint("TOPLEFT",14,-12); frame.Title:SetText("Craft whisper")
+	CraftRoster.Theme:Window(frame,frame.Title); CraftRoster.Theme:TrackPanel(frame)
 	local close=CreateFrame("Button",nil,frame,"UIPanelCloseButton")
 	close:SetSize(24,24); close:SetPoint("TOPRIGHT",-3,-3); close:SetScript("OnClick",function() frame:Hide() end)
 	frame.Status=frame:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")

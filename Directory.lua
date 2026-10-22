@@ -3,7 +3,7 @@ local ADDON_NAME, CraftRoster = ...
 local Directory = {}
 CraftRoster.Directory = Directory
 
-local DEFAULT_WINDOW = { width = 760, height = 500, x = 0, y = 0 }
+local DEFAULT_WINDOW = { width = 1000, height = 680, x = 0, y = 0 }
 local MIN_WIDTH, MIN_HEIGHT = 620, 420
 
 local PROFESSION_ICONS = {
@@ -329,16 +329,16 @@ local function BindRecipeLinks(row,recipeID)
 	row.Label:ClearAllPoints()
 	if recipeID then
 		if not row.RecipeLink then
-			row.RecipeLink=CreateRecipeLinkButton(row,"recipe"); row.RecipeLink:SetPoint("BOTTOMLEFT",39,3)
+			row.RecipeLink=CreateRecipeLinkButton(row,"recipe"); row.RecipeLink:SetPoint("BOTTOMLEFT",47,3)
 			row.CraftLink=CreateRecipeLinkButton(row,"craft"); row.CraftLink:SetPoint("TOPLEFT",row.Icon,"TOPLEFT",0,0)
 		end
 		row.RecipeLink.recipeID=recipeID; row.CraftLink.recipeID=recipeID
-		local width=math.max(24,row:GetWidth()-55)
-		row.RecipeLink:SetWidth(width); row.CraftLink:SetSize(24,24)
+		local width=math.max(24,row:GetWidth()-63)
+		row.RecipeLink:SetWidth(width); row.CraftLink:SetSize(32,32)
 		UpdateLinkDisplay(row.RecipeLink); row.CraftLink:SetText("")
 		row.RightLabel:ClearAllPoints(); row.RightLabel:SetPoint("TOPRIGHT",row,"TOPRIGHT",-10,-5)
 		row.RecipeLink:Show(); row.CraftLink:Show()
-		row.Label:SetPoint("TOPLEFT",39,-5); row.Label:SetHeight(16)
+		row.Label:SetPoint("TOPLEFT",47,-5); row.Label:SetHeight(16)
 	else
 		if row.RecipeLink then row.RecipeLink:Hide(); row.CraftLink:Hide(); row.RecipeLink.recipeID=nil; row.CraftLink.recipeID=nil end
 		row.Label:SetPoint("LEFT",row.Icon,"RIGHT",8,0); row.Label:SetHeight(16)
@@ -374,8 +374,9 @@ local function CreateRow(child, width, height)
 	row.RightLabel:SetJustifyH("RIGHT")
 
 	row:SetScript("OnEnter", function(self)
-		self:SetBackdropColor(0.16, 0.16, 0.16, 0.65)
-		self:SetBackdropBorderColor(0.9, 0.8, 0.5, 0.75)
+		local accent=CraftRoster.Theme:Palette().accent
+		self:SetBackdropColor(accent[1]*0.16,accent[2]*0.16,accent[3]*0.16,0.95)
+		self:SetBackdropBorderColor(accent[1],accent[2],accent[3],0.9)
 
 		if self.hyperlink then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -395,8 +396,7 @@ local function CreateRow(child, width, height)
 	end)
 
 	row:SetScript("OnLeave", function(self)
-		self:SetBackdropColor(0, 0, 0, 0.30)
-		self:SetBackdropBorderColor(0.8, 0.7, 0.4, 0.25)
+		CraftRoster.Theme:Selection(self,self.selected)
 		GameTooltip:Hide()
 	end)
 
@@ -456,13 +456,14 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			local row = Row()
 			row:SetSize(width, entry.isHeader and headerHeight or normalHeight)
 			row:SetPoint("TOPLEFT", 0, -offsets[i])
+			row.Icon:SetSize(entry.recipe and 32 or 24,entry.recipe and 32 or 24)
 			if entry.atlas and row.Icon.SetAtlas then row.Icon:SetAtlas(entry.atlas)
 			else
 			 local icon=entry.recipe and CraftRoster.RecipeSources:GetRecipeIcon(entry.recipe.id,entry.icon) or entry.icon
 			 row.Icon:SetTexture(icon or "Interface\\Icons\\Trade_Tailoring")
 			end
 			local rightWidth = entry.rightText and entry.rightText ~= "" and math.max(30, math.min(120, width * 0.35)) or 0
-			row.Label:SetWidth(math.max(1, width - 59 - rightWidth))
+			row.Label:SetWidth(math.max(1, width - (entry.recipe and 67 or 59) - rightWidth))
 			row.Label:SetText(entry.text or "")
 			row.RightLabel:SetWidth(math.max(1, rightWidth))
 			row.RightLabel:SetText(entry.rightText or "")
@@ -471,6 +472,9 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			row.materials, row.hyperlink = entry.materials, entry.hyperlink
 			if entry.recipe then row.hyperlink=(Directory:GetSearchLinks(entry.recipe.id) or {}).craft end
 			BindRecipeLinks(row,not entry.isHeader and (entry.linkRecipeID or entry.recipeID or (entry.recipe and entry.recipe.id)) or nil)
+			local selected = entry.recipe and Directory.selectedRecipe and entry.id == Directory.selectedRecipe.id
+				or entry.characterKey and entry.characterKey == Directory.selectedCrafter
+			CraftRoster.Theme:Selection(row,selected)
 			row:EnableMouse(not entry.isHeader and (onClick ~= nil or row.tooltipLines ~= nil or row.materials ~= nil or row.hyperlink ~= nil))
 			if onClick and not entry.isHeader then
 				row.listClick, row.listEntry = onClick, entry
@@ -846,6 +850,7 @@ function Directory:Initialize()
 	self.frame = frame
 	self.selectedProfession = "All"
 	self.selectedRecipe = nil
+	CraftRoster.Theme:Directory(frame)
 end
 
 local function BuildProfessionEntries()
@@ -931,6 +936,7 @@ function Directory:RefreshProfessions()
 		Directory.selectedCrafter = nil
 		Directory:RefreshDetails()
 		Directory:RefreshCrafters()
+		if tab.ResultsChild.drawRows then tab.ResultsChild.drawRows() end
 	end)
 end
 
@@ -993,7 +999,7 @@ function Directory:RefreshCrafters()
 				offline = not isOnline,
 				characterKey = characterKey,
 				tooltipLines = { characterKey, professionText, self.selectedRecipe.name or "Unknown recipe", "Select for Whisper Player or Mail Player." },
-				rightText = self.selectedCrafter == characterKey and "Selected" or "",
+				rightText = isOnline and "|cff33ff66Online|r" or "|cff888888Offline|r",
 			}
 
 			if isOnline then

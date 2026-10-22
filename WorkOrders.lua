@@ -335,6 +335,7 @@ function Orders:Initialize()
 	frame:SetScript("OnDragStart",frame.StartMoving); frame:SetScript("OnDragStop",frame.StopMovingOrSizing)
 	local title=frame.TitleText or frame.TitleBar.TitleText
 	title:SetText("CraftRoster — Work Orders")
+	CraftRoster.Theme:Window(frame,title)
 	local close=CreateFrame("Button",nil,frame,"UIPanelCloseButton"); close:SetPoint("TOPRIGHT",-3,-3)
 	close:SetScript("OnClick",function() frame:Hide() end)
 	frame.Status=frame:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")

@@ -77,7 +77,7 @@ CASES = {
         assert(CraftRosterDB.settings.enabled and CraftRosterDB.settings.autoUpdateRecipes)
         assert(not addon.Directory.frame and not addon.Panel.frame)
         SlashCmdList.CRAFTROSTER(''); assert(addon.Directory.frame:IsShown())
-        assert(CraftRosterDB.settings.window.width == 760)
+        assert(CraftRosterDB.settings.window.width == 1000)
         assert(addon.Directory.frame.ProfessionsTab.CraftRosterTradeButton)
         SlashCmdList.CRAFTROSTER('settings'); assert(addon.Panel.frame:IsShown())
         SlashCmdList.CRAFTROSTER('reset')
@@ -284,8 +284,13 @@ CASES.update({
         local before=#frames
         SlashCmdList.CRAFTROSTER('')
         assert(#addon.Directory.recipeIndex==5004)
-        assert(#frames-before<100, 'offscreen recipes must not allocate UI rows')
+        assert(#frames-before<125, 'offscreen recipes must not allocate unbounded UI objects')
         local tab=addon.Directory.frame.ProfessionsTab
+        local poolRows=0
+        for _,row in ipairs(frames) do
+          if row.parent==tab.ResultsChild and row.Label then poolRows=poolRows+1 end
+        end
+        assert(poolRows<=math.ceil(tab.Results:GetHeight()/48)+3,'recipe rows must remain viewport-bounded')
         local count=#frames
         local cached=addon.Directory.professionCache
         for _,offset in ipairs({10000,50000,100000,190000,0}) do
@@ -791,7 +796,7 @@ CASES.update({
         SlashCmdList.CRAFTROSTER('reset')
         assert(CraftRosterDB.settings.window==nil and not addon.Directory.frame)
         SlashCmdList.CRAFTROSTER('')
-        assert(addon.Directory.frame:GetWidth()==760)
+        assert(addon.Directory.frame:GetWidth()==1000)
     """,
     'filtering_scrolled_directory_keeps_matching_row_visible': """
         for id=1,1000 do
@@ -1330,7 +1335,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.12')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.13')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)
