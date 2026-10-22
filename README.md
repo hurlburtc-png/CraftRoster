@@ -2,9 +2,9 @@
 
 [**Download CraftRoster.zip — latest install version**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-**Preferred install download.** Extracts to one **CraftRoster** folder, ready for `Interface/AddOns`. This link stays the same as the addon is updated.
+Your guild has someone who can craft that. Unfortunately, “someone” is usually an alt with an unpronounceable name. CraftRoster helps you find the right crafter, check which materials you’re missing, and prepare a whisper or mail request without asking guild chat the same question for the fourth time. Less detective work. More shiny things.
 
-Find guild crafters, gather materials, and manage crafting requests in **WoW Forever**.
+**Preferred install download.** Extracts to one **CraftRoster** folder, ready for `Interface/AddOns`. This link stays the same as the addon is updated.
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
