@@ -91,19 +91,43 @@ CASES = {
         inside(addon.Panel.scaleSlider,addon.Panel.frame)
         inside(addon.Panel.resetAppearance,addon.Panel.frame)
         apart(addon.Panel.scaleSlider,addon.Panel.resetAppearance)
+        inside(addon.Panel.themePreview,addon.Panel.frame)
+        for i,tile in ipairs(addon.Panel.themeButtons) do
+            inside(tile,addon.Panel.frame)
+            apart(tile,addon.Panel.themePreview)
+            for j=i+1,#addon.Panel.themeButtons do apart(tile,addon.Panel.themeButtons[j]) end
+        end
     ''',
-    'theme_menu_choices_apply_distinct_palettes': '''
-        local menus={}
-        UIDropDownMenu_Initialize=function(dropdown,callback) menus[dropdown]=callback end
-        UIDropDownMenu_CreateInfo=function() return {} end
-        local choices={}
-        UIDropDownMenu_AddButton=function(info) choices[#choices+1]=info end
+    'theme_tiles_apply_live_without_inventory_queries': '''
         addon.Panel:Initialize()
-        menus[addon.Panel.themeDropdown](addon.Panel.themeDropdown,1)
-        assert(#choices==5)
-        for i,choice in ipairs(choices) do
-            choice.func()
+        assert(#addon.Panel.themeButtons==10)
+        GetItemCount=function() error('theme switching must not query inventory') end
+        local seen={}
+        for i,tile in ipairs(addon.Panel.themeButtons) do
+            assert(not seen[tile.themeKey]); seen[tile.themeKey]=true
+            tile.scripts.OnClick()
             assert(addon.Theme:Palette().key==addon.Theme.palettes[i].key)
+            assert(CraftRosterDB.settings.theme==tile.themeKey)
+            assert(tile.Check:IsShown())
+            for j,other in ipairs(addon.Panel.themeButtons) do
+                assert(other.Check:IsShown()==(i==j))
+            end
+            local p=addon.Theme:Palette()
+            assert(addon.Panel.themePreview.backdropColor[1]==p.background[1])
+            assert(addon.Panel.themePreview.Selected.selected)
+        end
+        addon.Theme:SetPalette('gold')
+        assert(not addon.Panel.themePreview.ThemeMark:IsShown())
+        assert(not addon.Panel.resetAppearance.ThemeBorder:IsShown())
+        assert(#sent==0)
+    ''',
+    'palette_accents_meet_readable_contrast': '''
+        local function linear(c) if c<=0.04045 then return c/12.92 end return ((c+0.055)/1.055)^2.4 end
+        local function luminance(c) return 0.2126*linear(c[1])+0.7152*linear(c[2])+0.0722*linear(c[3]) end
+        for _,p in ipairs(addon.Theme.palettes) do
+            local ratio=(luminance(p.accent)+0.05)/(luminance(p.background)+0.05)
+            assert(ratio>=4.5,p.key..' heading contrast')
+            if p.key=='contrast' then assert(ratio>=7) end
         end
     ''',
 }

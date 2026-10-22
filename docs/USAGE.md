@@ -2,9 +2,14 @@
 
 ## Appearance
 
-Open `/cr settings` and use **Appearance** to choose Classic Gold, Frost Blue,
-Emerald, Arcane Violet or High Contrast. Colours update immediately and save
-between sessions. Item-quality colours, class colours and material readiness
+Open `/cr settings` and click any **Appearance** tile to apply its theme immediately.
+All ten options are visible: Classic Gold (default), Dark, High Contrast, Frost Blue,
+Emerald, Arcane Violet, Ember Fire, Woodland Nature, Fel Chaos and Ironbound.
+A checked tile identifies your selection; an illustrative recipe/material sample
+shows the selected style. No Apply button or reload is required, and preferences
+save between sessions. Fel Chaos uses fel green and purple with demonic details;
+Ironbound uses worn native iron textures, steel borders and blood-red skull details.
+Item-quality colours, class colours and material readiness
 indicators retain their in-game meaning.
 
 Enable **Use custom addon scale** to resize CraftRoster windows from 75–150% of

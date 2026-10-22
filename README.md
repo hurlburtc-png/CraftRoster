@@ -33,8 +33,10 @@ Open your professions and scan them, then click **Refresh** to share recipes wit
 - Public crafting notes, private member notes and missing material details fetched from a crafter’s scan.
 - Movable, resizable windows with scrolling for longer recipe details.
 - Dark-and-gold styling, a wider craft detail pane and highlighted recipe/crafter selections.
-- **Settings → Appearance:** live 75–150% addon scaling and Classic Gold, Frost Blue,
-  Emerald, Arcane Violet or High Contrast colours. Preferences save automatically;
+- **Settings → Appearance:** live 75–150% addon scaling and ten clickable themes:
+  Classic Gold, Dark, High Contrast, Frost Blue, Emerald, Arcane Violet, Ember Fire,
+  Woodland Nature, Fel Chaos and Ironbound. A sample previews selections immediately,
+  with no Apply button or reload. Preferences save automatically;
   **Reset appearance** restores the defaults. Large windows fit the available screen.
 
 You confirm trades, mail and completed orders yourself. Missing guild data does not mean nobody knows a recipe. Acquisition sources and drop estimates are labeled with their provenance.

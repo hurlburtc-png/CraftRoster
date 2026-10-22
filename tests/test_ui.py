@@ -85,7 +85,7 @@ class FrameLayoutTests(unittest.TestCase):
                         tab.SortButton.scripts.OnClick(tab.SortButton)
                         assert(CraftRosterDB.settings.sortMode=='crafters')
                         SlashCmdList.CRAFTROSTER('settings')
-                        assert(addon.Panel.frame.clamped and addon.Panel.frame:GetWidth()==380)
+                        assert(addon.Panel.frame.clamped and addon.Panel.frame:GetWidth()==680)
                         local settingsButtons={}
                         for _,button in ipairs(frames) do
                             if button.parent==addon.Panel.frame and button.scripts.OnClick then

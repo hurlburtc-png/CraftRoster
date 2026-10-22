@@ -20,6 +20,23 @@ features. In-game testing remains required for the current candidate.
 Roster updates are event-driven plus manual Refresh; periodic polling is not
 implemented. Trades, mail sending and crafting completion remain user-confirmed.
 
+## Next usability targets (not implemented)
+
+1. Recipe availability filters: guild knows / I know / missing recipe, with a
+   clear distinction between missing sync data and a genuinely unknown recipe.
+2. Surface scan/sync freshness and offline last-seen details beside crafters.
+3. A shared multi-recipe shopping list that combines reagents and separates
+   bag stock, deliveries and crafter-provided materials.
+4. Optional item-tooltip guild-crafter lookup, with online/favorite priority.
+5. Clearer next-action guidance through crafter selection, materials and delivery;
+   keep native profession terminology and user-confirmed trade/mail actions.
+
+Comparison references: author descriptions of
+[GuildWorkshop](https://www.curseforge.com/wow/addons/guildworkshop),
+[GuildCrafts](https://www.curseforge.com/wow/addons/guildcrafts) and
+[Profession Master](https://www.curseforge.com/wow/addons/profession-master).
+These are usability references, not claims that every addon supports Forever.
+
 ## Included in beta 11
 
 - Added compact Cancel request control beneath Whisper/Mail: cancels this character’s selected recipe/crafter requests, stops further material loading, and closes matching work orders on connected crafters. Cancellation cannot recall sent mail or delivered materials; unavailable guild sync is reported explicitly.

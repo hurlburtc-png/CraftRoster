@@ -1,13 +1,18 @@
 local ADDON_NAME, CraftRoster = ...
 local Theme = {}
 CraftRoster.Theme = Theme
-local panels,headings,buttons,windows = {},{},{},{}
+local panels,headings,buttons,windows,rows = {},{},{},{},{}
 Theme.palettes = {
-	{key="gold",name="Classic Gold",accent={1,0.82,0.32},border={0.55,0.43,0.22},background={0.035,0.035,0.04}},
-	{key="frost",name="Frost Blue",accent={0.48,0.83,1},border={0.25,0.52,0.68},background={0.025,0.045,0.07}},
-	{key="forest",name="Emerald",accent={0.48,0.95,0.7},border={0.25,0.58,0.4},background={0.025,0.055,0.04}},
-	{key="violet",name="Arcane Violet",accent={0.82,0.65,1},border={0.51,0.36,0.68},background={0.05,0.03,0.065}},
-	{key="contrast",name="High Contrast",accent={1,1,1},border={0.9,0.9,0.9},background={0,0,0}},
+	{key="gold",name="Classic Gold",description="The original warm gold and dark stone.",accent={1,0.82,0.32},border={0.55,0.43,0.22},background={0.035,0.035,0.04}},
+	{key="dark",name="Dark",description="Neutral charcoal with soft silver accents.",accent={0.86,0.9,0.95},border={0.42,0.46,0.52},background={0.022,0.025,0.03}},
+	{key="contrast",name="High Contrast",description="White on solid black with clear outlines.",accent={1,1,1},border={0.9,0.9,0.9},background={0,0,0}},
+	{key="frost",name="Frost Blue",description="Cool slate with icy blue accents.",accent={0.48,0.83,1},border={0.25,0.52,0.68},background={0.025,0.045,0.07}},
+	{key="forest",name="Emerald",description="Deep green with bright emerald accents.",accent={0.48,0.95,0.7},border={0.25,0.58,0.4},background={0.025,0.055,0.04}},
+	{key="violet",name="Arcane Violet",description="Dark plum with violet highlights.",accent={0.82,0.65,1},border={0.51,0.36,0.68},background={0.05,0.03,0.065}},
+	{key="fire",name="Ember Fire",description="Charcoal and ember-orange highlights.",accent={1,0.66,0.34},border={0.78,0.36,0.16},background={0.065,0.025,0.018}},
+	{key="nature",name="Woodland Nature",shortName="Nature",description="Warm earth tones with soft moss green.",accent={0.8,0.9,0.52},border={0.48,0.55,0.28},background={0.055,0.055,0.025}},
+	{key="demonic",name="Fel Chaos",description="Fel green, bruised purple and demonic accents.",accent={0.66,1,0.32},border={0.62,0.34,0.8},background={0.045,0.018,0.055},icon="Interface\\Icons\\Spell_Shadow_DemonForm"},
+	{key="metal",name="Ironbound",description="Worn iron, steel borders and blood-red details.",accent={0.9,0.91,0.94},border={0.62,0.65,0.69},background={0.045,0.045,0.05},secondary={0.85,0.28,0.24},texture="Interface\\DialogFrame\\UI-DialogBox-Background",edge="Interface\\DialogFrame\\UI-DialogBox-Border",icon="Interface\\Icons\\INV_Misc_Bone_01"},
 }
 
 function Theme:Palette()
@@ -16,10 +21,37 @@ function Theme:Palette()
 	return self.palettes[1]
 end
 
-function Theme:PaintPanel(panel)
-	local p=self:Palette()
-	panel:SetBackdropColor(p.background[1],p.background[2],p.background[3],0.98)
+function Theme:PaintPanel(panel,palette)
+	local p=palette or self:Palette()
+	panel:SetBackdrop({bgFile=p.texture or "Interface\\Tooltips\\UI-Tooltip-Background",
+		edgeFile=p.edge or "Interface\\Tooltips\\UI-Tooltip-Border",edgeSize=p.edge and 20 or 12,
+		insets={left=3,right=3,top=3,bottom=3}})
+	panel:SetBackdropColor(p.background[1],p.background[2],p.background[3],p.key=="contrast" and 1 or 0.98)
 	panel:SetBackdropBorderColor(p.border[1],p.border[2],p.border[3],0.95)
+	if p.icon and not panel.ThemeMark then
+		panel.ThemeMark=panel:CreateTexture(nil,"BACKGROUND")
+		panel.ThemeMark:SetPoint("BOTTOMRIGHT",-12,12); panel.ThemeMark:SetSize(40,40); panel.ThemeMark:SetAlpha(0.12)
+	end
+	if panel.ThemeMark then
+		if p.icon then
+			panel.ThemeMark:SetTexture(p.icon)
+			local tint=p.secondary or p.accent
+			panel.ThemeMark:SetVertexColor(tint[1],tint[2],tint[3]); panel.ThemeMark:Show()
+		else panel.ThemeMark:Hide() end
+	end
+end
+
+function Theme:PaintWindow(frame)
+	local p=self:Palette()
+	local function Tint(texture)
+		if texture and type(texture.SetVertexColor)=="function" then
+			if p.key=="gold" then texture:SetVertexColor(1,1,1)
+			else texture:SetVertexColor(p.background[1],p.background[2],p.background[3]) end
+		end
+	end
+	-- These are regions of our own window instances, never shared UI objects.
+	Tint(frame.Bg); Tint(frame.InsetBg)
+	if frame.Inset and frame.Inset~=frame then Tint(frame.Inset.Bg) end
 end
 
 function Theme:ApplyScale(frame)
@@ -44,6 +76,7 @@ function Theme:Window(frame,title)
 		frame:HookScript("OnSizeChanged",function() Theme:ApplyScale(frame) end)
 	end
 	if title then self:Heading(title) end
+	self:PaintWindow(frame)
 	self:ApplyScale(frame)
 end
 
@@ -71,12 +104,11 @@ function Theme:SetPalette(key)
 	for panel in pairs(panels) do self:PaintPanel(panel) end
 	for label in pairs(headings) do label:SetTextColor(p.accent[1],p.accent[2],p.accent[3]) end
 	for button in pairs(buttons) do self:TintButton(button) end
-	local d=CraftRoster.Directory
-	if d and d.frame and d.frame:IsShown() then
-		d:RefreshIfVisible()
-		local tab=d.frame.ProfessionsTab
-		if tab.ResultsChild.drawRows then tab.ResultsChild.drawRows() end
-	end
+	for frame in pairs(windows) do self:PaintWindow(frame) end
+	for row in pairs(rows) do self:Selection(row,row.selected) end
+	-- Appearance changes repaint existing widgets without rebuilding recipe lists,
+	-- querying bags, changing a selection, or moving either scrollbar.
+	if CraftRoster.Panel and CraftRoster.Panel.themePreview then CraftRoster.Panel:RefreshAppearance() end
 	return true
 end
 
@@ -104,6 +136,7 @@ function Theme:TrackPanel(panel)
 end
 
 function Theme:Selection(row, selected)
+	rows[row]=true
 	row.selected = selected and true or false
 	local p=self:Palette()
 	local color=selected and p.accent or p.border
@@ -123,8 +156,29 @@ end
 
 function Theme:TintButton(button)
 	local p=self:Palette()
+	local classic=p.key=="gold"
+	button:SetNormalTexture(classic and "Interface\\Buttons\\UI-Panel-Button-Up" or "Interface\\Buttons\\WHITE8X8")
+	button:SetPushedTexture(classic and "Interface\\Buttons\\UI-Panel-Button-Down" or "Interface\\Buttons\\WHITE8X8")
 	local texture=button.GetNormalTexture and button:GetNormalTexture()
-	if texture and texture.SetVertexColor then texture:SetVertexColor(p.accent[1],p.accent[2],p.accent[3]) end
+	if texture and texture.SetVertexColor then
+		if classic then texture:SetVertexColor(p.accent[1],p.accent[2],p.accent[3])
+		else texture:SetVertexColor(p.background[1]+0.07,p.background[2]+0.07,p.background[3]+0.07) end
+	end
+	local pushed=button.GetPushedTexture and button:GetPushedTexture()
+	if pushed and pushed.SetVertexColor then
+		if classic then pushed:SetVertexColor(1,1,1)
+		else pushed:SetVertexColor(p.accent[1]*0.24,p.accent[2]*0.24,p.accent[3]*0.24) end
+	end
+	if not classic and not button.ThemeBorder then
+		local border=CreateFrame("Frame",nil,button,BackdropTemplateMixin and "BackdropTemplate" or nil)
+		border:SetAllPoints(button); border:SetFrameLevel(button:GetFrameLevel())
+		border:SetBackdrop({edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",edgeSize=10})
+		button.ThemeBorder=border
+	end
+	if button.ThemeBorder then
+		if classic then button.ThemeBorder:Hide() else button.ThemeBorder:Show() end
+		button.ThemeBorder:SetBackdropBorderColor(p.border[1],p.border[2],p.border[3],1)
+	end
 	local label=button.GetFontString and button:GetFontString()
 	if label and label.SetTextColor then label:SetTextColor(p.accent[1],p.accent[2],p.accent[3]) end
 end
