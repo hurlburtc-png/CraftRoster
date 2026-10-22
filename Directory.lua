@@ -962,7 +962,7 @@ function Directory:RefreshDetails()
 end
 
 function Directory:RefreshRecipeSource()
- if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:RefreshSources() end
+ if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:RefreshMaterials() end
 end
 
 function Directory:RefreshCrafters()
@@ -976,10 +976,6 @@ function Directory:RefreshCrafters()
 		end
 	end
 	if not selectedValid then self.selectedCrafter = nil end
-	self:RefreshRecipeSource()
-	if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:RefreshMaterials() end
-
-
 	if self.selectedRecipe then
 		local onlineOnly = CraftRosterDB.settings.onlineOnly
 		local online, offline = {}, {}

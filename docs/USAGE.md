@@ -37,6 +37,38 @@ New directory windows open at 1000 × 680. Existing saved sizes are retained;
 materials; wider windows show them side by side. Recipe, materials, sources and
 crafters share one scroll area, with request actions kept at the bottom.
 
+## Selected craft
+
+The selected-craft pane shows acquisition details directly below the recipe link.
+Click **Where to get it** for the full source and binding description. Item and
+pattern icons retain their native hover tooltips. Larger +/- buttons adjust the
+craft quantity. The **Craft** button uses a locally scanned learned recipe and
+the selected quantity; the profession may need opening first. It uses the same
+combat, casting, enchant-target and duplicate-click checks as work orders.
+For other guild recipes, **Request craft** prepares a whisper to the selected
+crafter. Confirm/send that message in the composer.
+
+## Bank materials
+
+Visit your personal bank with CraftRoster enabled to scan the main bank storage
+and equipped bank bags. Material rows in the main pane and shopping list show
+bag counts separately from the saved bank count. Hover a material for the last
+scan time, how much to withdraw, and the remaining amount to buy or gather after
+bank stock, crafter contributions and recorded deliveries are taken into account.
+
+Bank snapshots are stored per character and remain available after closing the
+bank or reloading. They are last-seen data, not a promise of live remote access.
+An unvisited bank is shown as unknown, never zero. If a bank change cannot be
+verified before closing, counts become unknown until you reopen the bank; this
+prevents counting withdrawn items twice. Failed scans preserve the old snapshot
+but do not count its unverified contents toward shopping totals.
+
+Readiness and automatic trade/mail loading still use bags only. Withdraw bank
+items yourself before handing them over. This feature does not move bank items,
+scan guild/account banks or other players' banks, or share your bank contents
+with the guild. Recipe and guild-member comparisons remain future proposals;
+equipment comparison is intentionally excluded.
+
 ## Profession filter
 
 The dropdown contains **All**, a separator, and the 12 current Forever professions:

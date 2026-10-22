@@ -6,6 +6,28 @@ explicitly marked; an unmapped item has unknown binding.
 
 ## Coverage
 
+### Forever vendor additions
+
+The pinned ProfessionDB payload maps Moonglow Boots (spell **1255143**, teaching
+item **252764**) but has no acquisition record for it. This caused the screenshot's
+"Source unknown" result. It is a new Forever recipe, distinct from Moonglow Vest
+(spell 8322, pattern 6710); older quest sources must not be carried over by name.
+
+CraftRoster supplements the missing vendor record with AllTheThings' own Forever
+data at revision `d5741058c49a767660f894aa434f3246cd57485b`: Granny Finespindle,
+Ironforge **39.3, 33.7**, **Alliance**. The same vendor entry lists pattern items
+252761, 252762, 252832, 252764, 252763, 252826, 252830, 252831, 252827, 252828 and
+252829; these exact teaching-item IDs share the acquisition reference. Vendor
+stock remains subject to beta changes. No drop percentage is inferred.
+
+- [Vendor entry](https://github.com/ATTWoWAddon/AllTheThings/blob/d5741058c49a767660f894aa434f3246cd57485b/.contrib/.db/forever/zones/eastern%20kingdoms/1%20-%20ironforge.lua)
+- [Recipe mapping](https://github.com/ATTWoWAddon/AllTheThings/blob/d5741058c49a767660f894aa434f3246cd57485b/.contrib/.db/forever/profession%20db/leatherworking.lua)
+
+Location information is displayed directly below the recipe link, beside materials
+on wide windows and above them on narrow windows. Expanding "Where to get it"
+shows the complete acquisition/binding description. Native item and pattern
+tooltips remain available on their icons and links.
+
 Four starter entries are searchable even before a local profession scan. They do
 not count as learned recipes and are never advertised as the player's crafts.
 These are Classic references, **not confirmed Forever loot tables**.

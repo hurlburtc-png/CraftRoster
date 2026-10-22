@@ -30,8 +30,14 @@ Open your professions and scan them, then click **Refresh** to share recipes wit
 
 - Bundled recipe catalogue, online/offline guild crafters, item tooltips and favorites.
 - Partial delivery tracking, an **Auto-load items** toggle, and **Cancel request** to update connected crafters.
+- Personal-bank material tracking: bags and saved bank stock shown separately,
+  with withdrawal and remaining-shortage details. Visit the bank once to scan it;
+  counts stay private and bank stock never counts as ready to trade or mail.
 - Public crafting notes, private member notes and missing material details fetched from a crafter’s scan.
 - Movable, resizable windows with scrolling for longer recipe details.
+- Larger item headings and quantity buttons, acquisition locations directly below
+  the recipe link, and an inline **Craft / Request craft** button. Direct crafting
+  uses your learned recipes and selected quantity; guild requests prepare a whisper.
 - Dark-and-gold styling, a wider craft detail pane and highlighted recipe/crafter selections.
 - **Settings → Appearance:** live 75–150% addon scaling and ten clickable themes:
   Classic Gold, Dark, High Contrast, Frost Blue, Emerald, Arcane Violet, Ember Fire,

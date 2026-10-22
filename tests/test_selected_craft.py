@@ -11,6 +11,47 @@ addon.Directory:RefreshDetails()
 '''
 
 CASES = {
+'craft_button_uses_selected_quantity_and_existing_guards': '''
+    CraftRosterDB.characters['Tester-Realm'].recipes[42]={}
+    addon.SelectedCraft:Refresh()
+    addon.ShoppingList:SetQuantity(42,3); flushTimers()
+    GetNumTradeSkills=function() return 1 end
+    GetTradeSkillRecipeLink=function() return 'enchant:42' end
+    local calls=0
+    DoTradeSkill=function(index,count) assert(index==1 and count==3); calls=calls+1 end
+    local button=addon.SelectedCraft.craftButton
+    assert(button:GetText()=='Craft')
+    assert(addon.Directory.frame.ProfessionsTab.CraftRosterQuantityUp:GetWidth()>=32)
+    button.scripts.OnClick(); assert(calls==1)
+    button.scripts.OnClick(); assert(calls==1,'duplicate clicks are throttled')
+    clock=clock+1
+    InCombatLockdown=function() return true end
+    button.scripts.OnClick(); assert(calls==1)
+    assert(#addon.WorkOrders:GetOrders()==0,'direct crafting must not create a fake work order')
+''',
+'guild_craft_button_prepares_selected_crafter_request': '''
+    addon.Directory.selectedCrafter='Crafter-Realm'
+    addon.SelectedCraft:RefreshMaterials()
+    local chosen
+    addon.Requests.WhisperPlayer=function(_,id,crafter) chosen={id,crafter} end
+    local button=addon.SelectedCraft.craftButton
+    assert(button:GetText()=='Request craft')
+    button.scripts.OnClick()
+    assert(chosen[1]==42 and chosen[2]=='Crafter-Realm')
+    chosen=nil; addon.Directory.selectedCrafter=nil
+    button.scripts.OnClick(); assert(not chosen)
+''',
+'moonglow_boots_acquisition_uses_forever_vendor_not_old_quest': '''
+    CraftRosterDB.recipes[1255143]={name='Moonglow Boots',profession='Leatherworking'}
+    addon.Directory.selectedRecipe={id=1255143,name='Moonglow Boots',profession='Leatherworking',crafters={}}
+    addon.SelectedCraft:Refresh()
+    local text=addon.Directory.frame.ProfessionsTab.RecipeSource.Text:GetText()
+    assert(text:find('Granny Finespindle',1,true) and text:find('Ironforge (39.3, 33.7)',1,true))
+    assert(text:find('Alliance',1,true) and text:find('ATT Forever reference',1,true))
+    assert(not text:find('Source unknown',1,true) and not text:find('Quest:',1,true))
+    local old=addon.RecipeSources:Format(8322)
+    assert(not old:find('Granny Finespindle',1,true),'different recipes must not inherit acquisition by name')
+''',
 'closed_shopping_list_still_tracks_bag_changes_and_quantity': '''
     assert(not addon.ShoppingList.frame)
     assert(addon.SelectedCraft.entries[1].owned==24 and addon.SelectedCraft.entries[1].required==3)
@@ -34,18 +75,11 @@ CASES = {
     for i=1,20 do dispatch('BAG_UPDATE',0) end
     flushTimers(); assert(calls==1)
 ''',
-'native_pattern_text_is_copied_and_materials_remain_independent': '''
-    addon.SelectedCraft.cachedLink=nil
+'location_below_recipe_and_materials_remain_independent': '''
     CraftRosterDB.recipes[42].recipeItemID=123
-    local field=CreateFrame(); field:SetText('Pattern: Potion')
-    local use=CreateFrame(); use:SetText('Use: Teaches you how to make Potion.')
-    CraftRosterRecipePreviewScannerTextLeft1=field
-    CraftRosterRecipePreviewScannerTextLeft2=use
-    local scanner=addon.SelectedCraft.scanner
-    scanner.SetHyperlink=function() end
-    scanner.GetNumLines=function() return 2 end
+    CraftRosterDB.recipes[42].sourceText='Vendor: Example seller\\nLocation: Example town'
     addon.SelectedCraft:Refresh()
-    assert(addon.SelectedCraft.recipeBody:GetText():find('Use: Teaches you',1,true))
+    assert(addon.Directory.frame.ProfessionsTab.RecipeSource.Text:GetText():find('Example town',1,true))
     assert(addon.SelectedCraft.entries[1].required==3)
     local row=addon.SelectedCraft.rows[1]
     assert(row.Icon and row.Label:GetText():find('24 / 3',1,true))

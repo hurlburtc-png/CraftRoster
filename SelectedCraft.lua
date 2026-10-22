@@ -44,45 +44,6 @@ local function Height(label,text,width)
 	return math.max(18,tonumber(measured) or lines*15)
 end
 
--- Read the client's native pattern/spell tooltip, then wrap its text within the
--- recipe column. No fabricated item stats and no tooltip scaling on small windows.
-function View:RecipeText(link)
-	if link and self.cachedLink==link then return self.cachedText or "" end
-	local lines={}
-	if link then
-		self.scanner=self.scanner or CreateFrame("GameTooltip","CraftRosterRecipePreviewScanner",UIParent,"GameTooltipTemplate")
-		local scan=self.scanner
-		local ok=pcall(function()
-			scan:SetOwner(UIParent,"ANCHOR_NONE"); scan:ClearLines(); scan:SetHyperlink(link)
-		end)
-		if ok and scan.GetNumLines then
-			for index=1,math.min(40,scan:GetNumLines() or 0) do
-				local parts={}
-				for _,side in ipairs({"Left","Right"}) do
-					local field=_G["CraftRosterRecipePreviewScannerText"..side..index]
-					local value=field and field:GetText()
-					if value and value~="" then
-						if field.GetTextColor then
-							local r,g,b=field:GetTextColor()
-							value=("|cff%02x%02x%02x%s|r"):format(math.floor((r or 1)*255),math.floor((g or 1)*255),math.floor((b or 1)*255),value)
-						end
-						table.insert(parts,value)
-					end
-				end
-				if #parts>0 then table.insert(lines,table.concat(parts,"  ")) end
-			end
-		end
-		scan:Hide()
-	end
-	local recipe=CraftRoster.Directory.selectedRecipe
-	if #lines==0 and recipe then
-		local saved=CraftRosterDB.recipes[recipe.id] or {}
-		local data=CraftRoster.RecipeSources:Get(recipe.id)
-		lines={data.name or recipe.name,saved.description or "Recipe tooltip is loading. Hover the recipe to inspect it in game."}
-	end
-	self.cachedLink,self.cachedText=link,table.concat(lines,"\n")
-	return self.cachedText
-end
 
 function View:Initialize(tab)
 	self.tab=tab
@@ -125,7 +86,6 @@ function View:Initialize(tab)
 	self.recipeButton:SetScript("OnEnter",function(button) local links=Links(); Hover(button,links and links.recipe) end)
 	self.recipeButton:SetScript("OnLeave",function() GameTooltip:Hide() end)
 	self.recipeButton:SetScript("OnClick",function(owner,button) local links=Links(); Click(links and links.recipe,button,owner) end)
-	self.recipeBody=Text(tab.Details); self.recipeBody:SetPoint("TOPLEFT",12,-120)
 	self.recipeTitle=Text(tab.Details); self.recipeTitle:SetText("Recipe"); CraftRoster.Theme:Heading(self.recipeTitle)
 	self.recipeIcon=self.recipeButton:CreateTexture(nil,"ARTWORK")
 	self.recipeIcon:SetSize(32,32); self.recipeIcon:SetPoint("RIGHT",self.recipeButton,"LEFT",-8,0)
@@ -133,6 +93,24 @@ function View:Initialize(tab)
 	CraftRoster.Theme:Heading(self.materialTitle)
 	self.crafterTitle=Text(content); self.crafterTitle:SetText("Crafters"); CraftRoster.Theme:Heading(self.crafterTitle)
 	self.rows={}
+	self.craftButton=CreateFrame("Button",nil,tab.Details,"UIPanelButtonTemplate")
+	CraftRoster.Theme:Button(self.craftButton)
+	self.craftButton:SetScript("OnClick",function()
+		local recipe=CraftRoster.Directory.selectedRecipe
+		if not recipe or not CraftRosterDB.settings.enabled then return end
+		local character=CraftRosterDB.characters[UnitName("player").."-"..(GetRealmName() or "")]
+		if character and character.recipes[recipe.id] then
+			CraftRoster.WorkOrders:CraftSelected(recipe.id,CraftRoster.ShoppingList:GetQuantity(recipe.id))
+		elseif CraftRoster.Directory.selectedCrafter then
+			CraftRoster.Requests:WhisperPlayer(recipe.id,CraftRoster.Directory.selectedCrafter)
+		end
+	end)
+	self.craftButton:SetScript("OnEnter",function(button)
+		GameTooltip:SetOwner(button,"ANCHOR_TOP"); GameTooltip:SetText(button:GetText())
+		GameTooltip:AddLine("Craft a recipe you have scanned as learned, using the selected quantity. Guild recipes prepare a whisper to your selected crafter.",1,1,1,true)
+		GameTooltip:AddLine("The game checks materials and profession access. Enchants require selecting the target item.",1,1,1,true); GameTooltip:Show()
+	end)
+	self.craftButton:SetScript("OnLeave",function() GameTooltip:Hide() end)
 	for _,button in ipairs({header,self.recipeButton,self.sourceToggle}) do
 	 button:EnableMouseWheel(true); button:SetScript("OnMouseWheel",function(_,delta) View:Scroll(delta) end)
 	end
@@ -170,16 +148,16 @@ function View:LayoutActions()
 	tab.CraftRosterCancelRequestButton:SetSize(104,20)
 	tab.CraftRosterCancelRequestButton:SetPoint("BOTTOMRIGHT",bar,"BOTTOMRIGHT",-2,2)
 	local quantity=tab.CraftRosterQuantity
-	quantity:ClearAllPoints(); quantity:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",164,-76); quantity:SetSize(40,22)
+	quantity:ClearAllPoints(); quantity:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",156,-85); quantity:SetSize(52,30)
 	if tab.CraftRosterQuantityLabel then tab.CraftRosterQuantityLabel:SetText("Quantity:") end
-	for _,spec in ipairs({{tab.CraftRosterQuantityDown,118,"-"},{tab.CraftRosterQuantityUp,214,"+"}}) do
-		local button=spec[1]; button:ClearAllPoints(); button:SetSize(26,24)
-		button:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",spec[2],-75)
-		CraftRoster.Theme:Button(button); button:SetText(spec[3])
+	for _,spec in ipairs({{tab.CraftRosterQuantityDown,108,"-"},{tab.CraftRosterQuantityUp,224,"+"}}) do
+		local button=spec[1]; button:ClearAllPoints(); button:SetSize(36,32)
+		button:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",spec[2],-84)
+		CraftRoster.Theme:Button(button); button:SetNormalFontObject("GameFontNormalLarge"); button:SetText(spec[3])
 	end
 	if tab.CraftRosterQuantityLabel then
 		tab.CraftRosterQuantityLabel:ClearAllPoints()
-		tab.CraftRosterQuantityLabel:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",12,-80)
+		tab.CraftRosterQuantityLabel:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",12,-94)
 	end
 end
 
@@ -189,15 +167,18 @@ function View:RefreshMaterials()
 	local recipe=CraftRoster.Directory.selectedRecipe
 	local width=math.max(220,tab.SelectedCraftScroll:GetWidth())
 	tab.SelectedCraftContent:SetWidth(width)
-	tab.DetailsIcon:ClearAllPoints(); tab.DetailsIcon:SetPoint("TOPLEFT",12,-12); tab.DetailsIcon:SetSize(56,56)
-	tab.DetailsName:ClearAllPoints(); tab.DetailsName:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",80,-12)
-	tab.DetailsName:SetWidth(math.max(100,width-96))
-	tab.DetailsProfession:ClearAllPoints(); tab.DetailsProfession:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",80,-54)
-	tab.CraftItemHover:SetHeight(66)
+	tab.DetailsIcon:ClearAllPoints(); tab.DetailsIcon:SetPoint("TOPLEFT",12,-12); tab.DetailsIcon:SetSize(64,64)
+	tab.DetailsName:ClearAllPoints(); tab.DetailsName:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",88,-12)
+	tab.DetailsName:SetWidth(math.max(100,width-104)); tab.DetailsName:SetHeight(42)
+	tab.DetailsName:SetFontObject("GameFontNormalHuge")
+	tab.DetailsProfession:ClearAllPoints(); tab.DetailsProfession:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",88,-58)
+	tab.CraftItemHover:SetHeight(76)
 	self:LayoutActions()
+	self.sourceY=204
+	self:RefreshSources()
 	local column=self.column or math.floor((width-36)/2)
 	local materialX=self.stacked and 12 or column+24
-	local materialY=self.stacked and (194+(self.recipeHeight or 18)) or 112
+	local materialY=self.stacked and (self.sourceY+(self.sourceHeight or 0)+16) or 132
 	self.materialTitle:ClearAllPoints(); self.materialTitle:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",materialX,-materialY)
 	self.materialTitle:SetWidth(column); self.materialTitle:SetHeight(26)
 	local entries=recipe and CraftRoster.ShoppingList:GetMaterialStatus(recipe.id,CraftRoster.Directory.selectedCrafter)
@@ -217,6 +198,7 @@ function View:RefreshMaterials()
 				Hover(button,material.itemID and ("item:"..material.itemID))
 				if not material.itemID then GameTooltip:SetOwner(button,"ANCHOR_RIGHT"); GameTooltip:SetText(material.name) end
 				GameTooltip:AddLine(("In bags: %s · still needed: %d · total: %d"):format(material.owned or "?",material.required,material.recipeRequired),1,1,1,true)
+				CraftRoster.ShoppingList:AddBankTooltip(material)
 				GameTooltip:AddLine(("Delivered: %d · crafter provides: %d"):format(material.delivered,material.crafterProvides),1,1,1,true)
 				GameTooltip:AddLine("Click: insert whisper/chat link, or fill AH search",1,1,1); GameTooltip:Show()
 			end)
@@ -229,7 +211,7 @@ function View:RefreshMaterials()
 		local color=entry.owned and entry.owned>=entry.required and "|cff33ff66" or "|cffffd166"
 		local inline=column>=260
 		local count=color..tostring(entry.owned or "?").." / "..entry.required.."|r"
-		local text=inline and entry.name or entry.name.."\n"..count
+		local text=(inline and entry.name or entry.name.."\n"..count).."\n"..CraftRoster.ShoppingList:BankSummary(entry)
 		row.Count:SetText(inline and count or "")
 		row.Label:ClearAllPoints(); row.Label:SetPoint("TOPLEFT",40,-2)
 		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",inline and -80 or 0,2)
@@ -239,9 +221,14 @@ function View:RefreshMaterials()
 	end
 	for index=#self.entries+1,#self.rows do self.rows[index]:Hide() end
 	self.materialTitle:SetText(entries and "Materials" or "Materials unavailable")
-	self.sourceY=math.max(y+8,184+(self.recipeHeight or 18)+12)
-	self:RefreshSources()
-	local bottom=self.sourceY+(self.sourceHeight or 0)+8
+	local bottom=math.max(y+8,self.sourceY+(self.sourceHeight or 0)+8)
+	local own=CraftRosterDB.characters[UnitName("player").."-"..(GetRealmName() or "")]
+	local known=recipe and own and own.recipes[recipe.id]
+	self.craftButton:ClearAllPoints(); self.craftButton:SetPoint("TOPRIGHT",tab.Details,"TOPRIGHT",-12,-bottom)
+	self.craftButton:SetSize(math.min(160,width-24),32)
+	self.craftButton:SetText(known and "Craft" or "Request craft")
+	self.craftButton:SetEnabled(recipe and CraftRosterDB.settings.enabled and (known or CraftRoster.Directory.selectedCrafter) and true or false)
+	bottom=bottom+44
 	tab.Details:SetHeight(bottom)
 	self.crafterTitle:ClearAllPoints(); self.crafterTitle:SetPoint("TOPLEFT",tab.SelectedCraftContent,"TOPLEFT",12,-(bottom+8))
 	self.crafterTitle:SetSize(math.max(100,width-160),24)
@@ -260,23 +247,20 @@ end
 function View:Refresh()
 	if not self.tab or not Visible() then return end
 	local recipe=CraftRoster.Directory.selectedRecipe
-	local links=Links()
 	if self.recipeID~=(recipe and recipe.id) then
-		self.cachedLink=nil; self.sourcesExpanded=false; self.recipeID=recipe and recipe.id
+		self.sourcesExpanded=false; self.recipeID=recipe and recipe.id
 		self.tab.SelectedCraftScroll:SetVerticalScroll(0)
 	end
 	local width=math.max(220,self.tab.SelectedCraftScroll:GetWidth())
 	self.stacked=width<500
 	local column=self.stacked and width-24 or math.floor((width-36)/2)
 	self.column=column
-	self.recipeTitle:ClearAllPoints(); self.recipeTitle:SetPoint("TOPLEFT",12,-112); self.recipeTitle:SetSize(column,26)
-	self.recipeButton:ClearAllPoints(); self.recipeButton:SetPoint("TOPLEFT",52,-144); self.recipeButton:SetSize(column-40,32)
+	self.recipeTitle:ClearAllPoints(); self.recipeTitle:SetPoint("TOPLEFT",12,-132); self.recipeTitle:SetSize(column,26)
+	self.recipeButton:ClearAllPoints(); self.recipeButton:SetPoint("TOPLEFT",52,-164); self.recipeButton:SetSize(column-40,32)
 	local data=recipe and CraftRoster.RecipeSources:Get(recipe.id)
+	local links=Links()
 	self.recipeButton:SetText(links and (data and data.label or "View recipe") or "Select a recipe")
 	self.recipeIcon:SetTexture(data and data.icon or "Interface\\Icons\\INV_Scroll_03")
-	self.recipeBody:ClearAllPoints(); self.recipeBody:SetPoint("TOPLEFT",12,-184)
-	self.recipeHeight=Height(self.recipeBody,self:RecipeText(links and links.recipe),column)
-	self.recipeBody:SetHeight(self.recipeHeight)
 	self:RefreshMaterials()
 end
 
@@ -300,20 +284,13 @@ function View:RefreshSources()
  local recipe=CraftRoster.Directory.selectedRecipe
  if not recipe then source:Hide(); self.sourceHeight=0; return end
  source:Show(); source.Link:Hide(); source.Output:Hide(); source.Status:Hide()
- local column=math.max(196,self.tab.SelectedCraftScroll:GetWidth()-24)
- source:ClearAllPoints(); source:SetPoint("TOPLEFT",self.tab.Details,"TOPLEFT",12,-(self.sourceY or 240))
+ local column=self.column or math.max(196,self.tab.SelectedCraftScroll:GetWidth()-24)
+ source:ClearAllPoints(); source:SetPoint("TOPLEFT",self.tab.Details,"TOPLEFT",12,-(self.sourceY or 204))
  source:SetWidth(column); source.Child:SetWidth(column)
- self.sourceToggle:SetText(self.sourcesExpanded and "Recipe source / location −" or "Recipe source / location +")
+ self.sourceToggle:SetText(self.sourcesExpanded and "Where to get it −" or "Where to get it +")
  CraftRoster.Theme:Heading(self.sourceTitle,true)
- local text=CraftRoster.RecipeSources:Format(recipe.id)
- if not self.sourcesExpanded then
-  local lines={}
-  for line in text:gmatch("[^\n]+") do
-   if not line:find("Description:",1,true) then lines[#lines+1]=line end
-   if #lines==3 then break end
-  end
-  text=table.concat(lines,"\n")
- end
+ local text=CraftRoster.RecipeSources:Format(recipe.id,nil,not self.sourcesExpanded)
+ text=text:gsub("^|cffffd100Where to get it|r\n","")
  source.Text:ClearAllPoints(); source.Text:SetPoint("TOPLEFT",0,-26)
  local height=Height(source.Text,text,column); source.Text:SetHeight(height)
  self.sourceHeight=height+36; source:SetHeight(self.sourceHeight); source.Child:SetHeight(self.sourceHeight)

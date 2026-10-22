@@ -2,7 +2,7 @@ local ADDON_NAME, CraftRoster = ...
 local ShoppingList = {}
 CraftRoster.ShoppingList = ShoppingList
 
-local ROW_HEIGHT = 40
+local ROW_HEIGHT = 64
 local refreshTimer
 
 local function GetState()
@@ -180,6 +180,7 @@ function ShoppingList:DrawRows()
 			row = CreateFrame("Button", nil, frame.Content)
 			local label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 			label:SetPoint("TOPLEFT",38,-3); label:SetPoint("BOTTOMRIGHT",0,3); label:SetJustifyH("LEFT"); label:SetWordWrap(true)
+			label:SetMaxLines(4)
 			row.Icon=row:CreateTexture(nil,"ARTWORK"); row.Icon:SetSize(32,32); row.Icon:SetPoint("LEFT",2,0)
 			row:SetFontString(label); row:SetSize(296, ROW_HEIGHT)
 			row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -195,6 +196,7 @@ function ShoppingList:DrawRows()
 				if not shown then GameTooltip:SetText(material.name) end
 				GameTooltip:AddLine(("Recipe requires: %d · crafter provides: %d"):format(material.recipeRequired, material.crafterProvides or 0), 1, 1, 1)
 				GameTooltip:AddLine(("Your share: %d · in bags: %s"):format(material.required, material.owned and tostring(material.owned) or "?"), 1, 1, 1)
+				ShoppingList:AddBankTooltip(material)
 				if (material.delivered or 0)>0 then GameTooltip:AddLine("Already delivered: "..material.delivered,1,1,1) end
 				GameTooltip:AddLine("Click: whisper/chat link, or AH search. Right-click: crafter share.", 1, 1, 1); GameTooltip:Show()
 			end)
@@ -207,7 +209,8 @@ function ShoppingList:DrawRows()
 		local ready = count and count >= entry.required
 		row.Icon:SetTexture(entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 		local text = ("%s\n%s/%d"):format(entry.name, count and tostring(count) or "?", entry.required)
-		if count and not ready then text = text .. ("  (need %d)"):format(entry.required - count) end
+		if count and not ready then text = text .. ("  (need %d in bags)"):format(entry.required - count) end
+		text=text.."\n"..self:BankSummary(entry,true)
 		row:SetText((ready and "|cff33ff66" or "|cffffd166") .. text .. "|r")
 		row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -(index - 1) * ROW_HEIGHT)
 		row:Show()
@@ -223,6 +226,7 @@ function ShoppingList:GetMaterialStatus(recipeID, crafter)
 	local ready,unavailable=0,false
 	local contribution=Contribution(recipeID,crafter)
 	local delivered=crafter and CraftRoster.Requests and CraftRoster.Requests:GetDeliveredMaterials(recipeID,crafter,self:GetQuantity(recipeID)) or {}
+	local snapshot=CraftRoster.BankMaterials:Snapshot()
 	for _,entry in ipairs(entries) do
 		entry.recipeRequired=entry.required
 		entry.crafterProvides=math.min(entry.required,contribution[entry.itemID or entry.name] or 0)
@@ -232,10 +236,36 @@ function ShoppingList:GetMaterialStatus(recipeID, crafter)
 			local ok,value=pcall(getCount,entry.itemID or entry.name,false,false,false,false)
 			if ok and type(value)=="number" and value>=0 then entry.owned=value end
 		elseif counts then entry.owned=counts[entry.itemID or entry.name] or 0 end
+		entry.bank=CraftRoster.BankMaterials:GetCount(entry.itemID or entry.name,snapshot or false)
+		entry.bankDirty=snapshot and snapshot.dirty
+		entry.bankScannedAt=snapshot and snapshot.scannedAt
+		if entry.owned~=nil and entry.bank~=nil then
+			entry.totalOwned=entry.owned+entry.bank
+			entry.withdraw=math.min(entry.bank,math.max(0,entry.required-entry.owned))
+			entry.missing=math.max(0,entry.required-entry.totalOwned)
+		end
 		if entry.owned==nil then unavailable=true
 		elseif entry.owned>=entry.required then ready=ready+1 end
 	end
 	return entries,ready,unavailable
+end
+
+function ShoppingList:BankSummary(entry,compact)
+	if entry.bankDirty then return "Bank: ? (reopen to refresh)" end
+	if entry.bank==nil then return "Bank: ? (visit bank to scan)" end
+	if compact then return "Bank: "..entry.bank.." (saved)" end
+	local text="Bank: "..entry.bank.." (last seen)"
+	if entry.withdraw and entry.withdraw>0 then text=text.." · withdraw "..entry.withdraw end
+	if entry.missing and entry.missing>0 then text=text.." · missing "..entry.missing end
+	return text
+end
+
+function ShoppingList:AddBankTooltip(entry)
+	GameTooltip:AddLine(self:BankSummary(entry),1,1,1,true)
+	if entry.bankScannedAt then
+		GameTooltip:AddLine("Personal bank last scanned: "..date("%b %d, %I:%M %p",entry.bankScannedAt),1,1,1,true)
+		GameTooltip:AddLine("Withdraw bank materials before trading or mailing. Bank counts are private.",1,1,1,true)
+	end
 end
 
 function ShoppingList:Refresh()
@@ -252,7 +282,7 @@ function ShoppingList:Refresh()
 		self.frame.Message:Show(); self.frame.Summary:SetText("Waiting for recipe data")
 	else
 		self.frame.Message:Hide()
-		self.frame.Summary:SetText(unavailable and "Inventory counts unavailable" or ("%d of %d materials ready"):format(ready,#entries))
+		self.frame.Summary:SetText(unavailable and "Inventory counts unavailable" or ("%d of %d materials ready in bags"):format(ready,#entries))
 	end
 	self.frame:SetHeight(math.min(312, math.max(160, 130 + #self.entries * ROW_HEIGHT)))
 	self.frame.Content:SetHeight(math.max(1, #self.entries * ROW_HEIGHT))

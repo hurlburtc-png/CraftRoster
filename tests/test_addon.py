@@ -538,7 +538,7 @@ CASES.update({
         inventory[1].count=1; inventory[2].count=0
         for i=1,20 do dispatch('BAG_UPDATE',0) end
         flushTimers()
-        assert(list.entries[1].owned==1 and list.frame.Summary:GetText()=='0 of 1 materials ready')
+        assert(list.entries[1].owned==1 and list.frame.Summary:GetText()=='0 of 1 materials ready in bags')
         assert(list.frame.Rows[1]:GetText():find('need 2'))
     """,
     'shopping_close_stops_updates_and_command_reopens': """
@@ -599,7 +599,7 @@ CASES.update({
         addon.ShoppingList:Open(42)
         assert(#addon.ShoppingList.frame.Rows<=20)
         local scroll=addon.ShoppingList.frame.Scroll
-        scroll:SetVerticalScroll(99*40); scroll.scripts.OnVerticalScroll()
+        scroll:SetVerticalScroll(99*addon.ShoppingList.frame.Rows[1]:GetHeight()); scroll.scripts.OnVerticalScroll()
         local found=false
         for _,row in ipairs(addon.ShoppingList.frame.Rows) do if row:IsShown() and row:GetText():find('Material 100') then found=true end end
         assert(found)
@@ -1335,7 +1335,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.16')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.17')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)

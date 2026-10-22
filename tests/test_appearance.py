@@ -71,9 +71,10 @@ CASES = {
             local view=addon.SelectedCraft
             inside(tab.SearchBox,tab.CataloguePanel); inside(tab.Results,tab.CataloguePanel)
             apart(tab.Results,tab.SelectedCraftScroll); apart(tab.ActionBar,tab.SelectedCraftScroll)
-            inside(view.recipeBody,tab.Details)
-            apart(view.recipeBody,view.rows[1]); apart(view.materialTitle,view.rows[1])
-            apart(tab.RecipeSource,view.rows[1]); apart(tab.RecipeSource,view.recipeBody)
+            inside(tab.RecipeSource,tab.Details)
+            apart(view.recipeButton,tab.RecipeSource); apart(view.materialTitle,view.rows[1])
+            apart(tab.RecipeSource,view.rows[1]); apart(view.craftButton,tab.RecipeSource)
+            apart(view.craftButton,view.rows[1]); inside(view.craftButton,tab.Details)
             apart(view.crafterTitle,tab.Details); apart(view.crafterTitle,tab.CrafterList)
             local controls={tab.CraftRosterTradeButton,tab.CraftRosterMailButton,
                 tab.CraftRosterShoppingButton,tab.CraftRosterFavoriteButton,

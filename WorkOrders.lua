@@ -190,7 +190,7 @@ function Orders:OpenProfession(recipe)
 	local id=recipe.professionID or professionIDs[recipe.profession]
 	if C_TradeSkillUI and C_TradeSkillUI.OpenTradeSkill and id then
 		local ok,opened=SafeCall(C_TradeSkillUI.OpenTradeSkill,id)
-		if ok and opened~=false then Say("Profession opened. Click this order's craft button again when loaded."); return true end
+		if ok and opened~=false then Say("Profession opened. Click Craft again when loaded."); return true end
 	end
 	local spell=professionSpells[recipe.profession]
 	local name=recipe.profession
@@ -201,9 +201,9 @@ function Orders:OpenProfession(recipe)
 	end
 	if CastSpellByName and name then
 		local ok=SafeCall(CastSpellByName,name)
-		if ok then Say("Profession opened. Click the order again when loaded."); return true end
+		if ok then Say("Profession opened. Click Craft again when loaded."); return true end
 	end
-	Say("Open " .. (recipe.profession or "the profession") .. " once, then click this order. No manual recipe search is needed.")
+	Say("Open " .. (recipe.profession or "the profession") .. " once, then click Craft again.")
 	return false
 end
 function Orders:IsEnchant(order)
@@ -214,8 +214,20 @@ function Orders:IsEnchant(order)
 end
 function Orders:Craft(id, requestedCount)
 	local order=self:Find(id)
+	if self.selected and self.selected[id]==false then return false end
+	return self:ExecuteCraft(order,requestedCount)
+end
+
+function Orders:CraftSelected(recipeID,quantity)
+	if type(quantity)~="number" or quantity<1 or quantity>999 or quantity~=math.floor(quantity) then return false end
+	return self:ExecuteCraft({id="directory",recipeID=recipeID,quantity=quantity,done=0,
+		status="requested",customer=UnitName("player")},quantity)
+end
+
+function Orders:ExecuteCraft(order,requestedCount)
 	if not CraftRosterDB.settings.enabled then Say("CraftRoster is disabled. Enable it before crafting."); return false end
-	if not order or not Active(order) or (self.selected and self.selected[id]==false) then return false end
+	if not order or not Active(order) then return false end
+	local id=order.id
 	if order.status=="needs_review" then Say("Review and Accept this possible duplicate before crafting."); return false end
 	local remaining=math.max(0,order.quantity-(order.done or 0))
 	local count=requestedCount=="all" and remaining or (requestedCount==nil and 1 or requestedCount)
@@ -263,7 +275,7 @@ function Orders:Craft(id, requestedCount)
 				local success, result=SafeCall(fn,order.recipeID,count)
 				if success and result~=false then
 					self.craftClicks[id]=now; order.lastBatchCount=count; self:Refresh()
-					Say(enchant and "Enchant selected. Click the customer's correct item in the trade window, then review before accepting." or ("Craft batch requested (" .. count .. "). Mark results done only after checking them."))
+					Say(enchant and "Enchant selected. Click the intended item, then check the result." or ("Craft batch requested (" .. count .. "). Check the result before confirming completion."))
 					return true
 				end
 				Say("The client rejected this craft. Check materials, profession access and the game's error message."); return false
@@ -281,7 +293,7 @@ function Orders:Craft(id, requestedCount)
 					local success,result=SafeCall(DoTradeSkill,index,count)
 					if not success or result==false then Say("Craft rejected. Check the game's error message."); return false end
 					self.craftClicks[id]=now; order.lastBatchCount=count; self:Refresh()
-					Say(enchant and "Enchant selected. Click the correct traded item before accepting." or ("Craft batch requested (" .. count .. "). Confirm results before marking done."))
+					Say(enchant and "Enchant selected. Click the intended item, then check the result." or ("Craft batch requested (" .. count .. "). Check the result before confirming completion."))
 					return true
 				end
 			end

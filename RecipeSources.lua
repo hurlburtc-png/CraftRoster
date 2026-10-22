@@ -25,6 +25,12 @@ local bindingNames = {
 	[0] = "Does not bind (tradable)", [1] = "Binds when picked up",
 	[2] = "Binds when equipped", [3] = "Binds when used", [4] = "Quest item",
 }
+-- Acquisition additions absent from the pinned ProfessionDB source payload.
+-- Checked against ATT's Forever data; exact upstream revision is in docs/RECIPE_SOURCES.md.
+local granny={vendor="Granny Finespindle",zone="Ironforge",coordinates="39.3, 33.7",faction="Alliance"}
+local acquisitionReferences = {[1255143]=granny}
+local grannyPatterns = {[252761]=true,[252762]=true,[252832]=true,[252764]=true,[252763]=true,
+	[252826]=true,[252830]=true,[252831]=true,[252827]=true,[252828]=true,[252829]=true}
 local requested = {}
 
 local function libraryCall(method, ...)
@@ -176,13 +182,20 @@ function Sources:Get(recipeID)
 	return result
 end
 
-function Sources:Format(recipeID, data)
+function Sources:Format(recipeID, data, compact)
 	data = data or self:Get(recipeID)
 	local saved = CraftRosterDB.recipes[recipeID] or {}
 	local reference = data.reference
+	local acquisition=acquisitionReferences[recipeID] or (grannyPatterns[data.itemID] and granny)
 	local lines = { "|cffffd100Where to get it|r" }
 	if saved.sourceText then
 		table.insert(lines, saved.sourceText)
+	end
+	if acquisition and not saved.sourceText then
+		table.insert(lines,"Vendor: "..acquisition.vendor)
+		table.insert(lines,"Location: "..acquisition.zone.." ("..acquisition.coordinates..")")
+		table.insert(lines,"Availability: "..acquisition.faction)
+		table.insert(lines,"ATT Forever reference; verify vendor stock in game.")
 	end
 	local sources=libraryCall("GetRecipeSources",recipeID)
 	data.hasLibrarySource=false
@@ -195,19 +208,20 @@ function Sources:Format(recipeID, data)
 				data.hasLibrarySource=true
 				local total=type(list.total)=="number" and math.max(#list,list.total) or #list
 				table.insert(lines,labels[kind].." sources: "..total)
+				local limit=compact and 2 or 12
 				for index,source in ipairs(list) do
-					if index>12 then break end
+					if index>limit then break end
 					if type(source)=="table" then
 						table.insert(lines,labels[kind]..": "..(type(source.name)=="string" and source.name or "Name unavailable"))
 					end
 				end
-				if total>math.min(12,#list) then table.insert(lines,"and "..(total-math.min(12,#list)).." more (database examples are capped).") end
+				if total>math.min(limit,#list) then table.insert(lines,"and "..(total-math.min(limit,#list)).." more (database examples are capped).") end
 			end
 		end
 		if data.hasLibrarySource then
 			local borrowed=libraryCall("IsBorrowed",recipeID,"sources")
 			table.insert(lines,borrowed and (tostring(borrowed).." reference - Forever source unconfirmed.") or "LibProfessionDB source; verify in game.")
-			table.insert(lines,"Source names are English. Provenance: bundled LibProfessionDB v1.9.1; emulator reference databases, not verified Forever loot rates.")
+			if not compact then table.insert(lines,"Source names are English. Provenance: bundled LibProfessionDB v1.9.1; emulator reference databases, not verified Forever loot rates.") end
 		end
 	end
 	if not data.hasLibrarySource and libraryCall("IsAutoTaughtRecipe",recipeID) then
@@ -224,10 +238,11 @@ function Sources:Format(recipeID, data)
 		table.insert(lines, "Location: " .. reference.zone)
 		table.insert(lines, ("Estimated drop chance: ~%.2f%% per kill"):format(reference.chance))
 		table.insert(lines, "Classic estimate - Forever source/rate unconfirmed.")
-	elseif not saved.sourceText and not data.hasLibrarySource then
+	elseif not saved.sourceText and not data.hasLibrarySource and not acquisition then
 		table.insert(lines, "Source unknown: no acquisition details available.")
 	end
-	if not reference then table.insert(lines, "Drop chance: unknown (no verified estimate)") end
+	if not reference and (not compact or (type(sources)=="table" and sources.drop)) then table.insert(lines, "Drop chance: unknown (no verified estimate)") end
+	if compact then return table.concat(lines,"\n") end
 	table.insert(lines, "\n|cffffd100Recipe item binding|r")
 	table.insert(lines, data.binding or "Unknown: learnable recipe item not mapped.")
 	if reference then
