@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "att_repository": "ATTWoWAddon/AllTheThings",
+  "att_path": ".contrib/.db/forever",
+  "att_baseline_commit": "d5741058c49a767660f894aa434f3246cd57485b",
+  "professiondb_url": "https://www.curseforge.com/wow/addons/libprofessiondb",
+  "policy": "Online Forever records require review. Borrowed, conflicting or changed acquisition records are not automatically confirmed."
+}

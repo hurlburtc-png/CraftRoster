@@ -5,7 +5,52 @@ so no separate ProfessionDB, Ace3 or VersionCheck installation is required.
 The addon does not download code/data at login. Guild scans and ownership remain
 in SavedVariables; replacing the addon folder does not require clearing them.
 
-The database should be reviewed when Forever patches change recipes, the author
+## Automatic online checks
+
+The **Check online recipe databases** GitHub workflow runs daily at 09:17 UTC,
+can be run with **Run workflow**, and runs when its checker/configuration changes.
+It monitors the official ProfessionDB publisher page and AllTheThings' Forever
+source tree. It does not scrape Wowhead or rely on a private API key.
+Checks discover changes when those upstream projects publish them; they cannot
+detect an unpublished Blizzard change immediately.
+The first push, and later checker/configuration changes, request an audit even
+when source data is unchanged, to exercise the review path without inventing changes.
+
+The checker compares immutable source revisions, added/removed recipe IDs,
+teaching-item mappings and changed acquisition files. It retains multiple
+teaching-item mappings for review, ignores placeholder IDs, refuses truncated
+trees, and fails without advancing the snapshot when a source cannot be read.
+Commit changes outside the watched data do not create an update report.
+
+When a change is found it runs the addon tests, retains a report artifact and
+opens/updates a **draft** PR on `automation/recipe-database-update`. Repeated runs
+with the same snapshot do not create duplicate PRs. Human changes to that branch
+stop the bot from overwriting it. Nothing is automatically merged or released.
+The repository must allow GitHub Actions to create pull requests; a policy block
+is reported by the workflow and the report remains available as an artifact.
+
+`data/upstream_snapshot.json` records the last **observed** upstream state.
+It is not an approval and is not shipped in the addon. The separate
+`vendor/ProfessionDB/manifest.json` identifies the database actually installed.
+Merging a report alone does not update any recipes, locations or ZIP contents.
+
+For a data update, complete the import/review steps below on the draft branch (or
+a separate review branch), including its regenerated ZIP. A ProfessionDB version
+can change only other game clients, so inspect its Forever changes before import.
+For an affected location, verify the exact recipe/teaching-item/NPC IDs, faction,
+coordinates and source conditions in Forever-specific online data. Borrowed or
+conflicting data remains unconfirmed; a changed hash is a review trigger, never
+confirmation. Include source URL, revision, checked date and applicable build when
+known. Do not invent a build or drop percentage. Players receive approved data by
+updating CraftRoster after the reviewed changes are published.
+
+Local check (no GitHub writes):
+
+```sh
+python scripts/check_database_updates.py
+```
+
+The database should also be reviewed when Forever patches change recipes, the author
 publishes a relevant release, or a confirmed discrepancy is reported. Not every
 CraftRoster change requires a database update, and a newer library release may
 change only Retail data. Update the complete compatible Forever snapshot, not
@@ -55,6 +100,6 @@ separate, with their own source and uncertainty labels.
    library version/client build in release notes. Retain the previous working
    release for rollback; do not roll back a player's SavedVariables blindly.
 
-This is a release maintenance process, not automatic unreviewed replacement.
+Online detection is automatic; importing and publishing changed data remains reviewed.
 The original curated percentages remain explicitly Classic estimates. The library
 supplies acquisition names, not drop percentages; unknown rates stay unknown.

@@ -29,6 +29,9 @@ Open your professions and scan them, then click **Refresh** to share recipes wit
 ## Other features
 
 - Bundled recipe catalogue, online/offline guild crafters, item tooltips and favorites.
+- Daily online database checks prepare a draft review when upstream recipes or
+  acquisition files change. Approved database changes ship through addon updates;
+  the game does not download web data. See [database updates](docs/DATABASE_UPDATES.md).
 - Partial delivery tracking, an **Auto-load items** toggle, and **Cancel request** to update connected crafters.
 - Personal-bank material tracking: bags and saved bank stock shown separately,
   with withdrawal and remaining-shortage details. Visit the bank once to scan it;

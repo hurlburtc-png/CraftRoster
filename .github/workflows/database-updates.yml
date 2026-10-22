@@ -1,0 +1,88 @@
+name: Check online recipe databases
+on:
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/database-updates.yml'
+      - 'scripts/check_database_updates.py'
+      - 'data/database_watch.json'
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: recipe-database-update
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test tools
+        run: python -m pip install -r tests/requirements.txt
+      - name: Test update checker
+        run: python -m unittest discover -s tests -p test_database_updates.py -v
+      - name: Check online sources
+        id: sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$RUN_EVENT" = 'push' ]; then
+            python scripts/check_database_updates.py --force-report
+          else
+            python scripts/check_database_updates.py
+          fi
+      - name: Validate addon and installable ZIP
+        if: steps.sources.outputs.changed == 'true'
+        run: python -m unittest discover -s tests -v
+      - name: Retain review report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-review
+          path: |
+            docs/DATABASE_UPDATE_REPORT.md
+            data/upstream_snapshot.json
+          if-no-files-found: ignore
+      - name: Prepare draft review
+        if: steps.sources.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b automation/recipe-database-update
+          git add data/upstream_snapshot.json docs/DATABASE_UPDATE_REPORT.md
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'Prepare upstream recipe database review'
+          remote_sha=$(git ls-remote origin refs/heads/automation/recipe-database-update | cut -f1)
+          if [ -n "$remote_sha" ]; then
+            git fetch origin automation/recipe-database-update
+            if [ "$(git log -1 --format=%ae FETCH_HEAD)" != '41898282+github-actions[bot]@users.noreply.github.com' ]; then
+              echo 'The draft branch has human changes. Review the retained artifact instead of overwriting it.'
+              exit 1
+            fi
+            if [ "$(git show FETCH_HEAD:data/upstream_snapshot.json | sha256sum)" = "$(sha256sum < data/upstream_snapshot.json)" ]; then
+              echo 'The existing branch already has this source snapshot.'
+            else
+              git push --force-with-lease=refs/heads/automation/recipe-database-update:$remote_sha origin HEAD:automation/recipe-database-update
+            fi
+          else
+            git push origin HEAD:automation/recipe-database-update
+          fi
+          number=$(gh pr list --head automation/recipe-database-update --base main --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh pr edit "$number" --body-file docs/DATABASE_UPDATE_REPORT.md
+          else
+            gh pr create --draft --base main --head automation/recipe-database-update --title 'Review online recipe database changes' --body-file docs/DATABASE_UPDATE_REPORT.md
+          fi
