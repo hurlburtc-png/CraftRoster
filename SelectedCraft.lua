@@ -148,12 +148,13 @@ function View:LayoutActions()
 	tab.CraftRosterCancelRequestButton:SetSize(104,20)
 	tab.CraftRosterCancelRequestButton:SetPoint("BOTTOMRIGHT",bar,"BOTTOMRIGHT",-2,2)
 	local quantity=tab.CraftRosterQuantity
-	quantity:ClearAllPoints(); quantity:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",156,-85); quantity:SetSize(52,30)
+	quantity:ClearAllPoints(); quantity:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",112,-85); quantity:SetSize(52,30)
 	if tab.CraftRosterQuantityLabel then tab.CraftRosterQuantityLabel:SetText("Quantity:") end
-	for _,spec in ipairs({{tab.CraftRosterQuantityDown,108,"-"},{tab.CraftRosterQuantityUp,224,"+"}}) do
-		local button=spec[1]; button:ClearAllPoints(); button:SetSize(36,32)
-		button:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",spec[2],-84)
-		CraftRoster.Theme:Button(button); button:SetNormalFontObject("GameFontNormalLarge"); button:SetText(spec[3])
+	for _,spec in ipairs({{tab.CraftRosterQuantityUp,"TOPLEFT","TOPRIGHT"},
+		{tab.CraftRosterQuantityDown,"BOTTOMLEFT","BOTTOMRIGHT"}}) do
+		local button=spec[1]; button:ClearAllPoints(); button:SetSize(18,14)
+		button:SetPoint(spec[2],quantity,spec[3],4,0)
+		-- Preserve the native arrow textures created by CraftRequests across themes.
 	end
 	if tab.CraftRosterQuantityLabel then
 		tab.CraftRosterQuantityLabel:ClearAllPoints()

@@ -35,7 +35,8 @@ Open your professions and scan them, then click **Refresh** to share recipes wit
   counts stay private and bank stock never counts as ready to trade or mail.
 - Public crafting notes, private member notes and missing material details fetched from a crafter’s scan.
 - Movable, resizable windows with scrolling for longer recipe details.
-- Larger item headings and quantity buttons, acquisition locations directly below
+- Larger item headings and a native-style editable quantity field with up/down
+  arrows, acquisition locations directly below
   the recipe link, and an inline **Craft / Request craft** button. Direct crafting
   uses your learned recipes and selected quantity; guild requests prepare a whisper.
 - Dark-and-gold styling, a wider craft detail pane and highlighted recipe/crafter selections.

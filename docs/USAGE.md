@@ -41,8 +41,9 @@ crafters share one scroll area, with request actions kept at the bottom.
 
 The selected-craft pane shows acquisition details directly below the recipe link.
 Click **Where to get it** for the full source and binding description. Item and
-pattern icons retain their native hover tooltips. Larger +/- buttons adjust the
-craft quantity. The **Craft** button uses a locally scanned learned recipe and
+pattern icons retain their native hover tooltips. Type a craft quantity directly
+into the number field, or use the native WoW up/down arrows beside it (1–999).
+The **Craft** button uses a locally scanned learned recipe and
 the selected quantity; the profession may need opening first. It uses the same
 combat, casting, enchant-target and duplicate-click checks as work orders.
 For other guild recipes, **Request craft** prepares a whisper to the selected

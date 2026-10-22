@@ -11,6 +11,21 @@ addon.Directory:RefreshDetails()
 '''
 
 CASES = {
+'quantity_keeps_native_arrows_across_theme_changes_and_accepts_typing': '''
+    local tab=addon.Directory.frame.ProfessionsTab
+    for _,arrow in ipairs({tab.CraftRosterQuantityUp,tab.CraftRosterQuantityDown}) do
+        assert(arrow:GetText()=='' and arrow:GetHeight()==14)
+        arrow.SetNormalTexture=function() error('themes must not overwrite native arrows') end
+    end
+    for _,palette in ipairs(addon.Theme.palettes) do addon.Theme:SetPalette(palette.key) end
+    addon.SelectedCraft:Refresh()
+    local field=tab.CraftRosterQuantity
+    field:SetText('25'); field.scripts.OnTextChanged(field,true)
+    field.scripts.OnEnterPressed(field)
+    assert(field:GetText()=='25' and addon.ShoppingList:GetQuantity(42)==25)
+    tab.CraftRosterQuantityDown.scripts.OnClick()
+    assert(field:GetText()=='24' and addon.ShoppingList:GetQuantity(42)==24)
+''',
 'craft_button_uses_selected_quantity_and_existing_guards': '''
     CraftRosterDB.characters['Tester-Realm'].recipes[42]={}
     addon.SelectedCraft:Refresh()
@@ -21,7 +36,7 @@ CASES = {
     DoTradeSkill=function(index,count) assert(index==1 and count==3); calls=calls+1 end
     local button=addon.SelectedCraft.craftButton
     assert(button:GetText()=='Craft')
-    assert(addon.Directory.frame.ProfessionsTab.CraftRosterQuantityUp:GetWidth()>=32)
+    assert(addon.Directory.frame.ProfessionsTab.CraftRosterQuantityUp:GetHeight()==14)
     button.scripts.OnClick(); assert(calls==1)
     button.scripts.OnClick(); assert(calls==1,'duplicate clicks are throttled')
     clock=clock+1
