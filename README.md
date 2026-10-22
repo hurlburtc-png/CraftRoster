@@ -2,7 +2,7 @@
 
 [**Download CraftRoster.zip — latest install version**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-Your guild has someone who can craft that. Unfortunately, “someone” is usually an alt with an unpronounceable name. CraftRoster helps you find the right crafter, check which materials you’re missing, and prepare a whisper or mail request without asking guild chat the same question for the fourth time. Less detective work. More shiny things.
+Unsure which guildie can craft it? Is their name an abomination you can’t type without some cooked accents?? Are they offline, so you can’t ask whether they know the recipe? Wondering what the mats are—or how to help someone get the recipe if nobody knows it? Need a shopping list showing what’s missing and how much to buy? Are your bags a mess, and wouldn’t it be easier to have an addon pull the mats into your trade window or mail, with recipient checks and you in control of the final click?! All of this and MUCH MORE with **CRAFTROSTER!!!!**
 
 **Preferred install download.** Extracts to one **CraftRoster** folder, ready for `Interface/AddOns`. This link stays the same as the addon is updated.
 
