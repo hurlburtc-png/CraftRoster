@@ -4,6 +4,13 @@ CraftRoster.ErrorReporter = Reporter
 
 local MAX_ERRORS, MAX_MESSAGE, MAX_STACK = 10, 2048, 6000
 local errors = {}
+
+local function AddonVersion()
+ local metadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
+ if type(metadata) ~= "function" then return "unknown" end
+ local ok, value = pcall(metadata, ADDON_NAME, "Version")
+ return ok and value and tostring(value) or "unknown"
+end
 local handling = false
 local lastNotice = -math.huge
 
@@ -27,6 +34,7 @@ function Reporter:Restore()
 			if type(entry) == "table" and type(entry.message) == "string" then
 				table.insert(errors, {message=Text(entry.message, MAX_MESSAGE), stack=Text(entry.stack or "", MAX_STACK),
 					count=type(entry.count)=="number" and entry.count==entry.count and math.floor(math.max(1, math.min(entry.count, 1000000))) or 1,
+					version=entry.version or "unknown",
 					firstSeen=type(entry.firstSeen)=="number" and entry.firstSeen or Now(),
 					lastSeen=type(entry.lastSeen)=="number" and entry.lastSeen or Now()})
 			end
@@ -34,7 +42,7 @@ function Reporter:Restore()
 		for i = #current, 1, -1 do
 			local entry = current[i]
 			for index, savedEntry in ipairs(errors) do
-				if savedEntry.message == entry.message then
+				if savedEntry.message == entry.message and savedEntry.version == (entry.version or "unknown") then
 					entry.count = math.min(1000000, entry.count + savedEntry.count)
 					entry.firstSeen = math.min(entry.firstSeen, savedEntry.firstSeen)
 					table.remove(errors, index); break
@@ -50,7 +58,7 @@ end
 function Reporter:Capture(err, trace)
 	local message = Text(err, MAX_MESSAGE)
 	local duplicate
-	for i, entry in ipairs(errors) do if entry.message == message then duplicate = i; break end end
+	for i, entry in ipairs(errors) do if entry.message == message and entry.version == AddonVersion() then duplicate = i; break end end
 	if trace == nil and duplicate then trace = errors[duplicate].stack end
 	if trace == nil and type(debugstack) == "function" then
 		local ok, value = pcall(debugstack, 3, 16, 0)
@@ -65,9 +73,9 @@ function Reporter:Capture(err, trace)
 	if not relevant then return false end
 	local existing
 	for i, entry in ipairs(errors) do
-		if entry.message == message then existing = table.remove(errors, i); break end
+		if entry.message == message and entry.version == AddonVersion() then existing = table.remove(errors, i); break end
 	end
-	local entry = existing or {message=message, stack=trace, firstSeen=Now(), count=0}
+	local entry = existing or {message=message, stack=trace, version=AddonVersion(), firstSeen=Now(), count=0}
 	entry.count = math.min(1000000, entry.count + 1); entry.lastSeen = Now()
 	if trace ~= "" then entry.stack = trace end
 	table.insert(errors, 1, entry)
@@ -99,7 +107,7 @@ function Reporter:GetReport()
 		"What were you doing? (add steps, expected result and actual result before sending)", ""}
 	if #errors == 0 then table.insert(lines, "No CraftRoster Lua errors captured. This report can still accompany a behavior bug.") end
 	for i, entry in ipairs(errors) do
-		table.insert(lines, ("Error %d · occurrences: %d · first: %s · last: %s"):format(i, entry.count, tostring(entry.firstSeen), tostring(entry.lastSeen)))
+		table.insert(lines, ("Error %d · addon version: %s · occurrences: %d · first: %s · last: %s"):format(i, entry.version or "unknown", entry.count, tostring(entry.firstSeen), tostring(entry.lastSeen)))
 		table.insert(lines, entry.message)
 		table.insert(lines, entry.stack ~= "" and entry.stack or "Stack trace unavailable on this client.")
 		table.insert(lines, "")
