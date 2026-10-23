@@ -1339,7 +1339,9 @@ class ForeverManifestTests(unittest.TestCase):
         self.assertTrue(version.startswith('0.8.0-beta.'))
         self.assertTrue(version.removeprefix('0.8.0-beta.').isdigit())
         readme = (ROOT / 'README.md').read_text()
-        self.assertIn(version, readme)
+        self.assertIn(f'**Version:** `{version}`', readme,
+                      'README version metadata must match the TOC, not just a download link')
+        self.assertIn(f'Download CraftRoster.zip — {version}', readme)
         self.assertIn('CraftRoster.zip', readme)
         for line in lines:
             if line and not line.startswith('#'):
