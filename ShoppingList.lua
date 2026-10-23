@@ -210,7 +210,8 @@ function ShoppingList:DrawRows()
 		row.Icon:SetTexture(entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 		local text = ("%s\n%s/%d"):format(entry.name, count and tostring(count) or "?", entry.required)
 		if count and not ready then text = text .. ("  (need %d in bags)"):format(entry.required - count) end
-		text=text.."\n"..self:BankSummary(entry,true)
+		local bank=self:BankSummary(entry,true)
+		if bank and bank~="" then text=text.."\n"..bank end
 		row:SetText((ready and "|cff33ff66" or "|cffffd166") .. text .. "|r")
 		row:ClearAllPoints(); row:SetPoint("TOPLEFT", 0, -(index - 1) * ROW_HEIGHT)
 		row:Show()
