@@ -14,3 +14,31 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r tests/requirements.txt
       - run: python -m unittest discover -s tests -v
+  forever-reconciliation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reconcile every recipe against Forever client tables
+        run: python -u scripts/reconcile_forever_client.py
+      - name: Publish verification counts
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          d=json.loads(Path('build/forever-client-reconciliation.json').read_text())
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+              f.write('## CraftRoster Forever recipe reconciliation\n\n')
+              f.write(f"- Processed: **{d['processed']}/{d['total']} ({d['processedPercent']:.1f}%)**\n")
+              f.write(f"- Exact client ID/output matches: **{d['clientMatched']}/{d['total']} ({d['clientMatchedPercent']:.1f}%)**\n")
+              f.write('- Fully verified acquisition/materials: **not assessed by this audit**\n')
+              for name, count in sorted(d['statuses'].items()):
+                  f.write(f'- {name}: {count}\n')
+          PY
+      - name: Upload recipe reconciliation
+        uses: actions/upload-artifact@v4
+        with:
+          name: forever-recipe-reconciliation
+          path: build/forever-client-reconciliation.json
