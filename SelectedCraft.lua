@@ -207,7 +207,7 @@ function View:RefreshMaterials()
 	self:RefreshSources()
 	local column=self.column or math.floor((width-36)/2)
 	local materialX=self.stacked and 12 or column+24
-	local materialY=self.stacked and (self.sourceY+(self.sourceHeight or 0)+16) or 102
+	local materialY=self.stacked and (self.sourceY+(self.sourceHeight or 0)+8) or 102
 	self.materialTitle:ClearAllPoints(); self.materialTitle:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",materialX,-materialY)
 	self.materialTitle:SetWidth(column); self.materialTitle:SetHeight(26)
 	local entries=recipe and CraftRoster.ShoppingList:GetMaterialStatus(recipe.id,CraftRoster.Directory.selectedCrafter)
