@@ -3,7 +3,7 @@
 ## IconTexture: Interface\Icons\INV_Potion_97
 ## Notes: Find the right guild crafter for any recipe.
 ## Author: hurlburtc-png
-## Version: 0.8.0-beta.25
+## Version: 0.8.0-beta.26
 ## X-ReleaseChannel: beta
 ## OptionalDeps: TomTom
 ## SavedVariables: CraftRosterDB
