@@ -398,7 +398,7 @@ function View:RefreshSources()
   row.Copy:ClearAllPoints(); row.Copy:SetPoint("TOPLEFT",0,-labelHeight-4)
   row.Map:ClearAllPoints(); row.Map:SetPoint("LEFT",row.Copy,"RIGHT",6,0)
   row.Copy:SetEnabled(record.confirmed)
-  row.Map:SetEnabled(CraftRoster.RecipeLocations:Backend(record)~=nil)
+  row.Map:SetEnabled(record.confirmed and CraftRoster.RecipeLocations:Backend(record)~=nil or false)
   local rowHeight=labelHeight+36; row:SetHeight(rowHeight); row:Show(); y=y+rowHeight+4
  end
  for index=#locations+1,#self.locationRows do self.locationRows[index]:Hide() end
