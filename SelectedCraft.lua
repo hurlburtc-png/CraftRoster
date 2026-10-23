@@ -366,7 +366,13 @@ function View:RefreshSources()
   self.sourceHeight=y+4; source:SetHeight(self.sourceHeight); source.Child:SetHeight(self.sourceHeight)
   return
  end
- for index,record in ipairs(locations) do
+ -- The source text already describes unverified references. Do not add
+ -- empty rows with disabled copy/map buttons for those references.
+ local visibleRows=0
+ for _,record in ipairs(locations) do
+  if record.confirmed then
+  visibleRows=visibleRows+1
+  local index=visibleRows
   local row=self.locationRows[index]
   if not row then
    row=CreateFrame("Frame",nil,source); self.locationRows[index]=row
@@ -406,7 +412,8 @@ function View:RefreshSources()
   row.Copy:SetEnabled(record.confirmed)
   row.Map:SetEnabled(record.confirmed and CraftRoster.RecipeLocations:Backend(record)~=nil or false)
   local rowHeight=labelHeight+36; row:SetHeight(rowHeight); row:Show(); y=y+rowHeight+4
+  end
  end
- for index=#locations+1,#self.locationRows do self.locationRows[index]:Hide() end
+ for index=visibleRows+1,#self.locationRows do self.locationRows[index]:Hide() end
  self.sourceHeight=y+4; source:SetHeight(self.sourceHeight); source.Child:SetHeight(self.sourceHeight)
 end
