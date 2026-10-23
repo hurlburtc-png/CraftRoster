@@ -1,6 +1,13 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — latest install version**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.24**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+
+**ZIP version:** `0.8.0-beta.24`  
+**Latest code merged:** October 23, 2026 at **10:28 AM EDT** (Eastern Time; EST resumes November 1).  
+**ZIP build time:** Pending successful release workflow; the ZIP may not yet include the latest merged changes.  
+**Release checks:** The October 23 merged-code test run failed; this build is **not yet validated for in-game testing**.  
+
+
 
 Unsure which guildie can craft it? Is their name an abomination you can’t type without some cooked accents?? Are they offline, so you can’t ask whether they know the recipe? Wondering what the mats are—or how to help someone get the recipe if nobody knows it? Need a shopping list showing what’s missing and how much to buy? Are your bags a mess, and wouldn’t it be easier to have an addon pull the mats into your trade window or mail, with recipient checks and you in control of the final click?! All of this and MUCH MORE with **CRAFTROSTER!!!!**
 
