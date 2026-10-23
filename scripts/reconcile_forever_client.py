@@ -146,6 +146,14 @@ def main():
         else:
             row["effectReviewHint"] = "inspect_spell_effect_or_item_creation"
     report["effectReviewHints"] = dict(Counter(row["effectReviewHint"] for row in unresolved))
+    # Focused evidence queue: inspect suspicious item-like recipes before assigning
+    # an output ID; do not mutate the shipped catalogue from naming heuristics.
+    report["focusedReview"] = [
+        {"spellID": row["spellID"], "name": row["name"],
+         "profession": row["profession"], "effectReviewHint": row["effectReviewHint"],
+         "sourceFile": row["sourceFile"]}
+        for row in unresolved if row["effectReviewHint"] == "inspect_spell_effect_or_item_creation"
+    ]
     args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     args.review_out.parent.mkdir(parents=True, exist_ok=True)
     with args.review_out.open("w", encoding="utf-8", newline="") as f:
@@ -157,6 +165,8 @@ def main():
     print(f"MISSING OUTPUT EVIDENCE: {json.dumps(report['missingOutputEvidence'], sort_keys=True)}", flush=True)
     print(f"UNRESOLVED BY PROFESSION: {json.dumps(report['unresolvedByProfession'])}", flush=True)
     print(f"NON-ENCHANTING EXCEPTIONS: {json.dumps(report['nonEnchantingExceptions'])}", flush=True)
+    print(f"EFFECT REVIEW HINTS: {json.dumps(report['effectReviewHints'], sort_keys=True)}", flush=True)
+    print(f"FOCUSED ITEM/EFFECT REVIEW: {json.dumps(report['focusedReview'])}", flush=True)
     print(json.dumps({k:v for k,v in report.items() if k != "recipes"}, indent=2))
 
 if __name__ == "__main__":
