@@ -127,6 +127,14 @@ def main():
     for row in unresolved:
         row["reviewPriority"] = "inspect_non_item_effect" if row["profession"].lower() == "enchanting" else "inspect_client_recipe_effect"
     report["reviewPriorities"] = dict(Counter(row["reviewPriority"] for row in unresolved))
+    # Non-enchanting exceptions are small enough for direct, human-readable audit.
+    # Keep spell IDs and source files visible rather than assuming an output exists.
+    report["nonEnchantingExceptions"] = [
+        {"spellID": row["spellID"], "profession": row["profession"],
+         "name": row["name"], "sourceFile": row["sourceFile"],
+         "status": row["status"]}
+        for row in unresolved if row["profession"].lower() != "enchanting"
+    ]
     args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     args.review_out.parent.mkdir(parents=True, exist_ok=True)
     with args.review_out.open("w", encoding="utf-8", newline="") as f:
@@ -137,6 +145,7 @@ def main():
     print(f"REVIEW CATEGORIES: {json.dumps(review_counts, sort_keys=True)}", flush=True)
     print(f"MISSING OUTPUT EVIDENCE: {json.dumps(report['missingOutputEvidence'], sort_keys=True)}", flush=True)
     print(f"UNRESOLVED BY PROFESSION: {json.dumps(report['unresolvedByProfession'])}", flush=True)
+    print(f"NON-ENCHANTING EXCEPTIONS: {json.dumps(report['nonEnchantingExceptions'])}", flush=True)
     print(json.dumps({k:v for k,v in report.items() if k != "recipes"}, indent=2))
 
 if __name__ == "__main__":
