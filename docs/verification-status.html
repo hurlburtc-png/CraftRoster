@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CraftRoster Verification Status</title><style>
+body{font:16px system-ui,sans-serif;background:#101827;color:#e8edf6;max-width:850px;margin:35px auto;padding:0 18px}h1{font-size:1.6rem}section{background:#1b2738;border:1px solid #364458;border-radius:12px;padding:18px;margin:14px 0}small,.muted{color:#aab8c9}.bar{height:12px;background:#354458;border-radius:20px;overflow:hidden;margin:8px 0}.fill{height:100%;background:#38b987;width:0}a{color:#8ecbff}strong{font-size:1.2rem}#state{font-weight:bold} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.metric{background:#233249;padding:12px;border-radius:8px}</style></head><body>
+<h1>CraftRoster — Recipe Verification</h1><p class="muted">Checks GitHub every 20 seconds while this page is open. This is a status monitor, not a verification worker.</p>
+<section><p id="state">Loading latest GitHub workflow status…</p><p id="updated" class="muted"></p><p id="run"></p></section>
+<section><h2>Catalogue coverage</h2><strong>2,510 / 2,510 inventoried (100%)</strong><div class="bar"><div class="fill" style="width:100%"></div></div><p class="muted">Inventory is not proof of verification.</p></section>
+<section><h2>Verification progress</h2><div class="grid"><div class="metric">Processed<br><strong id="processed">Not reported</strong></div><div class="metric">Forever client matches<br><strong id="matched">Not reported</strong></div><div class="metric">Fully verified<br><strong id="verified">Not measured</strong></div></div><p class="muted" id="explain">The reconciliation code exists, but its results must be published before percentages can be shown. No percentages are inferred from successful tests.</p></section>
+<p><a href="https://github.com/hurlburtc-png/CraftRoster/actions">Open GitHub Actions</a> · <a href="https://github.com/hurlburtc-png/CraftRoster">Repository</a></p>
+<script>
+const endpoint='https://api.github.com/repos/hurlburtc-png/CraftRoster/actions/runs?per_page=15';
+async function refresh(){
+ try{
+  const response=await fetch(endpoint,{cache:'no-store'});
+  if(!response.ok)throw Error('GitHub API '+response.status);
+  const data=await response.json();
+  const runs=data.workflow_runs||[];
+  const latest=runs.find(r=>r.name==='Forever recipe verification')||runs.find(r=>r.name==='Addon checks')||runs[0];
+  if(!latest)throw Error('No workflow runs found');
+  document.getElementById('state').textContent=latest.name+': '+(latest.conclusion||latest.status);
+  document.getElementById('run').innerHTML='';
+  const a=document.createElement('a');a.href=latest.html_url;a.textContent='View latest workflow run';a.target='_blank';a.rel='noopener noreferrer';document.getElementById('run').append(a);
+  document.getElementById('updated').textContent='Last checked: '+new Date().toLocaleTimeString()+' · GitHub updated: '+new Date(latest.updated_at).toLocaleString();
+ }catch(e){document.getElementById('state').textContent='Status unavailable: '+e.message;document.getElementById('updated').textContent='Will retry in 20 seconds.';}
+}
+refresh();setInterval(()=>{if(!document.hidden)refresh()},20000);
+</script></body></html>
