@@ -412,7 +412,14 @@ end
 
 function ShoppingList:Restore()
 	local state = GetState()
-	if state and state.visible and state.recipeID then self:Open(state.recipeID) end
+	if not state or not state.visible or not state.recipeID then return end
+	-- Recipes can disappear after an addon/database upgrade. A saved window
+	-- must not keep pointing at a removed recipe or reopen phantom materials.
+	if not CraftRosterDB.recipes[state.recipeID] then
+		state.recipeID, state.crafter, state.visible = nil, nil, false
+		return
+	end
+	self:Open(state.recipeID)
 end
 
 function ShoppingList:Toggle()
