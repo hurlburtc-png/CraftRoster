@@ -404,7 +404,7 @@ function View:RefreshSources()
   row.record=record; row:ClearAllPoints(); row:SetPoint("TOPLEFT",source,"TOPLEFT",0,-y); row:SetWidth(column)
   local labelHeight=0
   row.Label:SetText("")
-  if #locations>1 then labelHeight=Height(row.Label,record.name.." · "..record.zone,column) end
+  if visibleRows>1 then labelHeight=Height(row.Label,record.name.." · "..record.zone,column) end
   row.Label:SetHeight(labelHeight)
   row.Copy:SetSize(math.min(104,(column-6)/2),24); row.Map:SetSize(math.min(104,(column-6)/2),24)
   row.Copy:ClearAllPoints(); row.Copy:SetPoint("TOPLEFT",0,-labelHeight-4)
