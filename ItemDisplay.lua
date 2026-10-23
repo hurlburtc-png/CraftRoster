@@ -48,7 +48,13 @@ function Items:Click(entry)
   -- Otherwise shopping-list clicks can insert into the wrong chat destination.
   local composer=CraftRoster.WhisperComposer
   if composer and composer.frame and composer.frame:IsShown() then
-   if composer:InsertMaterialLink(link) then return true end
+   -- Never fall through to an unrelated chat or AH search while a whisper
+   -- composer is visible. A failed insert should remain in that context.
+   if composer.InsertMaterialLink then
+    local ok,inserted=pcall(composer.InsertMaterialLink,composer,link)
+    if ok and inserted then return true end
+   end
+   return false
   end
   local active=ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow()
   if active then
