@@ -272,6 +272,8 @@ function View:RefreshMaterials()
 	local known=recipe and own and own.recipes[recipe.id]
 	self.craftButton:ClearAllPoints(); self.craftButton:SetPoint("TOPRIGHT",tab.Details,"TOPRIGHT",-12,-bottom)
 	self.craftButton:SetSize(math.min(160,width-24),32)
+	-- Keep the action visible at narrow widths without overlapping the source
+	-- and materials sections; the unified scroll still handles long recipes.
 	self.craftButton:SetText(known and "Craft" or "Request craft")
 	self.craftButton:SetEnabled(recipe and CraftRosterDB.settings.enabled and (known or CraftRoster.Directory.selectedCrafter) and true or false)
 	bottom=bottom+44
