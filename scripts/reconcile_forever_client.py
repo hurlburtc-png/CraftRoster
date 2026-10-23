@@ -4,6 +4,7 @@
 Exact spell IDs only. This checks identity/output, NOT acquisition or server loot.
 """
 import argparse
+import csv
 import json
 import re
 from collections import Counter
@@ -69,6 +70,7 @@ def main():
     p.add_argument("--coverage", type=Path, default=ROOT / "data/classic-source-coverage.json")
     p.add_argument("--core", type=Path, default=CORE)
     p.add_argument("--out", type=Path, default=ROOT / "build/forever-client-reconciliation.json")
+    p.add_argument("--review-out", type=Path, default=ROOT / "build/forever-recipe-review.csv")
     args = p.parse_args()
     coverage = json.loads(args.coverage.read_text(encoding="utf-8"))
     index, builds = records(args.core)
@@ -87,6 +89,13 @@ def main():
               "recipes": result}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    unresolved = [row for row in result if row["status"] != "exact_forever_spell_and_output_match"]
+    args.review_out.parent.mkdir(parents=True, exist_ok=True)
+    with args.review_out.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified"])
+        writer.writeheader()
+        writer.writerows(unresolved)
+    print(f"REVIEW QUEUE: {len(unresolved)} entries written to {args.review_out}", flush=True)
     print(json.dumps({k:v for k,v in report.items() if k != "recipes"}, indent=2))
 
 if __name__ == "__main__":
