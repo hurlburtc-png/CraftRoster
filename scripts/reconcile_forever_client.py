@@ -44,8 +44,18 @@ def reconcile(coverage, index):
         # Duplicate IDs are retained rather than silently overwriting evidence.
         # A matching output disambiguates a shared spell ID where possible.
         matches = [v for v in candidates if entry.get("output") and v["output"] == int(entry["output"])]
-        found = matches[0] if len(matches) == 1 else (candidates[0] if len(candidates) == 1 else None)
-        if len(matches) > 1 or (len(candidates) > 1 and not matches):
+        # A spell can appear in multiple bundled tables; profession is independent evidence.
+        # Only narrow when the source filename unambiguously identifies the profession.
+        profession = re.sub(r"[^a-z0-9]", "", str(entry["profession"]).lower())
+        pool = matches if matches else candidates
+        profession_matches = [v for v in pool if re.sub(r"[^a-z0-9]", "", Path(v["sourceFile"]).stem.lower()) == profession]
+        if len(profession_matches) == 1:
+            found = profession_matches[0]
+        elif len(pool) == 1:
+            found = pool[0]
+        else:
+            found = None
+        if len(pool) > 1 and not found:
             status = "ambiguous_forever_spell"
         elif not found:
             status = "missing_exact_forever_spell"
