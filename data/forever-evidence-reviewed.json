@@ -1,23 +1,4 @@
 {
-  "source": "https://wowforevercompass.com/professions/recipes/",
-  "sourceBuild": "1.60.1.70338",
-  "reviewedDate": "2026-10-23",
-  "recipes": [
-    {
-      "spellID": 2149,
-      "craftStatus": "verified_forever",
-      "materialsStatus": "verified_forever",
-      "craftEvidence": "https://wowforevercompass.com/professions/recipes/",
-      "materialsEvidence": "https://wowforevercompass.com/professions/recipes/",
-      "notes": "Handstitched Leather Boots; output 2302 x1; Light Leather x2, Coarse Thread x1; client snapshot 70338. Acquisition not verified."
-    },
-    {
-      "spellID": 2329,
-      "craftStatus": "verified_forever",
-      "materialsStatus": "verified_forever",
-      "craftEvidence": "https://wowforevercompass.com/professions/recipes/",
-      "materialsEvidence": "https://wowforevercompass.com/professions/recipes/",
-      "notes": "Elixir of Minor Strength; output 2454 x1; Earthroot x1, Silverleaf x1, Empty Vial x1; client snapshot 70338. Trainer category is community reference, not verified NPC acquisition."
-    }
-  ]
+  "recipes": [],
+  "note": "No Forever recipe entries have yet been independently verified with retrievable, exact-ID primary-source evidence. Do not promote example or unverified URLs into verified status."
 }
