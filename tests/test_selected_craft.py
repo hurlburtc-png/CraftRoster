@@ -56,6 +56,32 @@ CASES = {
     chosen=nil; addon.Directory.selectedCrafter=nil
     button.scripts.OnClick(); assert(not chosen)
 ''',
+'unverified_acquisition_has_no_disabled_navigation_rows': '''
+    CraftRosterDB.recipes[1255143]={name='Moonglow Boots',profession='Leatherworking'}
+    addon.Directory.selectedRecipe={id=1255143,name='Moonglow Boots',profession='Leatherworking',crafters={}}
+    addon.SelectedCraft:Refresh()
+    local source=addon.Directory.frame.ProfessionsTab.RecipeSource
+    local toggle=addon.SelectedCraft.sourceToggle
+    toggle.scripts.OnClick()
+    assert(addon.SelectedCraft.sourcesExpanded)
+    assert(source.Text:GetText():find('Granny Finespindle',1,true))
+    assert(not addon.SelectedCraft.locationRows[1] or not addon.SelectedCraft.locationRows[1]:IsShown(),
+      'unverified source must not create empty navigation rows')
+    -- A confirmed record still gets usable copy/map controls.
+    addon.RecipeLocations.bySpell[1255143]={
+      {kind='vendor',npcID=123,name='Confirmed Vendor',zone='Test Zone',x=25,y=75,
+       status='confirmed',url='https://example.org/forever/123',revision='fixture',checked='2026-10-23'}
+    }
+    addon.SelectedCraft:Refresh()
+    local row=addon.SelectedCraft.locationRows[1]
+    assert(row and row:IsShown() and row.Copy:IsEnabled())
+    assert(row.Copy:GetText()=='Copy coords')
+    addon.RecipeLocations.bySpell[1255143]={
+      {kind='vendor',npcID=123,name='Unverified Vendor',zone='Test Zone',x=25,y=75,status='reference'}
+    }
+    addon.SelectedCraft:Refresh()
+    assert(not row:IsShown(),'stale confirmed navigation must hide when source becomes unverified')
+''',
 'moonglow_boots_acquisition_uses_forever_vendor_not_old_quest': '''
     CraftRosterDB.recipes[1255143]={name='Moonglow Boots',profession='Leatherworking'}
     addon.Directory.selectedRecipe={id=1255143,name='Moonglow Boots',profession='Leatherworking',crafters={}}
