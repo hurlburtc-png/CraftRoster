@@ -103,11 +103,11 @@ def main():
               "note": "Exact-ID client craft comparison only; not proof of acquisition, reagents or Forever server availability.",
               "recipes": result}
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     unresolved = [row for row in result if row["status"] != "exact_forever_spell_and_output_match"]
     # Separate evidence-backed candidates from entries requiring manual investigation.
     review_counts = dict(Counter("client_output_available" if row["suggestedOutput"] is not None else "manual_evidence_needed" for row in unresolved))
     report["reviewCategories"] = review_counts
+    args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     args.review_out.parent.mkdir(parents=True, exist_ok=True)
     with args.review_out.open("w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified", "reviewAction", "suggestedOutput"])
