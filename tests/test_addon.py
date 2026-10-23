@@ -1338,7 +1338,9 @@ class ForeverManifestTests(unittest.TestCase):
         version = metadata['Version']
         self.assertTrue(version.startswith('0.8.0-beta.'))
         self.assertTrue(version.removeprefix('0.8.0-beta.').isdigit())
-        self.assertIn(version, (ROOT / 'README.md').read_text())
+        readme = (ROOT / 'README.md').read_text()
+        self.assertIn(version, readme)
+        self.assertIn('CraftRoster.zip', readme)
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT / line).is_file(), 'Missing TOC module: ' + line)
