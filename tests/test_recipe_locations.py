@@ -137,8 +137,9 @@ CASES = {
  assert(not row:IsShown(),'new recipe defaults to collapsed location details')
  addon.SelectedCraft.sourcesExpanded=true
  addon.SelectedCraft:Refresh()
- row.Copy.scripts.OnClick(); assert(value:find('/way #999',1,true),'unverified row cannot copy a command')
- assert(not row.record.confirmed and row.record.npcID==258306 and not row.Copy:IsEnabled() and not row.Map:IsEnabled())
+ assert(not row:IsShown(),'unverified acquisition must not display disabled navigation controls')
+ assert(#addon.RecipeLocations:Get(1255143)>0,'unverified source details remain available in text')
+ assert(value:find('/way #999',1,true),'switching recipes must not generate a new waypoint')
  addon.Directory.selectedRecipe={id=99999,name='Unknown',profession='Alchemy',crafters={}}
  addon.SelectedCraft:Refresh(); assert(not row:IsShown())
 ''',
