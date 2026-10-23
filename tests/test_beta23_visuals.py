@@ -10,7 +10,7 @@ local function info(id)
  if id==70001 and cached then return 'Crafted item','|cff0070dd|Hitem:70001|h[Crafted item]|h|r',3,1,1,'Armor','Cloth',1,'',123 end
  if id==70002 then return 'Pattern: Long Crafted Item Example','|cff1eff00|Hitem:70002|h[Pattern: Long Crafted Item Example]|h|r',2,1,1,'Recipe','Tailoring',1,'',456 end
 end
-GetItemInfo=info;if C_Item then C_Item.GetItemInfo=info; C_Item.RequestLoadItemDataByID=function() return true end end
+C_Item=C_Item or {}; GetItemInfo=info; C_Item.GetItemInfo=info; C_Item.RequestLoadItemDataByID=function() return true end
 addon.Directory:Toggle()
 local d=addon.Directory;local tab=d.frame.ProfessionsTab
 local function find()
