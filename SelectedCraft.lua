@@ -209,10 +209,10 @@ function View:RefreshMaterials()
 	local materialX=self.stacked and 12 or column+24
 	local materialY=self.stacked and (self.sourceY+(self.sourceHeight or 0)+8) or 102
 	self.materialTitle:ClearAllPoints(); self.materialTitle:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",materialX,-materialY)
-	self.materialTitle:SetWidth(column); self.materialTitle:SetHeight(26)
+	self.materialTitle:SetWidth(column); self.materialTitle:SetHeight(22)
 	local entries=recipe and CraftRoster.ShoppingList:GetMaterialStatus(recipe.id,CraftRoster.Directory.selectedCrafter)
 	self.entries=entries or {}
-	local y=materialY+32
+	local y=materialY+26
 	for index,entry in ipairs(self.entries) do
 		local row=self.rows[index]
 		if not row then
