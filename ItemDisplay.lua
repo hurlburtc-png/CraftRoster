@@ -15,8 +15,12 @@ function Items:Resolve(id, fallback)
   local ok,value=pcall(getIcon,id); if ok then icon=value end
  end
  if id and not name and not self.pending[id] then
-  self.pending[id]=true
-  if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID,id) end
+  -- Only mark a request pending when the client actually accepts it.
+  -- Legacy clients without an async loader must remain retryable.
+  if C_Item and type(C_Item.RequestLoadItemDataByID)=="function" then
+   local ok=pcall(C_Item.RequestLoadItemDataByID,id)
+   if ok then self.pending[id]=true end
+  end
  end
  if fallback and fallback:match("^Item %d+$") then fallback=nil end
  return name or fallback or "Material loading…",link or (id and ("|cffffffff|Hitem:"..id..":0:0:0:0:0:0:0|h["..(name or fallback or "Material loading…").."]|h|r")),icon,quality
@@ -63,8 +67,10 @@ local events=CreateFrame("Frame")
 pcall(events.RegisterEvent,events,"GET_ITEM_INFO_RECEIVED")
 pcall(events.RegisterEvent,events,"ITEM_DATA_LOAD_RESULT")
 events:SetScript("OnEvent",function(_,_,id,success)
- if not success or not Items.pending[id] then return end
+ if not Items.pending[id] then return end
  Items.pending[id]=nil
+ -- A failed load is not permanent; the next Resolve may retry.
+ if success==false then return end
  if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft.cachedLink=nil end
  if CraftRoster.ShoppingList then CraftRoster.ShoppingList:ScheduleRefresh() end
  local directory=CraftRoster.Directory
