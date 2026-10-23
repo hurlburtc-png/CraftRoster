@@ -13,6 +13,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: craftroster-release
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -39,7 +43,9 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add CraftRoster.zip
             git commit -m "Rebuild installable CraftRoster ZIP [skip ci]"
-            git push
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
 
       - name: Read addon version
