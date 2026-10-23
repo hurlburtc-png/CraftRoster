@@ -46,6 +46,9 @@ class ForeverClientReconciliationTests(unittest.TestCase):
                 "exact_forever_spell_output_unchecked"
             ])
             self.assertEqual(rows[0]["candidateCount"], 2)
+            self.assertEqual(rows[2]["suggestedOutput"], 100)
+            self.assertIn("Confirm catalogue", rows[2]["reviewAction"])
+            self.assertIsNone(rows[1]["suggestedOutput"])
 
 if __name__ == "__main__":
     unittest.main()
