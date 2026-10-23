@@ -40,13 +40,17 @@ end
 function Items:Click(entry)
  local _,link=self:Resolve(entry.itemID,entry.name)
  if link then
+  -- The dedicated whisper composer takes priority over stale active chat boxes.
+  -- Otherwise shopping-list clicks can insert into the wrong chat destination.
+  local composer=CraftRoster.WhisperComposer
+  if composer and composer.frame and composer.frame:IsShown() then
+   if composer:InsertMaterialLink(link) then return true end
+  end
   local active=ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow()
   if active then
    if ChatEdit_InsertLink then local ok,inserted=pcall(ChatEdit_InsertLink,link); if ok and inserted then return true end end
    if active.Insert then active:Insert(link); return true end
   end
-  local composer=CraftRoster.WhisperComposer
-  if composer and composer.frame and composer.frame:IsShown() then return composer:InsertMaterialLink(link) end
   if IsShiftKeyDown and IsShiftKeyDown() then
    if ChatEdit_InsertLink then local ok,inserted=pcall(ChatEdit_InsertLink,link); if ok and inserted then return true end end
    if ChatFrame_OpenChat then ChatFrame_OpenChat(link); return true end
