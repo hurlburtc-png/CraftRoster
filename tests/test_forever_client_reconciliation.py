@@ -43,7 +43,7 @@ class ForeverClientReconciliationTests(unittest.TestCase):
             self.assertEqual([r["status"] for r in rows], [
                 "exact_forever_spell_and_output_match",
                 "ambiguous_forever_spell",
-                "ambiguous_forever_spell"
+                "exact_forever_spell_output_unchecked"
             ])
             self.assertEqual(rows[0]["candidateCount"], 2)
 
