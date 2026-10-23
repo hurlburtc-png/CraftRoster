@@ -1,9 +1,13 @@
 name: Release CraftRoster
 
 on:
-  # ZIP builds are intentionally manual during development.
-  # Keep normal pushes covered by .github/workflows/tests.yml.
+  # ZIP builds run on explicit version changes or manual dispatch.
+  # Normal source pushes remain covered by .github/workflows/tests.yml.
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - CraftRoster.toc
 
 permissions:
   contents: write
