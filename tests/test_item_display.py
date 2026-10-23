@@ -24,6 +24,26 @@ CASES = {
  assert(addon.RecipeSources:GetMaterials(42)[1].name=='Peacebloom')
  assert(CraftRosterDB.recipes[42].materials[1].name=='Item 7','Do not overwrite saved scan data')
 ''',
+'item_load_failure_retries': '''
+ inventoryFixture(false,true)
+ local items=addon.ItemDisplay
+ items.pending={}
+ C_Item=C_Item or {}
+ local requests=0
+ C_Item.GetItemInfo=function() return nil end
+ C_Item.GetItemIconByID=function() return nil end
+ C_Item.RequestLoadItemDataByID=function(id) requests=requests+1 end
+ items:Resolve(777,'Item 777')
+ assert(items.pending[777] and requests==1)
+ dispatch('GET_ITEM_INFO_RECEIVED',777,false)
+ assert(items.pending[777]==nil)
+ items:Resolve(777,'Item 777')
+ assert(items.pending[777] and requests==2)
+ items.pending[777]=nil
+ C_Item.RequestLoadItemDataByID=nil
+ items:Resolve(778,'Item 778')
+ assert(items.pending[778]==nil)
+''',
 'active_native_whisper_takes_priority_over_auction_search': '''
  inventoryFixture(false,true); addon.ShoppingList:Open(42)
  AuctionFrame=CreateFrame(); BrowseName=CreateFrame(); BrowseName:SetText('unchanged')
