@@ -68,7 +68,13 @@ def main():
     result = reconcile(coverage, index)
     if len(result) != coverage["summary"]["catalogue"]:
         raise ValueError("Catalogue rows missing")
-    report = {"total": len(result), "foreverCoreSpells": len(index),
+    matched = sum(row["status"] == "exact_forever_spell_and_output_match" for row in result)
+    print(f"PROGRESS: {len(result)}/{len(result)} ({100.0 if result else 0.0:.1f}%) entries processed", flush=True)
+    print(f"CLIENT ID/OUTPUT MATCH: {matched}/{len(result)} ({100*matched/len(result) if result else 0:.1f}%)", flush=True)
+    print("FULLY FOREVER VERIFIED: 0 (acquisition/material verification not performed by this script)", flush=True)
+    report = {"total": len(result), "processed": len(result), "processedPercent": 100.0 if result else 0.0,
+              "clientMatched": matched, "clientMatchedPercent": round(100*matched/len(result),2) if result else 0,
+              "fullyVerified": 0, "foreverCoreSpells": len(index),
               "builds": builds, "statuses": dict(Counter(r["status"] for r in result)),
               "note": "Exact-ID client craft comparison only; not proof of acquisition, reagents or Forever server availability.",
               "recipes": result}
