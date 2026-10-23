@@ -2,12 +2,12 @@ local ADDON_NAME, CraftRoster = ...
 local Items = { pending = {} }
 CraftRoster.ItemDisplay = Items
 
--- Legacy clients expose the icon as the tenth GetItemInfo return value.
+-- GetItemInfo texture is return #10; pcall adds a leading success value.
 function Items:Resolve(id, fallback)
  local name,link,icon,quality
  local getInfo=C_Item and C_Item.GetItemInfo or GetItemInfo
  if id and type(getInfo)=="function" then
-  local ok,n,l,q,_,_,_,_,_,texture=pcall(getInfo,id)
+  local ok,n,l,q,_,_,_,_,_,_,texture=pcall(getInfo,id)
   if ok then name,link,icon,quality=n,l,texture,q end
  end
  local getIcon=C_Item and (C_Item.GetItemIconByID or C_Item.GetItemIcon) or GetItemIcon
