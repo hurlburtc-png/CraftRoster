@@ -135,10 +135,21 @@ def main():
          "status": row["status"]}
         for row in unresolved if row["profession"].lower() != "enchanting"
     ]
+    # These are review hints only: a name or profession is not proof of effect type.
+    for row in unresolved:
+        if row["name"].strip().lower() == row["profession"].strip().lower():
+            row["effectReviewHint"] = "possible_profession_skill_entry"
+        elif row["profession"].lower() == "enchanting":
+            row["effectReviewHint"] = "possible_direct_enchant_effect"
+        elif row["profession"].lower() == "engineering" and row["name"].lower().startswith("tinker:"):
+            row["effectReviewHint"] = "possible_tinker_effect"
+        else:
+            row["effectReviewHint"] = "inspect_spell_effect_or_item_creation"
+    report["effectReviewHints"] = dict(Counter(row["effectReviewHint"] for row in unresolved))
     args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     args.review_out.parent.mkdir(parents=True, exist_ok=True)
     with args.review_out.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified", "reviewAction", "suggestedOutput", "missingOutputEvidence", "reviewPriority"])
+        writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified", "reviewAction", "suggestedOutput", "missingOutputEvidence", "reviewPriority", "effectReviewHint"])
         writer.writeheader()
         writer.writerows(unresolved)
     print(f"REVIEW QUEUE: {len(unresolved)} entries written to {args.review_out}", flush=True)
