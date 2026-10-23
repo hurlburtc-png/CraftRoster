@@ -77,7 +77,11 @@ def reconcile(coverage, index):
                                         "Investigate conflicting crafted-item IDs" if status == "output_conflict" else
                                         "Disambiguate spell ID using profession and client evidence" if status == "ambiguous_forever_spell" else
                                         "Find matching Forever client spell and crafted output"),
-                       "suggestedOutput": found["output"] if found and not entry.get("output") else None})
+                       "suggestedOutput": found["output"] if found and not entry.get("output") else None,
+                       "missingOutputEvidence": ("both_catalogue_and_client" if not entry.get("output") and found and found["output"] is None else
+                                                 "catalogue_only" if not entry.get("output") and found and found["output"] is not None else
+                                                 "client_only" if entry.get("output") and found and found["output"] is None else
+                                                 "not_applicable")})
     return result
 
 def main():
@@ -107,14 +111,16 @@ def main():
     # Separate evidence-backed candidates from entries requiring manual investigation.
     review_counts = dict(Counter("client_output_available" if row["suggestedOutput"] is not None else "manual_evidence_needed" for row in unresolved))
     report["reviewCategories"] = review_counts
+    report["missingOutputEvidence"] = dict(Counter(row["missingOutputEvidence"] for row in unresolved))
     args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     args.review_out.parent.mkdir(parents=True, exist_ok=True)
     with args.review_out.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified", "reviewAction", "suggestedOutput"])
+        writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified", "reviewAction", "suggestedOutput", "missingOutputEvidence"])
         writer.writeheader()
         writer.writerows(unresolved)
     print(f"REVIEW QUEUE: {len(unresolved)} entries written to {args.review_out}", flush=True)
     print(f"REVIEW CATEGORIES: {json.dumps(review_counts, sort_keys=True)}", flush=True)
+    print(f"MISSING OUTPUT EVIDENCE: {json.dumps(report['missingOutputEvidence'], sort_keys=True)}", flush=True)
     print(json.dumps({k:v for k,v in report.items() if k != "recipes"}, indent=2))
 
 if __name__ == "__main__":
