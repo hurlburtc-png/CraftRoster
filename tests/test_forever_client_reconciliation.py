@@ -23,5 +23,29 @@ class ForeverClientReconciliationTests(unittest.TestCase):
                              ["exact_forever_spell_and_output_match","output_conflict","missing_exact_forever_spell"])
             self.assertTrue(all(not x["acquisitionVerified"] for x in rows))
 
+    def test_duplicate_spell_disambiguation_and_missing_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for filename, output in (("Cooking.lua", 100), ("Fishing.lua", 200)):
+                Path(tmp, filename).write_text(
+                    '-- build 1.60.1.69977\n'
+                    'lib:LoadCore(185, {\n'
+                    ' [2543] = {\n'
+                    ' ["craftedItemId"] = %d,\n'
+                    ' },\n'
+                    '})\n' % output, encoding="utf-8")
+            index, _ = records(Path(tmp))
+            self.assertEqual(len(index[2543]), 2)
+            rows = reconcile({"recipes": [
+                {"spellID":2543,"profession":"Cooking","name":"Matched","output":100},
+                {"spellID":2543,"profession":"Cooking","name":"Ambiguous","output":300},
+                {"spellID":2543,"profession":"Cooking","name":"Unknown output","output":None}
+            ]}, index)
+            self.assertEqual([r["status"] for r in rows], [
+                "exact_forever_spell_and_output_match",
+                "ambiguous_forever_spell",
+                "ambiguous_forever_spell"
+            ])
+            self.assertEqual(rows[0]["candidateCount"], 2)
+
 if __name__ == "__main__":
     unittest.main()
