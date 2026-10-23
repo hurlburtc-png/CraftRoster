@@ -1,9 +1,9 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — 0.8.0-beta.27**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.28**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-**Version:** `0.8.0-beta.26`  
-**Released:** pending GitHub release validation (Mountain time will be added after publication)
+**Version:** `0.8.0-beta.28`  
+**Released:** pending beta.28 release validation (America/Edmonton time will be added after publication)
 
 
 
