@@ -1,9 +1,9 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — 0.8.0-beta.26**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.27**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
 **Version:** `0.8.0-beta.26`  
-**Released:** October 23, 2026 at 4:08 PM MDT (Alberta time)
+**Released:** pending GitHub release validation (Mountain time will be added after publication)
 
 
 
