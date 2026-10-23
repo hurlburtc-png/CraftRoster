@@ -340,6 +340,14 @@ function View:RefreshSources()
  local height=Height(source.Text,text,column); source.Text:SetHeight(height)
  local y=height+32
  local locations=CraftRoster.RecipeLocations:Get(recipe.id)
+ -- Only create the map/copy controls when acquisition details are expanded.
+ -- Otherwise these controls consume the entire recipe pane on recipes with
+ -- multiple possible vendors or trainers.
+ if not self.sourcesExpanded then
+  for _,row in ipairs(self.locationRows) do row:Hide() end
+  self.sourceHeight=y+4; source:SetHeight(self.sourceHeight); source.Child:SetHeight(self.sourceHeight)
+  return
+ end
  for index,record in ipairs(locations) do
   local row=self.locationRows[index]
   if not row then
