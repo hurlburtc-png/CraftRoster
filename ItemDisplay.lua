@@ -18,8 +18,10 @@ function Items:Resolve(id, fallback)
   -- Only mark a request pending when the client actually accepts it.
   -- Legacy clients without an async loader must remain retryable.
   if C_Item and type(C_Item.RequestLoadItemDataByID)=="function" then
-   local ok=pcall(C_Item.RequestLoadItemDataByID,id)
-   if ok then self.pending[id]=true end
+   local ok,accepted=pcall(C_Item.RequestLoadItemDataByID,id)
+   -- A protected call can succeed even when the API explicitly rejects
+   -- the request. Do not permanently suppress retries in that case.
+   if ok and accepted~=false then self.pending[id]=true end
   end
  end
  if fallback and fallback:match("^Item %d+$") then fallback=nil end
