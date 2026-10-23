@@ -112,15 +112,22 @@ def main():
     review_counts = dict(Counter("client_output_available" if row["suggestedOutput"] is not None else "manual_evidence_needed" for row in unresolved))
     report["reviewCategories"] = review_counts
     report["missingOutputEvidence"] = dict(Counter(row["missingOutputEvidence"] for row in unresolved))
+    report["unresolvedByProfession"] = dict(sorted(Counter(row["profession"] for row in unresolved).items(), key=lambda pair: (-pair[1], pair[0])))
+    # An enchant or other direct spell effect may have no crafted item by design.
+    # Profession alone is only a triage hint, never proof of a missing output.
+    for row in unresolved:
+        row["reviewPriority"] = "inspect_non_item_effect" if row["profession"].lower() == "enchanting" else "inspect_client_recipe_effect"
+    report["reviewPriorities"] = dict(Counter(row["reviewPriority"] for row in unresolved))
     args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     args.review_out.parent.mkdir(parents=True, exist_ok=True)
     with args.review_out.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified", "reviewAction", "suggestedOutput", "missingOutputEvidence"])
+        writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified", "reviewAction", "suggestedOutput", "missingOutputEvidence", "reviewPriority"])
         writer.writeheader()
         writer.writerows(unresolved)
     print(f"REVIEW QUEUE: {len(unresolved)} entries written to {args.review_out}", flush=True)
     print(f"REVIEW CATEGORIES: {json.dumps(review_counts, sort_keys=True)}", flush=True)
     print(f"MISSING OUTPUT EVIDENCE: {json.dumps(report['missingOutputEvidence'], sort_keys=True)}", flush=True)
+    print(f"UNRESOLVED BY PROFESSION: {json.dumps(report['unresolvedByProfession'])}", flush=True)
     print(json.dumps({k:v for k,v in report.items() if k != "recipes"}, indent=2))
 
 if __name__ == "__main__":
