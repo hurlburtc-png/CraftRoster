@@ -236,7 +236,18 @@ function View:RefreshMaterials()
 			row:SetScript("OnClick",function(button) CraftRoster.ItemDisplay:Click(button.entry) end)
 		end
 		row.entry=entry
-		row.Icon:SetTexture(entry.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+		local icon=entry.icon
+		if entry.itemID and (not icon or icon=="Interface\\Icons\\INV_Misc_QuestionMark") then
+			if C_Item and C_Item.GetItemIconByID then
+				local ok,result=pcall(C_Item.GetItemIconByID,entry.itemID)
+				if ok and result then icon=result end
+			end
+			if (not icon or icon=="Interface\\Icons\\INV_Misc_QuestionMark") and GetItemIcon then
+				local ok,result=pcall(GetItemIcon,entry.itemID)
+				if ok and result then icon=result end
+			end
+		end
+		row.Icon:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 		local color=entry.owned and entry.owned>=entry.required and "|cff33ff66" or "|cffffd166"
 		local inline=column>=260
 		local count=color..tostring(entry.owned or "?").." / "..entry.required.."|r"
