@@ -249,15 +249,16 @@ function View:RefreshMaterials()
 		end
 		row.Icon:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 		local color=entry.owned and entry.owned>=entry.required and "|cff33ff66" or "|cffffd166"
-		local inline=column>=260
 		local count=color..tostring(entry.owned or "?").." / "..entry.required.."|r"
-		-- Keep bank details in the tooltip, rather than adding a second line
-		-- to every material in the compact recipe pane.
-		local text=(inline and entry.name or entry.name.."\n"..count)
-		row.Count:SetText(inline and count or "")
+		-- Reserve a fixed count column even on narrow panels. Wrapping the
+		-- quantity under the name made every material consume two lines.
+		-- The tooltip retains the full material name and inventory breakdown.
+		row.Count:SetText(count)
+		row.Count:SetWidth(76)
 		row.Label:ClearAllPoints(); row.Label:SetPoint("TOPLEFT",40,-2)
-		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",inline and -80 or 0,2)
-		local height=math.max(36,Height(row.Label,text,column-40-(inline and 80 or 0)))
+		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",-80,2)
+		row.Label:SetText(entry.name)
+		local height=36
 		row:SetSize(column,height); row:ClearAllPoints(); row:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",materialX,-y); row:Show()
 		y=y+height+2
 	end
