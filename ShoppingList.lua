@@ -229,6 +229,14 @@ function ShoppingList:GetMaterialStatus(recipeID, crafter)
 	local delivered=crafter and CraftRoster.Requests and CraftRoster.Requests:GetDeliveredMaterials(recipeID,crafter,self:GetQuantity(recipeID)) or {}
 	local snapshot=CraftRoster.BankMaterials:Snapshot()
 	for _,entry in ipairs(entries) do
+		-- Resolve live item metadata before drawing either the shopping list
+		-- or selected recipe. Saved recipe data may contain placeholder icons.
+		if CraftRoster.ItemDisplay and entry.itemID then
+			local name,link,icon=CraftRoster.ItemDisplay:Resolve(entry.itemID,entry.name)
+			if icon then entry.icon=icon end
+			if name and name~="Material loading…" then entry.name=name end
+			if link then entry.link=link end
+		end
 		entry.recipeRequired=entry.required
 		entry.crafterProvides=math.min(entry.required,contribution[entry.itemID or entry.name] or 0)
 		entry.delivered=math.min(entry.required-entry.crafterProvides,delivered[entry.itemID or entry.name] or 0)
