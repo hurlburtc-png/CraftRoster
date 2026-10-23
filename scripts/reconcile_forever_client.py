@@ -47,6 +47,8 @@ def reconcile(coverage, index):
             status = "output_conflict"
         elif entry.get("output") and not found["output"]:
             status = "missing_forever_output"
+        elif not entry.get("output"):
+            status = "exact_forever_spell_output_unchecked"
         else:
             status = "exact_forever_spell_and_output_match"
         result.append({"spellID": spell, "profession": entry["profession"],
