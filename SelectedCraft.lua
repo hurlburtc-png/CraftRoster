@@ -240,7 +240,9 @@ function View:RefreshMaterials()
 		local color=entry.owned and entry.owned>=entry.required and "|cff33ff66" or "|cffffd166"
 		local inline=column>=260
 		local count=color..tostring(entry.owned or "?").." / "..entry.required.."|r"
-		local text=(inline and entry.name or entry.name.."\n"..count).."\n"..CraftRoster.ShoppingList:BankSummary(entry,true)
+		local bank=CraftRoster.ShoppingList:BankSummary(entry,true)
+		local text=(inline and entry.name or entry.name.."\n"..count)
+		if bank and bank~="" then text=text.."\n"..bank end
 		row.Count:SetText(inline and count or "")
 		row.Label:ClearAllPoints(); row.Label:SetPoint("TOPLEFT",40,-2)
 		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",inline and -80 or 0,2)
