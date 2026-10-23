@@ -45,12 +45,6 @@ local SEARCH_WORD_ALIASES = {
 	mail = { "mail" },
 }
 
-local SEARCH_PHRASE_ALIASES = {
-	["mail chest"] = { "mail chest" },
-	["mail chest piece"] = { "mail chest" },
-	["wrist enchant"] = { "bracer" },
-	["bracer enchant"] = { "bracer" },
-}
 
 local SORT_MODES = { "name", "crafters", "profession" }
 local SORT_LABELS = {
@@ -61,27 +55,22 @@ local SORT_LABELS = {
 
 local sortMode = "name"
 
+local function NormalizeSearch(value)
+ value=tostring(value or ""):gsub("|H.-|h(.-)|h","%1"):gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")
+ return (value:lower():gsub("[%p]"," "):gsub("%s+"," "):gsub("^%s+",""):gsub("%s+$",""))
+end
 local function GetSearchTerms(search)
-	local terms = { search }
-
-	for phrase, expansions in pairs(SEARCH_PHRASE_ALIASES) do
-		if search:find(phrase, 1, true) then
-			for _, expansion in ipairs(expansions) do
-				table.insert(terms, expansion)
-			end
-		end
-	end
-
-	for word in search:gmatch("%a+") do
-		local expansions = SEARCH_WORD_ALIASES[word]
-		if expansions then
-			for _, expansion in ipairs(expansions) do
-				table.insert(terms, expansion)
-			end
-		end
-	end
-
-	return terms
+ local terms={}
+ local ignored={recipe=true,pattern=true,formula=true,schematic=true,plans=true,piece=true}
+ for word in search:gmatch("%S+") do
+  if not ignored[word] or not search:find(" ",1,true) then
+   local alternatives={word}
+   for _,alias in ipairs(SEARCH_WORD_ALIASES[word] or {}) do alternatives[#alternatives+1]=alias end
+   if word=="resist" then alternatives[#alternatives+1]="resistance" end
+   terms[#terms+1]=alternatives
+  end
+ end
+ return terms
 end
 
 local function DebouncedRefresh(method)
@@ -197,7 +186,7 @@ local function BuildRecipeIndex()
 				recipe = {
 					id = recipeID,
 					name = saved.name or GetRecipeName(recipeID),
-					searchName = (saved.name or GetRecipeName(recipeID)):lower(),
+					searchName = NormalizeSearch((saved.name or GetRecipeName(recipeID)).." "..profession),
 					profession = profession,
 					icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession),true)) or GetProfessionIcon(profession),
 					crafters = {},
@@ -214,7 +203,7 @@ local function BuildRecipeIndex()
 		if not index[recipeID] then
 			local profession = saved.profession or "Unknown"
 			index[recipeID] = { id = recipeID, name = saved.name or GetRecipeName(recipeID),
-				searchName = (saved.name or GetRecipeName(recipeID)):lower(), profession = profession,
+				searchName = NormalizeSearch((saved.name or GetRecipeName(recipeID)).." "..profession), profession = profession,
 				icon = (CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetRecipeIcon(recipeID, GetProfessionIcon(profession),true)) or GetProfessionIcon(profession), crafters = {} }
 		end
 	end
@@ -331,7 +320,7 @@ local function BindRecipeLinks(row,recipeID)
 			row.CraftLink=CreateRecipeLinkButton(row,"craft"); row.CraftLink:SetPoint("TOPLEFT",row.Icon,"TOPLEFT",0,0)
 		end
 		row.RecipeLink.recipeID=recipeID; row.CraftLink.recipeID=recipeID
-		local width=math.max(24,row:GetWidth()-63)
+		local width=math.max(24,row:GetWidth()-63-(row.rightReserved or 0))
 		row.RecipeLink:SetWidth(width); row.CraftLink:SetSize(32,32)
 		UpdateLinkDisplay(row.RecipeLink); row.CraftLink:SetText("")
 		row.RightLabel:ClearAllPoints(); row.RightLabel:SetPoint("TOPRIGHT",row,"TOPRIGHT",-10,-5)
@@ -441,6 +430,7 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			 if outer then row:EnableMouseWheel(true); row:SetScript("OnMouseWheel",function(_,delta) CraftRoster.SelectedCraft:Scroll(delta) end) end
 			end
 			row:ClearAllPoints()
+   if row.IsMouseOver and row:IsMouseOver() then GameTooltip:Hide() end
 			row.listClick, row.listEntry = nil, nil
 			row.materials, row.tooltipLines, row.hyperlink = nil, nil, nil
 			row:SetBackdropColor(0, 0, 0, 0.30)
@@ -461,7 +451,8 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			 row.Icon:SetTexture(icon or "Interface\\Icons\\Trade_Tailoring")
 			end
 			local rightWidth = entry.rightText and entry.rightText ~= "" and math.max(30, math.min(120, width * 0.35)) or 0
-			row.Label:SetWidth(math.max(1, width - (entry.recipe and 67 or 59) - rightWidth))
+			row.rightReserved=rightWidth
+   row.Label:SetWidth(math.max(1, width - (entry.recipe and 67 or 59) - rightWidth))
 			row.Label:SetText(entry.text or "")
 			row.RightLabel:SetWidth(math.max(1, rightWidth))
 			row.RightLabel:SetText(entry.rightText or "")
@@ -800,6 +791,7 @@ function Directory:Initialize()
 	source:Hide()
 	if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft:Initialize(professionsTab) end
 
+
 	local playersTab = CreateTab("PlayersTab")
 	playersTab.SearchBox = CreateFrame("EditBox", nil, playersTab, "SearchBoxTemplate")
 	playersTab.SearchBox:SetSize(260, 24)
@@ -853,26 +845,28 @@ end
 
 local function BuildProfessionEntries()
 	local tab = Directory.frame.ProfessionsTab
-	local search = (tab.SearchBox:GetText() or ""):lower()
+	local search = NormalizeSearch(tab.SearchBox:GetText())
 	local cacheKey = search .. "\001" .. (Directory.selectedProfession or "All") .. "\001" .. sortMode
 		.. tostring(CraftRosterDB.settings.favoritesOnly)
 	if Directory.professionCache and Directory.professionCache.key == cacheKey then return Directory.professionCache.entries end
-	local searchTerms = GetSearchTerms(search)
+	if Directory.lastQueryKey~=cacheKey then tab.Results:SetVerticalScroll(0);Directory.lastQueryKey=cacheKey end
+ local searchTerms = GetSearchTerms(search)
 	local matching = {}
 
 	for _, recipe in ipairs(GetRecipeIndex()) do
 		local professionOK = Directory.selectedProfession == "All" or recipe.profession == Directory.selectedProfession
 		local searchOK = search == ""
 
-		if not searchOK then
-			local recipeName = recipe.searchName
-			for _, term in ipairs(searchTerms) do
-				if recipeName:find(term, 1, true) then
-					searchOK = true
-					break
-				end
-			end
-		end
+  if not searchOK then
+   searchOK=true
+   for _,alternatives in ipairs(searchTerms) do
+    local found=false
+    for _,term in ipairs(alternatives) do
+     if recipe.searchName:find(term,1,true) or tostring(recipe.id)==term then found=true;break end
+    end
+    if not found then searchOK=false;break end
+   end
+  end
 
 		if professionOK and searchOK and (not CraftRosterDB.settings.favoritesOnly or (CraftRosterDB.favorites or {})[recipe.id]) then
 			table.insert(matching, recipe)
@@ -890,6 +884,27 @@ local function BuildProfessionEntries()
 		return a.name < b.name
 	end)
 
+ local groups,grouped={},{}
+ for _,recipe in ipairs(matching) do
+  local key=recipe.profession.."\001"..recipe.searchName
+  if not groups[key] then groups[key]={};grouped[#grouped+1]=groups[key] end
+  groups[key][#groups[key]+1]=recipe
+ end
+ matching={}
+ local player=GetCharacterKey()
+ for _,versions in ipairs(grouped) do
+  if #versions>1 then table.sort(versions,function(a,b) return a.id>b.id end) end
+  local chosen=versions[1]
+  for _,version in ipairs(versions) do
+   if #version.crafters>0 then chosen=version;break end
+  end
+  for _,version in ipairs(versions) do
+   for _,crafter in ipairs(version.crafters) do if crafter==player then chosen=version end end
+   version.versions=#versions>1 and versions or nil
+  end
+  for _,version in ipairs(versions) do if Directory.selectedRecipe and Directory.selectedRecipe.id==version.id then chosen=version end end
+  matching[#matching+1]=chosen
+ end
 	local entries = {}
 	local lastProfession = nil
 
@@ -908,7 +923,7 @@ local function BuildProfessionEntries()
 			id = recipe.id,
 			text = recipe.name,
 			icon = recipe.icon,
-			rightText = #recipe.crafters == 0 and "No crafter" or ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
+			rightText = recipe.versions and (#recipe.versions.." versions") or #recipe.crafters == 0 and "No crafter" or ("%d crafter%s"):format(#recipe.crafters, #recipe.crafters == 1 and "" or "s"),
 			-- Native item links and icons are resolved only for visible rows.
 			recipe = recipe,
 		})

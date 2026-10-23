@@ -207,7 +207,7 @@ end
 function Theme:LayoutDirectory(frame)
 	local tab=frame.ProfessionsTab
 	local width=tab:GetWidth()
-	local left=math.max(254, math.floor(width*0.34))
+	local left=math.max(228,math.min(280,math.floor(width*0.27)))
 	tab.CatalogueWidth=left
 	tab.CataloguePanel:ClearAllPoints()
 	tab.CataloguePanel:SetPoint("TOPLEFT",tab,"TOPLEFT",4,0)
@@ -215,20 +215,25 @@ function Theme:LayoutDirectory(frame)
 	tab.SearchBox:ClearAllPoints(); tab.SearchBox:SetPoint("TOPLEFT",18,-12)
 	tab.SearchBox:SetSize(left-28,26)
 	tab.Dropdown:ClearAllPoints(); tab.Dropdown:SetPoint("TOPLEFT",0,-46)
-	UIDropDownMenu_SetWidth(tab.Dropdown,left-120)
+	-- Native dropdown caps extend beyond the text width. Reserve that chrome
+ -- so the refresh button does not sit on top of its arrow/hit rectangle.
+ UIDropDownMenu_SetWidth(tab.Dropdown,math.max(78,left-150))
+ tab.Dropdown:SetWidth(left-110);tab.Dropdown:SetHeight(32)
 	if tab.CraftRosterRefreshButton then
 		tab.CraftRosterRefreshButton:ClearAllPoints()
 		tab.CraftRosterRefreshButton:SetPoint("TOPLEFT",left-92,-48)
 		tab.CraftRosterRefreshButton:SetSize(78,26)
 	end
-	tab.SortButton:ClearAllPoints(); tab.SortButton:SetPoint("TOPLEFT",16,-84); tab.SortButton:SetSize(108,24)
-	tab.FavoritesCheck:ClearAllPoints(); tab.FavoritesCheck:SetPoint("TOPLEFT",128,-80)
+	tab.SortButton:ClearAllPoints(); tab.SortButton:SetPoint("TOPLEFT",16,-84); tab.SortButton:SetSize(100,24)
+	tab.FavoritesCheck:ClearAllPoints(); tab.FavoritesCheck:SetPoint("TOPLEFT",120,-80)
 	tab.FavoritesCheck.Text:SetText("Favorites")
 	tab.Results:ClearAllPoints(); tab.Results:SetPoint("TOPLEFT",14,-118)
 	tab.Results:SetPoint("BOTTOMRIGHT",tab,"BOTTOMLEFT",left-22,14)
 	tab.SelectedCraftScroll:ClearAllPoints()
 	tab.SelectedCraftScroll:SetPoint("TOPLEFT",tab,"TOPLEFT",left+18,-4)
-	tab.SelectedCraftScroll:SetPoint("BOTTOMRIGHT",tab,"BOTTOMRIGHT",-28,108)
+	local actionHeight=(width-left-46)>=520 and 60 or 90
+ tab.SelectedCraftScroll:SetPoint("BOTTOMRIGHT",tab,"BOTTOMRIGHT",-28,actionHeight+18)
+ for _,scroll in ipairs({tab.Results,tab.SelectedCraftScroll}) do if scroll.SetClipsChildren then scroll:SetClipsChildren(true) end end
 	tab.ActionBar:ClearAllPoints()
 	tab.ActionBar:SetPoint("TOPLEFT",tab.SelectedCraftScroll,"BOTTOMLEFT",0,-6)
 	tab.ActionBar:SetPoint("BOTTOMRIGHT",tab,"BOTTOMRIGHT",-28,12)

@@ -211,3 +211,44 @@ During normal release reviews, recheck cited Classic evidence when extending or
 changing this subset. Daily upstream monitoring remains focused on Forever;
 it does not auto-import or approve Classic facts. Publish reviewed corrections
 in the normal install ZIP. All beta 19 navigation safeguards remain in force.
+
+
+## Beta 21 usability corrections
+
+The main pane uses a short acquisition summary by default; expanding "Where to
+get it" retains the full source record, additional examples, dates and URLs.
+Summaries keep the Classic/unverified warning next to the information. Raw
+numeric vendor names are not presented as identities, and opaque native
+`Vendor: <ID>` text becomes an explicit details-unavailable message. Missing
+names or positions remain unknown.
+
+Ten additional exact Classic spell/item pairs have named vendor examples with
+coordinates from the same pinned QuestieDB Classic item/NPC tables cited above:
+7443/6342, 7793/6349, 13419/11039, 13536/11101, 13646/11163, 13931/11223,
+20015/16224, 20017/16217, 20026/16221 and 20051/16243. These are small factual
+examples, not copied Questie code or an exhaustive vendor catalogue. Faction
+filtering and reference-only navigation safeguards remain unchanged. The
+curated Classic reference set now covers 20 exact recipe/item pairs.
+
+Same-name recipes in the same profession are grouped in the directory as
+selectable versions. No different spell IDs are deleted, aliased as learned,
+or combined into another version's materials/source/ownership. Each version
+remains selectable; the default favours a locally learned version, then a
+known guild version, then the highest available ID without declaring an older
+one obsolete. Legacy string/numeric keys for the SAME spell ID are normalized,
+retaining metadata. Name grouping is a presentation feature, not evidence that
+the versions are interchangeable.
+
+Search normalizes whitespace, punctuation, case and pasted WoW link text; all
+query terms must match, with alternatives such as wrist/bracer within a term.
+A changed query resets the results scroll position. The layout has one owner
+in Theme.lua, a narrower catalogue column, compact source/material content,
+clipped viewports and adaptive action-bar height. Typical three-material,
+two-crafter recipes fit at default dimensions; smaller windows, large material
+lists and expanded provenance still scroll together. Geometry and mocks do not
+replace checking actual client fonts, clipping and native template behavior
+in game.
+
+"Clear list" removes the active recipe/crafter and prevents an inventory event
+or relog from restoring it. It retains per-recipe craft quantities, contribution
+settings and delivery history; those belong to separate crafting workflows.

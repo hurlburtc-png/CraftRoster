@@ -14,6 +14,9 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Classic fallback:** When Forever acquisition details are unknown, sourced Classic examples can show mobs, vendors, locations, coordinates and approximate drop rates. Every fallback is labelled unconfirmed in Forever; reference coordinates cannot create map markers. Confirmed Forever details take priority.
 
+
+**Latest usability fixes:** Clear the active shopping list with **Clear list**. Search matches all entered words, including aliases such as wrist/bracer. Same-name recipes share one result with a **Version** selector; each version keeps its own crafters, materials and sources. The selected-recipe pane uses more width and shows a short source overview; expand it for full details. Ten Enchanting recipes now include named Classic vendor examples and sourced coordinates, clearly unconfirmed for Forever.
+
 ## Install
 
 1. Download **CraftRoster.zip** above, rather than GitHub’s **Code → Download ZIP**.

@@ -54,6 +54,24 @@ recipe(7259,6057,{
  vendor(5594,"Alchemist Pestlezugg","Tanaris",50.89,26.96,"Neutral"),
  vendor(8157,"Logannas","Feralas",32.67,44.03,"Alliance"),
  vendor(8158,"Bronk","Feralas",76.06,43.28,"Horde")})
+-- Enchanting vendor examples use the same pinned Classic item/NPC evidence.
+local dalria=vendor(3954,"Dalria","Ashenvale",35.12,52.12,"Alliance")
+local kulwia=vendor(12043,"Kulwia","Stonetalon Mountains",45.39,59.33,"Horde")
+local mythrin=vendor(4229,"Mythrin'dir","Darnassus",60.96,17.67,"Alliance")
+local lorelae=vendor(12022,"Lorelae Wintersong","Moonglade",48.24,40.14,"Neutral")
+recipe(7443,6342,{vendor(1318,"Jessara Cordell","Stormwind City",42.81,64.39,"Alliance"),
+ vendor(3346,"Kithas","Orgrimmar",53.88,38.02,"Horde")})
+recipe(7793,6349,{vendor(5158,"Tilli Thistlefuzz","Ironforge",61.03,44,"Alliance"),
+ vendor(3012,"Nata Dawnstrider","Thunder Bluff",44.99,38.75,"Horde")})
+recipe(13419,11039,{dalria,kulwia})
+recipe(13536,11101,{dalria,kulwia})
+recipe(13646,11163,{vendor(2381,"Micha Yance","Hillsbrad Foothills",48.94,55.03,"Alliance"),
+ vendor(2821,"Keena","Arathi Highlands",74.09,32.73,"Horde")})
+recipe(13931,11223,{mythrin,vendor(989,"Banalash","Swamp of Sorrows",44.77,56.63,"Horde")})
+recipe(20015,16224,{lorelae})
+recipe(20017,16217,{mythrin,vendor(4561,"Daniel Bartlett","Undercity",64.05,37.37,"Horde")})
+recipe(20026,16221,{vendor(11189,"Qia","Winterspring",61.2,37.21,"Neutral")})
+recipe(20051,16243,{lorelae})
 local kinds={mob="Mob",boss="Boss",vendor="Vendor",trainer="Trainer",quest="Quest"}
 local function text(value) return type(value)=="string" and value~="" end
 local function id(value) return type(value)=="number" and value>0 and value<2147483647 and value==math.floor(value) end
@@ -85,7 +103,7 @@ function Classic:ForeverRate(location)
   or not rate.checked:match("^%d%d%d%d%-%d%d%-%d%d$") then return nil end
  return rate.percent
 end
-function Classic:Format(recipeID,itemID,locations,compact)
+function Classic:Format(recipeID,itemID,locations,compact,summary)
  local record=self:Get(recipeID,itemID)
  if not record then return nil end
  local confirmed,matching={},{}
@@ -113,9 +131,9 @@ function Classic:Format(recipeID,itemID,locations,compact)
  end
  if #entries==0 then return nil end
  local lines={"|cffffd100Classic reference — unconfirmed in Forever|r"}
- if record.examples then lines[#lines+1]="Source examples, not a complete source list." end
+ if record.examples and not summary then lines[#lines+1]="Source examples, not a complete source list." end
  local hasDrops=false
- local limit=compact and 2 or 12
+ local limit=summary and 1 or (compact and 2 or 12)
  for index,entry in ipairs(entries) do
   if index>limit then break end
   local source=entry.source
@@ -125,7 +143,7 @@ function Classic:Format(recipeID,itemID,locations,compact)
    lines[#lines+1]="Classic location: "..source.zone..(source.instance and " (instance)" or "")
    if percent(source.x) and percent(source.y) and evidence(source.coordinateURL) then
     lines[#lines+1]="Classic coordinates: "..source.x..", "..source.y..(source.area and " (spawn area)" or "")
-   else lines[#lines+1]="Classic coordinates: unknown" end
+   elseif not summary then lines[#lines+1]="Classic coordinates: unknown" end
    if text(source.faction) then lines[#lines+1]="Classic availability: "..source.faction end
    if source.kind=="trainer" then lines[#lines+1]="Classic training skill: "..source.profession.." "..source.requiredSkill end
    if text(source.requirements) then lines[#lines+1]="Classic requirements: "..source.requirements end
@@ -134,18 +152,18 @@ function Classic:Format(recipeID,itemID,locations,compact)
    lines[#lines+1]=percent(source.chance) and ("Classic drop estimate: ~%.2f%% per kill (%s)"):format(source.chance,source.name)
     or "Classic drop estimate: unknown"
   end
-  lines[#lines+1]="Source: "..(text(source.provider) and source.provider or "Classic database").." · checked "..(text(source.checked) and source.checked or (text(record.checked) and record.checked or "date unknown"))
+  if not summary then lines[#lines+1]="Source: "..(text(source.provider) and source.provider or "Classic database").." · checked "..(text(source.checked) and source.checked or (text(record.checked) and record.checked or "date unknown")) end
   if not compact then
    if text(source.coordinateChecked) then lines[#lines+1]="Coordinates checked: "..source.coordinateChecked end
    lines[#lines+1]=source.url
    if evidence(source.coordinateURL) and source.coordinateURL~=source.url then lines[#lines+1]="Coordinates: "..source.coordinateURL end
   end
  end
- if #entries>limit then lines[#lines+1]="and "..(#entries-limit).." more Classic references (expand for details)." end
- if #confirmed==0 then
+ if #entries>limit and not summary then lines[#lines+1]="and "..(#entries-limit).." more Classic references (expand for details)." end
+ if not summary and #confirmed==0 then
   lines[#lines+1]=hasDrops and "Forever location and drop rate: unknown." or "Forever location: unknown."
   lines[#lines+1]=hasDrops and "Classic estimate - Forever source/rate unconfirmed." or "Classic source — Forever availability unconfirmed."
- else lines[#lines+1]="Forever location confirmed; Forever drop rate unknown." end
- lines[#lines+1]="Classic reference navigation is disabled."
+ elseif not summary then lines[#lines+1]="Forever location confirmed; Forever drop rate unknown." end
+ if not summary then lines[#lines+1]="Classic reference navigation is disabled." end
  return table.concat(lines,"\n")
 end

@@ -105,7 +105,29 @@ function Sources:GetRecipeIcon(recipeID,fallback,cachedOnly)
  return fallback
 end
 
+function Sources:NormalizeRecipeKeys()
+ local function normalize(rows)
+  if type(rows)~="table" then return end
+  local changes={}
+  for key,value in pairs(rows) do
+   local id=type(key)=="string" and tonumber(key)
+   if id and id>0 and id==math.floor(id) then changes[#changes+1]={key,id,value} end
+  end
+  for _,change in ipairs(changes) do
+   local old,id,value=change[1],change[2],change[3]
+   if rows[id]==nil then rows[id]=value
+   elseif type(rows[id])=="table" and type(value)=="table" then
+    for field,detail in pairs(value) do if rows[id][field]==nil then rows[id][field]=detail end end
+   end
+   rows[old]=nil
+  end
+ end
+ normalize(CraftRosterDB.recipes)
+ for _,character in pairs(CraftRosterDB.characters or {}) do normalize(character.recipes) end
+end
+
 function Sources:SeedCatalog()
+ self:NormalizeRecipeKeys()
 	local changed = false
 	-- Import the bundled catalogue locally; never claim that a character knows it.
 	if not self.catalogLoaded then
@@ -197,7 +219,8 @@ function Sources:Format(recipeID, data, compact)
   or (CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:HasTrainerData(recipeID))
  -- Free-form text cannot be faction-filtered safely for trainer recipes.
  if saved.sourceText and not hasTrainers and not hasConfirmed then
-		table.insert(lines, saved.sourceText)
+		local native=saved.sourceText:gsub("([Vv]endor%s*:%s*)%d+", "%1name unavailable (source details not recorded)")
+  table.insert(lines,native)
 	end
  if #locations>0 then
   for _,location in ipairs(locations) do
@@ -231,7 +254,7 @@ function Sources:Format(recipeID, data, compact)
 				for index,source in ipairs(list) do
 					if index>limit then break end
 					if type(source)=="table" then
-						table.insert(lines,labels[kind]..": "..(type(source.name)=="string" and source.name or "Name unavailable"))
+						table.insert(lines,labels[kind]..": "..(type(source.name)=="string" and not source.name:match("^%s*%d+%s*$") and source.name or "Name unavailable — source details not recorded"))
 					end
 				end
 				if total>math.min(limit,#list) then table.insert(lines,"and "..(total-math.min(limit,#list)).." more (database examples are capped).") end
@@ -277,6 +300,45 @@ function Sources:Format(recipeID, data, compact)
 	end
 	if saved.description then table.insert(lines, "\n" .. saved.description) end
 	return table.concat(lines, "\n")
+end
+
+-- Keep the acquisition overview useful on the main pane. Full provenance,
+-- secondary sources and unknown-field explanations remain one click away.
+function Sources:Summary(recipeID)
+ local data=self:Get(recipeID)
+ local locations=CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:Get(recipeID) or {}
+ local lines={}
+ if #locations>0 then
+  lines[#lines+1]=CraftRoster.RecipeLocations:Label(locations[1])
+  if locations[1].source and not locations[1].confirmed then lines[#lines+1]=locations[1].source.." reference" end
+  local rate=CraftRoster.ClassicSources and CraftRoster.ClassicSources:ForeverRate(locations[1])
+  if rate~=nil then lines[#lines+1]=("Forever drop chance: %.2f%% per kill"):format(rate)
+  elseif locations[1].confirmed and CraftRoster.ClassicSources then
+   local estimate=CraftRoster.ClassicSources:Format(recipeID,data.itemID,locations,true,true)
+   if estimate then lines[#lines+1]=estimate end
+  end
+  if #locations>1 then lines[#lines+1]="More locations in source details." end
+  return table.concat(lines,"\n")
+ end
+ local classic=CraftRoster.ClassicSources and CraftRoster.ClassicSources:Format(recipeID,data.itemID,{},true,true)
+ if classic then return classic end
+ local full=self:Format(recipeID,data,true)
+ for line in full:gmatch("[^\n]+") do
+  if not line:find("Where to get it",1,true) and not line:find("sources:",1,true)
+   and not line:find("Source:",1,true) and not line:find("Coordinates unavailable",1,true)
+   and not line:find("Provenance:",1,true) and not line:find("Additional database",1,true) then
+   lines[#lines+1]=line
+  end
+ end
+ if #lines>6 then
+  local brief={}
+  for index=1,5 do brief[index]=lines[index] end
+  brief[6]="More sources and provenance in source details."
+  -- A compact display must never drop the provenance warning below the cut.
+  if full:find("reference",1,true) then brief[#brief+1]="Database reference — unconfirmed in Forever." end
+  return table.concat(brief,"\n")
+ end
+ return table.concat(lines,"\n")
 end
 
 local frame = CreateFrame("Frame")

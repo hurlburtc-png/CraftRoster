@@ -271,8 +271,10 @@ end
 function ShoppingList:Refresh()
 	local state = GetState()
 	if not state or not self.frame or not self.frame:IsShown() then return end
-	local recipe = CraftRosterDB.recipes[state.recipeID]
-	local title = (recipe and recipe.name or ("Recipe " .. tostring(state.recipeID))) .. " · " .. self:GetQuantity(state.recipeID) .. (self:GetQuantity(state.recipeID) == 1 and " craft" or " crafts")
+	if not state.recipeID then self:Clear();return end
+ self.frame.Clear:SetEnabled(true)
+ local recipe = CraftRosterDB.recipes[state.recipeID]
+ local title = (recipe and recipe.name or ("Recipe " .. tostring(state.recipeID))) .. " · " .. self:GetQuantity(state.recipeID) .. (self:GetQuantity(state.recipeID) == 1 and " craft" or " crafts")
 	if state.crafter then title = title .. "\nCrafter: " .. state.crafter end
 	self.frame.Recipe:SetText(title)
 	local entries,ready,unavailable=self:GetMaterialStatus(state.recipeID,state.crafter)
@@ -284,7 +286,7 @@ function ShoppingList:Refresh()
 		self.frame.Message:Hide()
 		self.frame.Summary:SetText(unavailable and "Inventory counts unavailable" or ("%d of %d materials ready in bags"):format(ready,#entries))
 	end
-	self.frame:SetHeight(math.min(312, math.max(160, 130 + #self.entries * ROW_HEIGHT)))
+	self.frame:SetHeight(math.min(312, math.max(160, 144 + #self.entries * ROW_HEIGHT)))
 	self.frame.Content:SetHeight(math.max(1, #self.entries * ROW_HEIGHT))
 	self:DrawRows()
 end
@@ -295,6 +297,24 @@ function ShoppingList:ScheduleRefresh()
 	if C_Timer and C_Timer.NewTimer then
 		refreshTimer = C_Timer.NewTimer(0.1, function() refreshTimer = nil; self:Refresh() end)
 	else self:Refresh() end
+end
+
+function ShoppingList:Clear()
+ local state=GetState()
+ if not state then return false end
+ state.recipeID=nil;state.crafter=nil;state.visible=false
+ -- Clearing the active list does not change craft quantities, deliveries or
+ -- saved contributions, which belong to craft/request workflows.
+ self.entries={}
+ if refreshTimer then refreshTimer:Cancel();refreshTimer=nil end
+ if self.frame then
+  for _,row in ipairs(self.frame.Rows or {}) do row:Hide() end
+  self.frame.Scroll:SetVerticalScroll(0);self.frame.Content:SetHeight(1)
+  self.frame.Recipe:SetText("Shopping list is empty")
+  self.frame.Summary:SetText("");self.frame.Message:SetText("Choose a recipe to start a new list.");self.frame.Message:Show()
+  self.frame.Clear:SetEnabled(false)
+ end
+ return true
 end
 
 function ShoppingList:Close()
@@ -336,7 +356,7 @@ function ShoppingList:Initialize()
 	frame.Close:SetSize(22, 22); frame.Close:SetPoint("TOPRIGHT", -2, -2)
 	frame.Close:SetScript("OnClick", function() self:Close() end)
 	frame.Scroll = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
-	frame.Scroll:SetPoint("TOPLEFT", 12, -78); frame.Scroll:SetPoint("BOTTOMRIGHT", -28, 42)
+	frame.Scroll:SetPoint("TOPLEFT", 12, -78); frame.Scroll:SetPoint("BOTTOMRIGHT", -28, 56)
 	frame.Content = CreateFrame("Frame", nil, frame.Scroll)
 	frame.Content:SetSize(296, 1); frame.Scroll:SetScrollChild(frame.Content)
 	frame.Rows = {}
@@ -345,10 +365,14 @@ function ShoppingList:Initialize()
 	frame.Message = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	frame.Message:SetPoint("TOPLEFT", 12, -80); frame.Message:SetWidth(296)
 	frame.Summary = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	frame.Summary:SetPoint("BOTTOMLEFT", 12, 24)
+	frame.Summary:SetPoint("BOTTOMLEFT", 12, 34);frame.Summary:SetWidth(296)
+ frame.Clear=CreateFrame("Button",nil,frame,"UIPanelButtonTemplate")
+ frame.Clear:SetSize(82,22);frame.Clear:SetPoint("BOTTOMRIGHT",-12,6);frame.Clear:SetText("Clear list")
+ CraftRoster.Theme:Button(frame.Clear)
+ frame.Clear:SetScript("OnClick",function() self:Clear() end)
 	frame.Hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	frame.Hint:SetPoint("BOTTOMLEFT", 12, 8)
-	frame.Hint:SetText("Click: chat / AH · Right: crafter share")
+	frame.Hint:SetPoint("BOTTOMLEFT", 12, 10);frame.Hint:SetWidth(202)
+	frame.Hint:SetText("Click: chat / AH · Right: share")
 	frame:SetScript("OnEvent", function() self:ScheduleRefresh() end)
 	frame:SetScript("OnHide", function()
 		frame:UnregisterAllEvents()

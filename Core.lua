@@ -19,6 +19,7 @@ Core:SetScript("OnEvent", function(self, event, loadedAddon)
 		end
 		CraftRosterDB.characters = CraftRosterDB.characters or {}
 		CraftRosterDB.recipes = CraftRosterDB.recipes or {}
+  if CraftRoster.RecipeSources then CraftRoster.RecipeSources:NormalizeRecipeKeys() end
 
 		if CraftRoster.ErrorReporter then CraftRoster.ErrorReporter:Restore() end
 
