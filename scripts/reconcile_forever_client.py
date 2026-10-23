@@ -72,7 +72,12 @@ def reconcile(coverage, index):
                        "foreverOutput": found["output"] if found else None,
                        "sourceFile": found["sourceFile"] if found else None,
                        "sourceBuild": found["sourceBuild"] if found else None,
-                       "candidateCount": len(candidates), "status": status, "acquisitionVerified": False})
+                       "candidateCount": len(candidates), "status": status, "acquisitionVerified": False,
+                       "reviewAction": ("Confirm catalogue crafted-item ID against the Forever client output" if status == "exact_forever_spell_output_unchecked" else
+                                        "Investigate conflicting crafted-item IDs" if status == "output_conflict" else
+                                        "Disambiguate spell ID using profession and client evidence" if status == "ambiguous_forever_spell" else
+                                        "Find matching Forever client spell and crafted output"),
+                       "suggestedOutput": found["output"] if found and not entry.get("output") else None})
     return result
 
 def main():
@@ -102,7 +107,7 @@ def main():
     unresolved = [row for row in result if row["status"] != "exact_forever_spell_and_output_match"]
     args.review_out.parent.mkdir(parents=True, exist_ok=True)
     with args.review_out.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified"])
+        writer = csv.DictWriter(f, fieldnames=["spellID", "profession", "name", "catalogueOutput", "foreverOutput", "sourceFile", "sourceBuild", "candidateCount", "status", "acquisitionVerified", "reviewAction", "suggestedOutput"])
         writer.writeheader()
         writer.writerows(unresolved)
     print(f"REVIEW QUEUE: {len(unresolved)} entries written to {args.review_out}", flush=True)
