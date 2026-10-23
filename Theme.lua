@@ -26,7 +26,7 @@ function Theme:PaintPanel(panel,palette)
 	panel:SetBackdrop({bgFile=p.texture or "Interface\\Tooltips\\UI-Tooltip-Background",
 		edgeFile=p.edge or "Interface\\Tooltips\\UI-Tooltip-Border",edgeSize=p.edge and 20 or 12,
 		insets={left=3,right=3,top=3,bottom=3}})
-	panel:SetBackdropColor(p.background[1],p.background[2],p.background[3],p.key=="contrast" and 1 or 0.98)
+	panel:SetBackdropColor(p.background[1],p.background[2],p.background[3],1)
 	panel:SetBackdropBorderColor(p.border[1],p.border[2],p.border[3],0.95)
 	if p.icon and not panel.ThemeMark then
 		panel.ThemeMark=panel:CreateTexture(nil,"BACKGROUND")
@@ -237,7 +237,7 @@ function Theme:LayoutDirectory(frame)
  tab.SelectedCraftScroll:SetPoint("BOTTOMRIGHT",tab,"BOTTOMRIGHT",-28,actionHeight+18)
  for _,scroll in ipairs({tab.Results,tab.SelectedCraftScroll}) do if scroll.SetClipsChildren then scroll:SetClipsChildren(true) end end
 	tab.ActionBar:ClearAllPoints()
-	tab.ActionBar:SetPoint("TOPLEFT",tab.SelectedCraftScroll,"BOTTOMLEFT",0,-6)
+	tab.ActionBar:SetPoint("TOPLEFT",tab.SelectedCraftScroll,"BOTTOMLEFT",0,0)
 	tab.ActionBar:SetPoint("BOTTOMRIGHT",tab,"BOTTOMRIGHT",-28,12)
 
 	local gap=4
@@ -257,7 +257,11 @@ function Theme:Directory(frame)
 	self:Window(frame,title)
 	local tab=frame.ProfessionsTab
 	tab.CataloguePanel=self:Panel(tab)
-	tab.ActionBar=CreateFrame("Frame",nil,tab)
+	tab.ActionBar=CreateFrame("Frame",nil,tab,BackdropTemplateMixin and "BackdropTemplate" or nil)
+ -- Footer is above scroll descendants and paints its own opaque background.
+ -- This also protects clients whose frame clipping differs from our mocks.
+ tab.ActionBar:SetFrameLevel(tab.SelectedCraftScroll:GetFrameLevel()+20)
+ self:TrackPanel(tab.ActionBar)
 	self:TrackPanel(tab.Details)
 	self:Heading(tab.DetailsName)
 	for _,spec in ipairs({{"ShoppingButton","Shopping List",function() CraftRoster.ShoppingList:Toggle() end},

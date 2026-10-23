@@ -36,8 +36,11 @@ local function Text(parent)
 	return label
 end
 local function Height(label,text,width)
-	label:SetWidth(width); label:SetText(text)
+	label:SetWidth(width)
+ -- Remove the prior fixed height before measuring a different wrapped string.
+ label:SetHeight(0);label:SetText(text)
 	local measured=label.GetStringHeight and label:GetStringHeight()
+ if type(measured)~="number" or measured<=0 then measured=nil end
 	text=text:gsub("|T.-|t", "XX"):gsub("|H.-|h(.-)|h", "%1"):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
 	local lines=0
 	for line in (text.."\n"):gmatch("([^\n]*)\n") do lines=lines+math.max(1,math.ceil(#line/math.max(8,math.floor(width/7)))) end

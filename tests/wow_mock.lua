@@ -20,7 +20,8 @@ function methods:SetChecked(value) self.checked=value end
 function methods:GetChecked() return rawget(self,'checked') or false end
 function methods:SetBackdropColor(...) self.backdropColor={...} end
 function methods:SetBackdropBorderColor(...) self.borderColor={...} end
-function methods:GetFrameLevel() return 1 end
+function methods:SetFrameLevel(level) self.frameLevel=level end
+function methods:GetFrameLevel() return rawget(self,'frameLevel') or 1 end
 function methods:IsMovable() return self.movable == true end
 function methods:GetWidth() return rawget(self,'width') or 100 end
 function methods:GetHeight() return rawget(self,'height') or 100 end

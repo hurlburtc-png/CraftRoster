@@ -516,7 +516,7 @@ CASES.update({
         tab.ResultsChild.scrollToEntry(1000)
         local found=false
         for _,row in ipairs(frames) do
-          if row.parent==tab.ResultsChild and row:IsShown() and row.Label and row.Label:GetText()=='Potion 1000' then
+          if row.parent==tab.ResultsChild and row:IsShown() and row.Label and row.Label:GetText():gsub('|c%x%x%x%x%x%x%x%x',''):gsub('|r','')=='Potion 1000' then
             row.scripts.OnMouseUp(row,'LeftButton'); found=true
           end
         end
@@ -810,7 +810,7 @@ CASES.update({
         assert(tab.Results:GetVerticalScroll()==0)
         local found=false
         for _,row in ipairs(frames) do
-          if row.parent==tab.ResultsChild and row:IsShown() and row.Label and row.Label:GetText()=='Potion 0001' then found=true end
+          if row.parent==tab.ResultsChild and row:IsShown() and row.Label and row.Label:GetText():gsub('|c%x%x%x%x%x%x%x%x',''):gsub('|r','')=='Potion 0001' then found=true end
         end
         assert(found)
     """,
@@ -1335,7 +1335,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.22')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.23')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)

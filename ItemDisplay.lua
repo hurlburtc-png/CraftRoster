@@ -4,11 +4,11 @@ CraftRoster.ItemDisplay = Items
 
 -- Legacy clients expose the icon as the tenth GetItemInfo return value.
 function Items:Resolve(id, fallback)
- local name,link,icon
+ local name,link,icon,quality
  local getInfo=C_Item and C_Item.GetItemInfo or GetItemInfo
  if id and type(getInfo)=="function" then
-  local ok,n,l,_,_,_,_,_,_,_,texture=pcall(getInfo,id)
-  if ok then name,link,icon=n,l,texture end
+  local ok,n,l,q,_,_,_,_,_,_,texture=pcall(getInfo,id)
+  if ok then name,link,icon,quality=n,l,texture,q end
  end
  local getIcon=C_Item and (C_Item.GetItemIconByID or C_Item.GetItemIcon) or GetItemIcon
  if not icon and id and type(getIcon)=="function" then
@@ -19,7 +19,22 @@ function Items:Resolve(id, fallback)
   if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID,id) end
  end
  if fallback and fallback:match("^Item %d+$") then fallback=nil end
- return name or fallback or "Material loading…",link or (id and ("|cffffffff|Hitem:"..id..":0:0:0:0:0:0:0|h["..(name or fallback or "Material loading…").."]|h|r")),icon
+ return name or fallback or "Material loading…",link or (id and ("|cffffffff|Hitem:"..id..":0:0:0:0:0:0:0|h["..(name or fallback or "Material loading…").."]|h|r")),icon,quality
+end
+
+function Items:RecipeLabel(recipeID,fallback)
+ local source=CraftRoster.RecipeSources
+ local output=source and source:GetOutputItemID(recipeID)
+ local _,link,_,quality=self:Resolve(output,fallback)
+ local colors={[0]="ff9d9d9d",[1]="ffffffff",[2]="ff1eff00",[3]="ff0070dd",[4]="ffa335ee",[5]="ffff8000",[6]="ffe6cc80",[7]="ffe6cc80"}
+ local color=colors[quality]
+ local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
+ if not color and saved and type(saved.itemLink)=="string" then color=saved.itemLink:match("^|c(%x%x%x%x%x%x%x%x)") end
+ -- The teaching scroll's rarity is independent of the crafted item. Unknown
+ -- output quality stays neutral; never copy the pattern's colour onto it.
+ color=color or "ffffffff"
+ local label=tostring(fallback or "Recipe"):gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")
+ return "|c"..color..label.."|r"
 end
 
 function Items:Click(entry)

@@ -325,10 +325,25 @@ local function BindRecipeLinks(row,recipeID)
 		UpdateLinkDisplay(row.RecipeLink); row.CraftLink:SetText("")
 		row.RightLabel:ClearAllPoints(); row.RightLabel:SetPoint("TOPRIGHT",row,"TOPRIGHT",-10,-5)
 		row.RecipeLink:Show(); row.CraftLink:Show()
-		row.Label:SetPoint("TOPLEFT",47,-5); row.Label:SetHeight(16)
+  if row.catalogue then
+   local links=Directory:GetSearchLinks(recipeID)
+   row.Label:SetPoint("TOPLEFT",47,-5);row.Label:SetWidth(math.max(24,row:GetWidth()-57));row.Label:SetHeight(32)
+   row.Label:SetWordWrap(true);if row.Label.SetMaxLines then row.Label:SetMaxLines(2) end
+   row.RightLabel:ClearAllPoints();row.RightLabel:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",-10,4)
+   if links and links.hasRecipeItem then
+    local data=CraftRoster.RecipeSources:Get(recipeID)
+    local caption=type(data.name)=="string" and data.name:match("^([^:]+):") or "Recipe"
+    local shortLink=links.recipe:gsub("|h%[.-%]|h","|h["..caption.."]|h")
+    row.RecipeLink:SetText("|TInterface\\Icons\\INV_Scroll_03:14:14|t "..shortLink)
+   else row.RecipeLink:Hide() end
+  else
+   row.Label:SetPoint("TOPLEFT",47,-5);row.Label:SetHeight(16);row.Label:SetWordWrap(false)
+   if row.Label.SetMaxLines then row.Label:SetMaxLines(1) end
+  end
 	else
 		if row.RecipeLink then row.RecipeLink:Hide(); row.CraftLink:Hide(); row.RecipeLink.recipeID=nil; row.CraftLink.recipeID=nil end
-		row.Label:SetPoint("LEFT",row.Icon,"RIGHT",8,0); row.Label:SetHeight(16)
+		row.Label:SetPoint("LEFT",row.Icon,"RIGHT",8,0); row.Label:SetHeight(16);row.Label:SetWordWrap(false)
+  if row.Label.SetMaxLines then row.Label:SetMaxLines(1) end
 		row.RightLabel:ClearAllPoints(); row.RightLabel:SetPoint("RIGHT",row,"RIGHT",-10,0)
 	end
 end
@@ -453,7 +468,8 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 			local rightWidth = entry.rightText and entry.rightText ~= "" and math.max(30, math.min(120, width * 0.35)) or 0
 			row.rightReserved=rightWidth
    row.Label:SetWidth(math.max(1, width - (entry.recipe and 67 or 59) - rightWidth))
-			row.Label:SetText(entry.text or "")
+			row.catalogue=entry.recipe~=nil
+   row.Label:SetText(entry.recipe and CraftRoster.ItemDisplay:RecipeLabel(entry.recipe.id,entry.text) or (entry.text or ""))
 			row.RightLabel:SetWidth(math.max(1, rightWidth))
 			row.RightLabel:SetText(entry.rightText or "")
 			row.Label:SetFontObject(entry.isHeader and "GameFontNormal" or "GameFontHighlight")
@@ -472,7 +488,8 @@ local function RenderList(child, entries, width, normalHeight, headerHeight, onC
 		if #entries == 0 then
 			local row = Row()
 			row:SetSize(width, 44); row:SetPoint("TOPLEFT", 0, -6)
-			row.Icon:SetTexture("Interface\\Icons\\Trade_Tailoring")
+			row.Icon:SetTexture("Interface\\Icons\\Trade_Tailoring");row.Icon:SetSize(24,24)
+   row.catalogue=false;row.Label:SetWidth(math.max(1,width-59));row.RightLabel:SetWidth(1)
 			BindRecipeLinks(row,nil)
 			row.Label:SetText("No matching entries."); row.RightLabel:SetText("")
 			row:EnableMouse(false)
@@ -960,7 +977,7 @@ function Directory:RefreshProfessions()
 	self.selectedRecipe = selected
 	self:RefreshDetails()
 	self:RefreshCrafters()
-	RenderList(tab.ResultsChild, entries, 320, 48, 28, function(entry)
+	RenderList(tab.ResultsChild, entries, 320, 64, 28, function(entry)
 		Directory.selectedRecipe = entry.recipe
 		Directory.selectedCrafter = nil
 		Directory:RefreshDetails()
@@ -982,7 +999,7 @@ function Directory:RefreshDetails()
 
 	if recipe then
 		tab.DetailsIcon:SetTexture(CraftRoster.RecipeSources:GetRecipeIcon(recipe.id,recipe.icon))
-		tab.DetailsName:SetText(recipe.name)
+		tab.DetailsName:SetText(CraftRoster.ItemDisplay:RecipeLabel(recipe.id,recipe.name))
 		tab.DetailsProfession:SetText(recipe.profession)
 	else
 		tab.DetailsIcon:SetTexture("Interface\\Icons\\Trade_Tailoring")

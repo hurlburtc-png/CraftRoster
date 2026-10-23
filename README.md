@@ -17,6 +17,9 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Latest usability fixes:** Clear the active shopping list with **Clear list**. Search matches all entered words, including aliases such as wrist/bracer. Tick **Known by guild** below the search to show only recipes in your own or saved guildmates’ scans, including offline members. Same-name recipes share one result with a **Version** selector; each version keeps its own crafters, materials and sources. The selected-recipe pane uses more width and shows a short source overview; expand it for full details. Ten Enchanting recipes now include named Classic vendor examples and sourced coordinates, clearly unconfirmed for Forever.
 
+
+**Item readability:** Crafted-item names use the client’s rarity colour and have room for two lines. Crafter counts sit below the name, beside a short pattern/formula link. Unknown rarity stays neutral. Scroll footers have a solid background and wrapped text is remeasured when its content changes.
+
 ## Install
 
 1. Download **CraftRoster.zip** above, rather than GitHub’s **Code → Download ZIP**.

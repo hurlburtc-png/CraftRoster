@@ -252,3 +252,27 @@ in game.
 "Clear list" removes the active recipe/crafter and prevents an inventory event
 or relog from restoring it. It retains per-recipe craft quantities, contribution
 settings and delivery history; those belong to separate crafting workflows.
+
+
+## Beta 23 screenshot-driven display corrections
+
+The primary catalogue and selected-item title use the crafted output's cached
+client quality colour. Teaching-scroll rarity is never substituted for output
+rarity. Unknown output quality stays neutral; the normal item-cache event redraws
+visible results once quality is available. Enchant spells without an output item
+remain neutral rather than inheriting a formula's quality.
+
+Catalogue names have the full row width and up to two lines, with status/counts
+on a separate bottom line. The teaching-item action retains the exact hyperlink
+but uses a short caption (Pattern, Formula, Recipe, etc.), avoiding a repeated
+full item name. If no teaching item is recorded, that duplicate output-link row
+is hidden; the main icon still opens the crafted-item tooltip. Non-catalogue
+player/crafter rows retain their original layout.
+
+Wrapped text clears its old fixed height before calling the client measurement
+API. This prevents a short previous label from clipping a longer new one or
+leaving stale spacing. The action footer paints an opaque themed backdrop above
+scroll descendants, directly against the viewport edge. Window-opacity controls
+still apply to the window. Geometry, cache and layering regressions are checked
+in mocks; final font/template/clipping behavior still needs a real client check.
+The Known by guild filter from beta 22 remains included.
