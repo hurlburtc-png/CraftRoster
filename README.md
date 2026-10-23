@@ -2,10 +2,8 @@
 
 [**Download CraftRoster.zip — 0.8.0-beta.24**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-**ZIP version:** `0.8.0-beta.24`  
-**Latest code merged:** October 23, 2026 at **10:28 AM EDT** (Eastern Time; EST resumes November 1).  
-**ZIP build time:** Pending successful release workflow; the ZIP may not yet include the latest merged changes.  
-**Release checks:** The October 23 merged-code test run failed; this build is **not yet validated for in-game testing**.  
+**Version:** `0.8.0-beta.24`  
+**Date:** October 23, 2026
 
 
 
