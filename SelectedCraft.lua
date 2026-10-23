@@ -246,7 +246,7 @@ function View:RefreshMaterials()
 		row.Count:SetText(inline and count or "")
 		row.Label:ClearAllPoints(); row.Label:SetPoint("TOPLEFT",40,-2)
 		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",inline and -80 or 0,2)
-		local height=math.max(38,Height(row.Label,text,column-40-(inline and 80 or 0)))
+		local height=math.max(36,Height(row.Label,text,column-40-(inline and 80 or 0)))
 		row:SetSize(column,height); row:ClearAllPoints(); row:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",materialX,-y); row:Show()
 		y=y+height+2
 	end
