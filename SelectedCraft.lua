@@ -409,8 +409,10 @@ function View:RefreshSources()
   row.Copy:SetSize(math.min(104,(column-6)/2),24); row.Map:SetSize(math.min(104,(column-6)/2),24)
   row.Copy:ClearAllPoints(); row.Copy:SetPoint("TOPLEFT",0,-labelHeight-4)
   row.Map:ClearAllPoints(); row.Map:SetPoint("LEFT",row.Copy,"RIGHT",6,0)
-  row.Copy:SetEnabled(record.confirmed)
-  row.Map:SetEnabled(record.confirmed and CraftRoster.RecipeLocations:Backend(record)~=nil or false)
+  -- Only verified locations reach this row; do not offer a waypoint if
+  -- the current client has no compatible navigation backend.
+  row.Copy:SetEnabled(true)
+  row.Map:SetEnabled(CraftRoster.RecipeLocations:Backend(record)~=nil)
   local rowHeight=labelHeight+36; row:SetHeight(rowHeight); row:Show(); y=y+rowHeight+4
   end
  end
