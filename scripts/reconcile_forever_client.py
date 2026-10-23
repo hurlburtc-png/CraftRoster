@@ -30,18 +30,23 @@ def records(folder):
             next_start = positions[i+1].start() if i+1 < len(positions) else len(text)
             body = text[found.end():next_start]
             crafted = CRAFTED.search(body)
-            if spell in index:
-                raise ValueError("Duplicate Forever core spell ID %s" % spell)
-            index[spell] = {"output": int(crafted.group(1)) if crafted else None,
-                            "sourceFile": path.name, "sourceBuild": builds[path.name]}
+            record = {"output": int(crafted.group(1)) if crafted else None,
+                      "sourceFile": path.name, "sourceBuild": builds[path.name]}
+            index.setdefault(spell, []).append(record)
     return index, builds
 
 def reconcile(coverage, index):
     result = []
     for entry in coverage["recipes"]:
         spell = int(entry["spellID"])
-        found = index.get(spell)
-        if not found:
+        candidates = index.get(spell, [])
+        # Duplicate IDs are retained rather than silently overwriting evidence.
+        # A matching output disambiguates a shared spell ID where possible.
+        matches = [v for v in candidates if entry.get("output") and v["output"] == int(entry["output"])]
+        found = matches[0] if len(matches) == 1 else (candidates[0] if len(candidates) == 1 else None)
+        if len(matches) > 1 or (len(candidates) > 1 and not matches):
+            status = "ambiguous_forever_spell"
+        elif not found:
             status = "missing_exact_forever_spell"
         elif entry.get("output") and found["output"] and int(entry["output"]) != found["output"]:
             status = "output_conflict"
@@ -56,7 +61,7 @@ def reconcile(coverage, index):
                        "foreverOutput": found["output"] if found else None,
                        "sourceFile": found["sourceFile"] if found else None,
                        "sourceBuild": found["sourceBuild"] if found else None,
-                       "status": status, "acquisitionVerified": False})
+                       "candidateCount": len(candidates), "status": status, "acquisitionVerified": False})
     return result
 
 def main():
