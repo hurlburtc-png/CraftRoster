@@ -263,7 +263,8 @@ function View:RefreshMaterials()
 		row.Label:SetText(entry.name)
 		local height=36
 		row:SetSize(column,height); row:ClearAllPoints(); row:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",materialX,-y); row:Show()
-		y=y+height+2
+		-- Keep a modest gap so icons and counts remain individually clickable.
+		y=y+height+1
 	end
 	for index=#self.entries+1,#self.rows do self.rows[index]:Hide() end
 	self.materialTitle:SetText(entries and "Materials" or "Materials unavailable")
