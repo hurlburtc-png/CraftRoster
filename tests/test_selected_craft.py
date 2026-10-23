@@ -61,7 +61,8 @@ CASES = {
     addon.Directory.selectedRecipe={id=1255143,name='Moonglow Boots',profession='Leatherworking',crafters={}}
     addon.SelectedCraft:Refresh()
     local text=addon.Directory.frame.ProfessionsTab.RecipeSource.Text:GetText()
-    assert(text:find('Granny Finespindle',1,true) and text:find('Ironforge (39.3, 33.7)',1,true))
+    assert(text:find('Granny Finespindle',1,true) and text:find('Ironforge',1,true))
+    assert(not text:find('39.3, 33.7',1,true),'unverified coordinates must not appear in the recipe pane')
     assert(text:find('Alliance',1,true) and text:find('ATT Forever reference',1,true))
     assert(not text:find('Source unknown',1,true) and not text:find('Quest:',1,true))
     local old=addon.RecipeSources:Format(8322)
