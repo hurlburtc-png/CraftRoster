@@ -21,6 +21,7 @@ def package(destination):
     # Redistributed library notices and the pinned version record travel with
     # the addon; every runtime vendor file is listed explicitly in its TOC.
     paths += [source / 'vendor/ProfessionDB/LICENSE', source / 'vendor/ProfessionDB/manifest.json']
+    paths += list((source / 'vendor/ClassicSources').glob('*.md'))
     with ZipFile(destination, 'w', ZIP_DEFLATED) as archive:
         folder = ZipInfo('CraftRoster/', (1980, 1, 1, 0, 0, 0))
         folder.create_system = 3

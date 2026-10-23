@@ -1335,7 +1335,7 @@ class ForeverManifestTests(unittest.TestCase):
         lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
         metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
         self.assertEqual(metadata['Interface'],'16001', 'Forever 1.60.1 build 70450 rejects the previous 110200 declaration')
-        self.assertEqual(metadata['Version'],'0.8.0-beta.23')
+        self.assertEqual(metadata['Version'],'0.8.0-beta.24')
         for line in lines:
             if line and not line.startswith('#'):
                 self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)

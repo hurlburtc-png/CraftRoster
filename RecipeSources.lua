@@ -214,34 +214,39 @@ function Sources:Format(recipeID, data, compact)
  local locations=CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:Get(recipeID) or {}
  local hasConfirmed=false
  for _,location in ipairs(locations) do if location.confirmed then hasConfirmed=true end end
+ local fallback=CraftRoster.ClassicSources and CraftRoster.ClassicSources:Format(recipeID,data.itemID,locations,compact)
+ -- Exact Classic references are the default when no confirmed Forever record
+ -- exists. Do not bury usable locations below older name-only source lists.
+ local classicDefault=fallback and not hasConfirmed
+ if classicDefault then table.insert(lines,fallback) end
  local sources=libraryCall("GetRecipeSources",recipeID)
  local hasTrainers=(type(sources)=="table" and type(sources.trainer)=="table" and #sources.trainer>0)
   or (CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:HasTrainerData(recipeID))
  -- Free-form text cannot be faction-filtered safely for trainer recipes.
- if saved.sourceText and not hasTrainers and not hasConfirmed then
+ if saved.sourceText and not hasTrainers and not hasConfirmed and not classicDefault then
 		local native=saved.sourceText:gsub("([Vv]endor%s*:%s*)%d+", "%1name unavailable (source details not recorded)")
   table.insert(lines,native)
 	end
- if #locations>0 then
+ if #locations>0 and not classicDefault then
   for _,location in ipairs(locations) do
    table.insert(lines,CraftRoster.RecipeLocations:Label(location))
    local rate=CraftRoster.ClassicSources and CraftRoster.ClassicSources:ForeverRate(location)
    if rate~=nil then table.insert(lines,("Forever drop chance: %.2f%% per kill"):format(rate)) end
    table.insert(lines,(location.source or "Database")..(location.confirmed and " · confirmed source record" or " reference; verify vendor stock in game."))
   end
- elseif acquisition and not saved.sourceText then
+ elseif acquisition and not saved.sourceText and not classicDefault then
   table.insert(lines,"Vendor: "..acquisition.vendor)
   table.insert(lines,"Location: "..acquisition.zone.." ("..acquisition.coordinates..")")
   table.insert(lines,"Availability: "..acquisition.faction)
   table.insert(lines,"ATT Forever reference; verify vendor stock in game.")
  end
- if hasTrainers then
+ if hasTrainers and not classicDefault then
   local listed=false
   for _,location in ipairs(locations) do if location.kind=="trainer" then listed=true end end
   if not listed then table.insert(lines,"Trainer listings withheld: faction or training skill not verified for your character.") end
  end
-	data.hasLibrarySource=not not hasTrainers
-	if type(sources)=="table" and not hasConfirmed then
+	data.hasLibrarySource=not not (hasTrainers or classicDefault)
+	if type(sources)=="table" and not hasConfirmed and not classicDefault then
 		local labels={trainer="Trainer",vendor="Vendor",quest="Quest",container="Container",drop="Mob/boss drop"}
 		if saved.sourceText then table.insert(lines,"\nAdditional database sources:") end
 		for _,kind in ipairs({"trainer","vendor","quest","container","drop"}) do
@@ -266,7 +271,7 @@ function Sources:Format(recipeID, data, compact)
 			if not compact then table.insert(lines,"Source names are English. Provenance: bundled LibProfessionDB v1.9.1; emulator reference databases, not verified Forever loot rates.") end
 		end
 	end
- if data.hasLibrarySource and #locations==0 then
+ if data.hasLibrarySource and #locations==0 and not classicDefault then
   table.insert(lines,"Coordinates unavailable: no confirmed Forever position recorded.")
  end
 	if not data.hasLibrarySource and libraryCall("IsAutoTaughtRecipe",recipeID) then
@@ -277,8 +282,7 @@ function Sources:Format(recipeID, data, compact)
 		local borrowed=libraryCall("IsBorrowed",recipeID,"requiredSkill")
 		table.insert(lines,"Required skill: "..skill..(borrowed and (" ("..tostring(borrowed).." reference; unconfirmed)") or " (database reference)"))
 	end
- local fallback=CraftRoster.ClassicSources and CraftRoster.ClassicSources:Format(recipeID,data.itemID,locations,compact)
- if fallback then table.insert(lines,"\n"..fallback)
+ if fallback and not classicDefault then table.insert(lines,"\n"..fallback)
  elseif not saved.sourceText and not data.hasLibrarySource and not acquisition and #locations==0 then
   table.insert(lines,"Source unknown: no acquisition details available.")
  end
@@ -290,6 +294,12 @@ function Sources:Format(recipeID, data, compact)
  for _,location in ipairs(locations) do if location.kind=="mob" then hasDrop=true end end
  if not fallback and not knownRate and (hasDrop or (#locations==0 and not data.hasLibrarySource)) then
   table.insert(lines,"Drop chance: unknown (no verified estimate)")
+ end
+ local gaps=CraftRoster.ClassicSourceData and CraftRoster.ClassicSourceData.gaps
+ if not fallback and not hasConfirmed and gaps and gaps[recipeID] then
+  table.insert(lines,gaps[recipeID]=="no_exact_classic_spell"
+   and "Classic lookup: no exact Classic counterpart. This recipe needs a Forever-specific acquisition record."
+   or "Classic lookup: no detailed acquisition record available in the bundled sources.")
  end
 	if compact then return table.concat(lines,"\n") end
 	table.insert(lines, "\n|cffffd100Recipe item binding|r")
@@ -308,6 +318,12 @@ function Sources:Summary(recipeID)
  local data=self:Get(recipeID)
  local locations=CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:Get(recipeID) or {}
  local lines={}
+ local confirmed=false
+ for _,location in ipairs(locations) do if location.confirmed then confirmed=true end end
+ if not confirmed then
+  local classic=CraftRoster.ClassicSources and CraftRoster.ClassicSources:Format(recipeID,data.itemID,{},true,true)
+  if classic then return classic end
+ end
  if #locations>0 then
   lines[#lines+1]=CraftRoster.RecipeLocations:Label(locations[1])
   if locations[1].source and not locations[1].confirmed then lines[#lines+1]=locations[1].source.." reference" end

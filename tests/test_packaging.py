@@ -16,6 +16,7 @@ class PackageTests(unittest.TestCase):
                      (ROOT / 'CraftRoster.toc').read_text().splitlines()
                      if line.strip() and not line.startswith('#')]
             files += ['vendor/ProfessionDB/LICENSE', 'vendor/ProfessionDB/manifest.json']
+            files += [p.relative_to(ROOT).as_posix() for p in (ROOT/'vendor/ClassicSources').glob('*.md')]
             self.assertEqual(set(archive.namelist()), {'CraftRoster/'} | {'CraftRoster/' + name for name in files})
             for name in files:
                 self.assertEqual(archive.read('CraftRoster/' + name), (ROOT / name).read_bytes(),

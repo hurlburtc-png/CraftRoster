@@ -73,6 +73,20 @@ recipe(20017,16217,{mythrin,vendor(4561,"Daniel Bartlett","Undercity",64.05,37.3
 recipe(20026,16221,{vendor(11189,"Qia","Winterspring",61.2,37.21,"Neutral")})
 recipe(20051,16243,{lorelae})
 local kinds={mob="Mob",boss="Boss",vendor="Vendor",trainer="Trainer",quest="Quest"}
+-- These are zone names, not map IDs or outdoor entrance coordinates. Instance
+-- subzones use the same prefix (e.g. Blackrock Depths Shadowforge City).
+local instances={"blackfathomdeeps","blackrockdepths","blackrockspire","upperblackrockspire","lowerblackrockspire",
+ "deadmines","thedeadmines","diremaul","gnomeregan","maraudon","ragefirechasm","razorfendowns","razorfenkraul",
+ "scarletmonastery","scholomance","shadowfangkeep","stockade","thestockade","stratholme",
+ "templeofatalhakkar","thetempleofatalhakkar","sunkentemple","uldaman","wailingcaverns","zulfarrak","zulgurub",
+ "moltencore","blackwinglair","ruinsofahnqiraj","templeofahnqiraj","ahnqiraj","naxxramas","onyxiaslair"}
+function Classic:IsInstanced(source)
+ if source.kind~="mob" and source.kind~="boss" then return false end
+ if source.instance then return true end
+ local zone=type(source.zone)=="string" and source.zone:lower():gsub("[^%a]","") or ""
+ for _,prefix in ipairs(instances) do if zone:sub(1,#prefix)==prefix then return true end end
+ return false
+end
 local function text(value) return type(value)=="string" and value~="" end
 local function id(value) return type(value)=="number" and value>0 and value<2147483647 and value==math.floor(value) end
 local function percent(value) return type(value)=="number" and value>=0 and value<=100 end
@@ -90,6 +104,31 @@ local function factionAllowed(source)
 end
 function Classic:Get(recipeID,itemID)
  local record=self.records[recipeID]
+ if not record then
+  local data=CraftRoster.ClassicSourceData
+  local raw=data and data.recipes[recipeID]
+  if raw then
+   record={}
+   for key,value in pairs(raw) do record[key]=value end
+   record.sources={}
+   for _,edge in ipairs(raw.sources) do
+    local npc=data.npcs[edge.npcID]
+    if npc then
+     local source={}
+     for key,value in pairs(npc) do source[key]=value end
+     for key,value in pairs(edge) do source[key]=value end
+     source.provider="CMaNGOS Classic-DB + QuestieDB Classic"
+     source.url=edge.kind=="trainer" and "https://github.com/cmangos/classic-db/blob/77b848e78fe31bdd0c5562922be49a4e8e5e79df/Full_DB/ClassicDB_1_12_1_z2815.sql.gz" or itemURL
+     source.coordinateURL=npcURL
+     source.relationshipURL="https://github.com/cmangos/classic-db/blob/77b848e78fe31bdd0c5562922be49a4e8e5e79df/Full_DB/ClassicDB_1_12_1_z2815.sql.gz"
+     if edge.kind=="quest" then source.provider="CMaNGOS Classic-DB + QuestieDB Classic" end
+     record.sources[#record.sources+1]=source
+    end
+   end
+   -- Shared NPC data stays immutable; only the selected recipe is expanded.
+   self.records[recipeID]=record
+  end
+ end
  if type(record)~="table" or record.spellID~=recipeID or type(record.sources)~="table" then return nil end
  if record.trainerOnly then
   if itemID~=nil then return nil end
@@ -133,19 +172,26 @@ function Classic:Format(recipeID,itemID,locations,compact,summary)
  local lines={"|cffffd100Classic reference — unconfirmed in Forever|r"}
  if record.examples and not summary then lines[#lines+1]="Source examples, not a complete source list." end
  local hasDrops=false
- local limit=summary and 1 or (compact and 2 or 12)
+ local limit=summary and 1 or (compact and 2 or #entries)
  for index,entry in ipairs(entries) do
   if index>limit then break end
   local source=entry.source
   if source.kind=="mob" or source.kind=="boss" then hasDrops=true end
   if #confirmed==0 then
-   lines[#lines+1]=kinds[source.kind]..((source.kind=="mob" or source.kind=="boss") and " drop: " or ": ")..source.name
-   lines[#lines+1]="Classic location: "..source.zone..(source.instance and " (instance)" or "")
-   if percent(source.x) and percent(source.y) and evidence(source.coordinateURL) then
+   lines[#lines+1]=kinds[source.kind]..((source.kind=="mob" or source.kind=="boss") and " drop: " or ": ")..source.name..(text(source.title) and (" <"..source.title..">") or "")
+   if text(source.questName) then lines[#lines+1]="Classic quest: "..source.questName end
+   local instanced=self:IsInstanced(source)
+   local skipCoords=instanced or source.kind=="boss"
+   lines[#lines+1]="Classic location: "..source.zone..(instanced and " (instance)" or "")
+   if not skipCoords and percent(source.x) and percent(source.y) and evidence(source.coordinateURL) then
     lines[#lines+1]="Classic coordinates: "..source.x..", "..source.y..(source.area and " (spawn area)" or "")
-   elseif not summary then lines[#lines+1]="Classic coordinates: unknown" end
+   elseif not skipCoords then lines[#lines+1]="Classic coordinates: unknown" end
    if text(source.faction) then lines[#lines+1]="Classic availability: "..source.faction end
-   if source.kind=="trainer" then lines[#lines+1]="Classic training skill: "..source.profession.." "..source.requiredSkill end
+   if source.kind=="trainer" then
+    lines[#lines+1]="Classic training skill: "..source.profession.." "..source.requiredSkill
+    if source.learnedWithProfession then lines[#lines+1]="Learned with the profession (Classic)." end
+   end
+   if source.kind=="trainer" and type(source.requiredLevel)=="number" and source.requiredLevel>0 then lines[#lines+1]="Requires character level "..source.requiredLevel end
    if text(source.requirements) then lines[#lines+1]="Classic requirements: "..source.requirements end
   end
   if source.kind=="mob" or source.kind=="boss" then
@@ -154,11 +200,16 @@ function Classic:Format(recipeID,itemID,locations,compact,summary)
   end
   if not summary then lines[#lines+1]="Source: "..(text(source.provider) and source.provider or "Classic database").." · checked "..(text(source.checked) and source.checked or (text(record.checked) and record.checked or "date unknown")) end
   if not compact then
-   if text(source.coordinateChecked) then lines[#lines+1]="Coordinates checked: "..source.coordinateChecked end
+   if not self:IsInstanced(source) and source.kind~="boss" and text(source.coordinateChecked) then lines[#lines+1]="Coordinates checked: "..source.coordinateChecked end
    lines[#lines+1]=source.url
-   if evidence(source.coordinateURL) and source.coordinateURL~=source.url then lines[#lines+1]="Coordinates: "..source.coordinateURL end
+   if evidence(source.relationshipURL) and source.relationshipURL~=source.url then lines[#lines+1]="Acquisition: "..source.relationshipURL end
+   if not self:IsInstanced(source) and source.kind~="boss" and evidence(source.coordinateURL) and source.coordinateURL~=source.url then lines[#lines+1]="Coordinates: "..source.coordinateURL end
   end
  end
+ if record.dropNPCCount and record.dropNPCCount>24 and not summary then
+  lines[#lines+1]="Classic world-drop pool: "..record.dropNPCCount.." NPCs; showing location examples, not the full pool."
+ end
+ if #entries>limit and summary then lines[#lines+1]="More locations in source details." end
  if #entries>limit and not summary then lines[#lines+1]="and "..(#entries-limit).." more Classic references (expand for details)." end
  if not summary and #confirmed==0 then
   lines[#lines+1]=hasDrops and "Forever location and drop rate: unknown." or "Forever location: unknown."
@@ -166,4 +217,26 @@ function Classic:Format(recipeID,itemID,locations,compact,summary)
  elseif not summary then lines[#lines+1]="Forever location confirmed; Forever drop rate unknown." end
  if not summary then lines[#lines+1]="Classic reference navigation is disabled." end
  return table.concat(lines,"\n")
+end
+
+-- Preserve reviewed drop estimates/coordinates while expanding the original
+-- twenty examples with the rest of the exact Classic vendor/trainer records.
+local originals={}
+for recipeID,record in pairs(Classic.records) do originals[recipeID]=record end
+for recipeID,record in pairs(originals) do
+ Classic.records[recipeID]=nil
+ local generated=Classic:Get(recipeID,record.itemID)
+ Classic.records[recipeID]=record
+ if generated then
+  for _,source in ipairs(generated.sources) do
+   local found=false
+   for _,existing in ipairs(record.sources) do
+    if source.npcID==existing.npcID and (source.kind==existing.kind or (source.kind=="mob" and existing.kind=="boss")) then
+     found=true
+     if not existing.title then existing.title=source.title end
+    end
+   end
+   if not found then record.sources[#record.sources+1]=source end
+  end
+ end
 end

@@ -276,3 +276,14 @@ scroll descendants, directly against the viewport edge. Window-opacity controls
 still apply to the window. Geometry, cache and layering regressions are checked
 in mocks; final font/template/clipping behavior still needs a real client check.
 The Known by guild filter from beta 22 remains included.
+
+
+## Catalogue-wide Classic defaults (beta 24)
+
+Supersedes the small beta 20/21 fallback coverage above. The generated data now surveys every one of the 2,510 bundled catalogue recipes. 1,135 have detailed Classic acquisition records; 1,257 have no exact Classic spell counterpart and 118 lack detailed acquisition evidence. The original reviewed drop-rate examples remain available and their exact NPCs retain precedence.
+
+Classic details are the default when Forever has no confirmed location, ahead of stale free text and borrowed name-only source lists. Full eligible vendor/trainer alternatives are accessible in expanded source details; compact summaries retain full NPC name/title, location and coordinates. Missing coordinates are explicitly shown as unknown, while known dungeon/boss sources remain visible. Trainers include recipe skill, recorded level and prerequisite warnings. Exact spell/item guards and faction filters remain in force.
+
+See [CLASSIC_SOURCE_BUILD.md](CLASSIC_SOURCE_BUILD.md), the reproducible importer and [complete coverage report](../data/classic-source-coverage.json). This is catalogue-wide processing, not a claim that every custom Forever recipe has a Classic equivalent.
+
+Boss and dungeon/raid drop references show the source NPC and instance, omitting coordinates and coordinate-unknown messages. Open-world sources retain their coordinate details.
