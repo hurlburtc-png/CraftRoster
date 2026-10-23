@@ -15,11 +15,20 @@ CORE = ROOT / "vendor/ProfessionDB/Data/Forever/_core"
 RECIPE = re.compile(r'^\s*\[(\d+)\] = \{\s*$', re.M)
 CRAFTED = re.compile(r'\["craftedItemId"\] = (\d+)')
 BUILD = re.compile(r'-- build ([\d.]+)')
+# Only profession tables contain spell recipes. Metadata maps use the same
+# numeric-key syntax but must never be counted as crafting spells.
+PROFESSION_FILES = frozenset({
+    "Alchemy.lua", "Blacksmithing.lua", "Cooking.lua", "Enchanting.lua",
+    "Engineering.lua", "Firstaid.lua", "Fishing.lua", "Leatherworking.lua",
+    "Mining.lua", "Tailoring.lua",
+})
 
 def records(folder):
     index = {}
     builds = {}
     for path in sorted(folder.glob("*.lua")):
+        if path.name not in PROFESSION_FILES:
+            continue
         text = path.read_text(encoding="utf-8")
         match = BUILD.search(text)
         builds[path.name] = match.group(1) if match else "unknown"
