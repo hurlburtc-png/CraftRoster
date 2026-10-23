@@ -1332,22 +1332,16 @@ class ErrorPersistenceTests(unittest.TestCase):
 
 class ForeverManifestTests(unittest.TestCase):
     def test_manifest_matches_reported_forever_client(self):
-        lines=(ROOT/'CraftRoster.toc').read_text().splitlines()
-        metadata=dict(line[3:].split(': ',1) for line in lines if line.startswith('## '))
-        self.assertEqual(metadata['Interface'],'16001')
-        self.assertRegex(metadata['Version'],r'^0[.]8[.]0-beta[.][0-9]+
-        self.assertIn(metadata['Version'],(ROOT/'README.md').read_text())
+        lines = (ROOT / 'CraftRoster.toc').read_text().splitlines()
+        metadata = dict(line[3:].split(': ', 1) for line in lines if line.startswith('## '))
+        self.assertEqual(metadata['Interface'], '16001')
+        version = metadata['Version']
+        self.assertTrue(version.startswith('0.8.0-beta.'))
+        self.assertTrue(version.removeprefix('0.8.0-beta.').isdigit())
+        self.assertIn(version, (ROOT / 'README.md').read_text())
         for line in lines:
             if line and not line.startswith('#'):
-                self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)
-
-if __name__ == '__main__':
-    unittest.main(verbosity=2)
-)
-        self.assertIn(metadata['Version'],(ROOT/'README.md').read_text())
-        for line in lines:
-            if line and not line.startswith('#'):
-                self.assertTrue((ROOT/line).is_file(), 'Missing TOC module: '+line)
+                self.assertTrue((ROOT / line).is_file(), 'Missing TOC module: ' + line)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
