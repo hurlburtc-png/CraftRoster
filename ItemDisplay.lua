@@ -60,8 +60,17 @@ function Items:Click(entry)
   end
   local active=ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow()
   if active then
-   if ChatEdit_InsertLink then local ok,inserted=pcall(ChatEdit_InsertLink,link); if ok and inserted then return true end end
-   if active.Insert then active:Insert(link); return true end
+   if ChatEdit_InsertLink then
+    local ok,inserted=pcall(ChatEdit_InsertLink,link)
+    if ok and inserted then return true end
+   end
+   if type(active.Insert)=="function" then
+    local ok=pcall(active.Insert,active,link)
+    if ok then return true end
+   end
+   -- A visible chat editor owns this click even if its insert API fails.
+   -- Never silently turn a failed chat insertion into an AH search.
+   return false
   end
   if IsShiftKeyDown and IsShiftKeyDown() then
    if ChatEdit_InsertLink then local ok,inserted=pcall(ChatEdit_InsertLink,link); if ok and inserted then return true end end
