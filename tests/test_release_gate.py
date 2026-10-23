@@ -23,7 +23,8 @@ class ReleaseGate(unittest.TestCase):
         self.assertIn('function Classic:IsInstanced(source)', src)
 
     def test_zip_layout_if_release_present(self):
-        archives = list(ROOT.glob("*beta*.zip"))
+        archives = list(ROOT.glob("*beta*.zip")) + list(ROOT.glob("CraftRoster.zip"))
+        self.assertTrue(archives, "No release ZIP found to validate")
         for archive in archives:
             with self.subTest(archive=archive.name), zipfile.ZipFile(archive) as z:
                 names = [n for n in z.namelist() if not n.endswith("/")]
@@ -31,6 +32,7 @@ class ReleaseGate(unittest.TestCase):
                 self.assertTrue(all(n.startswith("CraftRoster/") for n in names),
                                 "ZIP contains unexpected outer folder")
                 self.assertFalse(any(n.startswith("CraftRoster/CraftRoster/") for n in names))
+                self.assertEqual(len(names), len(set(names)), "Duplicate ZIP members")
 
 if __name__ == "__main__":
     unittest.main()
