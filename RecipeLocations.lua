@@ -65,7 +65,8 @@ function Locations:Get(recipeID)
  return out
 end
 function Locations:Label(record)
- local text=("%s: %s\n%s (%s, %s)"):format(kinds[record.kind],record.name,record.zone,tostring(record.x),tostring(record.y))
+ local coordinates=approved(record) and (" (%s, %s)"):format(tostring(record.x),tostring(record.y)) or ""
+ local text=("%s: %s\n%s%s"):format(kinds[record.kind],record.name,record.zone,coordinates)
  if record.kind=="mob" then text=text.." · "..(record.area and "spawn area" or "reported spawn point") end
  if record.subzone then text=text.." · "..record.subzone end
  if record.faction then text=text.." · "..record.faction end
