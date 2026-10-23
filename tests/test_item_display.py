@@ -44,6 +44,31 @@ CASES = {
  items:Resolve(778,'Item 778')
  assert(items.pending[778]==nil)
 ''',
+'async_item_request_explicit_rejection_stays_retryable': '''
+ inventoryFixture(false,true)
+ local items=addon.ItemDisplay
+ items.pending={}
+ C_Item=C_Item or {}
+ local requests=0
+ C_Item.GetItemInfo=function() return nil end
+ C_Item.GetItemIconByID=function() return nil end
+ C_Item.RequestLoadItemDataByID=function(id) requests=requests+1; return false end
+ items:Resolve(779,'Item 779')
+ assert(items.pending[779]==nil and requests==1)
+ items:Resolve(779,'Item 779')
+ assert(items.pending[779]==nil and requests==2)
+''',
+'failed_whisper_composer_insert_does_not_fall_through_to_ah_or_chat': '''
+ inventoryFixture(false,true); addon.ShoppingList:Open(42)
+ local composer=addon.WhisperComposer; assert(composer:Open(42))
+ composer.InsertMaterialLink=function() return false end
+ AuctionFrame=CreateFrame(); AuctionFrame:Show(); BrowseName=CreateFrame(); BrowseName:SetText('unchanged')
+ local inserted=false
+ ChatEdit_GetActiveWindow=function() return CreateFrame() end
+ ChatEdit_InsertLink=function() inserted=true; return true end
+ local row=addon.ShoppingList.frame.Rows[1]; row.scripts.OnClick(row,'LeftButton')
+ assert(not inserted and BrowseName:GetText()=='unchanged')
+''',
 'active_native_whisper_takes_priority_over_auction_search': '''
  inventoryFixture(false,true); addon.ShoppingList:Open(42)
  AuctionFrame=CreateFrame(); BrowseName=CreateFrame(); BrowseName:SetText('unchanged')
