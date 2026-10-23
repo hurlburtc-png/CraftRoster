@@ -14,7 +14,7 @@ Core:SetScript("OnEvent", function(self, event, loadedAddon)
 	if event == "ADDON_LOADED" and loadedAddon == ADDON_NAME then
 		CraftRosterDB = CraftRosterDB or {}
 		CraftRosterDB.settings = CraftRosterDB.settings or {}
-		for key, value in pairs({ enabled = true, autoUpdateRecipes = true, onlineOnly = true, autoLoadItems = true, windowOpacity = 1 }) do
+		for key, value in pairs({ enabled = true, autoUpdateRecipes = true, onlineOnly = true, guildKnownOnly = false, autoLoadItems = true, windowOpacity = 1 }) do
 			if CraftRosterDB.settings[key] == nil then CraftRosterDB.settings[key] = value end
 		end
 		CraftRosterDB.characters = CraftRosterDB.characters or {}

@@ -647,6 +647,22 @@ function Directory:Initialize()
 	professionsTab.SearchBox:SetAutoFocus(false)
 	professionsTab.SearchBox:HookScript("OnTextChanged", DebouncedRefresh("RefreshProfessions"))
 
+ professionsTab.GuildKnownCheck=CreateFrame("CheckButton",nil,professionsTab,"UICheckButtonTemplate")
+ professionsTab.GuildKnownCheck:SetSize(24,24)
+ professionsTab.GuildKnownCheck.Text:SetText("Known by guild")
+ professionsTab.GuildKnownCheck:SetChecked(CraftRosterDB.settings.guildKnownOnly==true)
+ professionsTab.GuildKnownCheck:SetScript("OnClick",function(button)
+  CraftRosterDB.settings.guildKnownOnly=not not button:GetChecked()
+  Directory:RefreshProfessions()
+ end)
+ professionsTab.GuildKnownCheck:SetScript("OnEnter",function(button)
+  GameTooltip:SetOwner(button,"ANCHOR_RIGHT");GameTooltip:SetText("Known by guild")
+  GameTooltip:AddLine("Show recipes in saved scans from you and guildmates, including offline members. Hide catalogue-only recipes.",1,1,1,true)
+  GameTooltip:AddLine("Based on the last saved or synced data. Online only filters the crafter list separately.",1,1,1,true)
+  GameTooltip:Show()
+ end)
+ professionsTab.GuildKnownCheck:SetScript("OnLeave",function() GameTooltip:Hide() end)
+
 	professionsTab.SortButton = CreateFrame("Button", nil, professionsTab, "GameMenuButtonTemplate")
 	professionsTab.SortButton:SetSize(140, 22)
 	professionsTab.SortButton:SetPoint("TOPLEFT", 18, -48)
@@ -847,7 +863,7 @@ local function BuildProfessionEntries()
 	local tab = Directory.frame.ProfessionsTab
 	local search = NormalizeSearch(tab.SearchBox:GetText())
 	local cacheKey = search .. "\001" .. (Directory.selectedProfession or "All") .. "\001" .. sortMode
-		.. tostring(CraftRosterDB.settings.favoritesOnly)
+		.. tostring(CraftRosterDB.settings.favoritesOnly).."\001"..tostring(CraftRosterDB.settings.guildKnownOnly)
 	if Directory.professionCache and Directory.professionCache.key == cacheKey then return Directory.professionCache.entries end
 	if Directory.lastQueryKey~=cacheKey then tab.Results:SetVerticalScroll(0);Directory.lastQueryKey=cacheKey end
  local searchTerms = GetSearchTerms(search)
@@ -868,7 +884,7 @@ local function BuildProfessionEntries()
    end
   end
 
-		if professionOK and searchOK and (not CraftRosterDB.settings.favoritesOnly or (CraftRosterDB.favorites or {})[recipe.id]) then
+		if professionOK and searchOK and (not CraftRosterDB.settings.guildKnownOnly or #recipe.crafters>0) and (not CraftRosterDB.settings.favoritesOnly or (CraftRosterDB.favorites or {})[recipe.id]) then
 			table.insert(matching, recipe)
 		end
 	end
