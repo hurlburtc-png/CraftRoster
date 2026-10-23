@@ -254,9 +254,12 @@ function View:RefreshMaterials()
 		-- quantity under the name made every material consume two lines.
 		-- The tooltip retains the full material name and inventory breakdown.
 		row.Count:SetText(count)
-		row.Count:SetWidth(76)
+		-- On a narrow pane, reclaim room for material names while retaining
+		-- a dedicated quantity column and the full tooltip on hover.
+		local countWidth=column<260 and 62 or 76
+		row.Count:SetWidth(countWidth)
 		row.Label:ClearAllPoints(); row.Label:SetPoint("TOPLEFT",40,-2)
-		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",-80,2)
+		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",-(countWidth+4),2)
 		row.Label:SetText(entry.name)
 		local height=36
 		row:SetSize(column,height); row:ClearAllPoints(); row:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",materialX,-y); row:Show()
