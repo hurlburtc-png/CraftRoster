@@ -33,7 +33,9 @@ class ForeverClientReconciliationTests(unittest.TestCase):
                     ' ["craftedItemId"] = %d,\n'
                     ' },\n'
                     '})\n' % output, encoding="utf-8")
+            Path(tmp, "Sources.lua").write_text('[2543] = {\n ["craftedItemId"] = 999,\n },\n', encoding="utf-8")
             index, _ = records(Path(tmp))
+            self.assertTrue(all(record["sourceFile"] != "Sources.lua" for record in index[2543]))
             self.assertEqual(len(index[2543]), 2)
             rows = reconcile({"recipes": [
                 {"spellID":2543,"profession":"Cooking","name":"Matched","output":100},
