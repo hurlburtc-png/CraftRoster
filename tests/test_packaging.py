@@ -13,10 +13,10 @@ class PackageTests(unittest.TestCase):
         with ZipFile(ROOT / 'CraftRoster.zip') as archive:
             self.assertIsNone(archive.testzip())
             files = ['CraftRoster.toc'] + [line.strip() for line in
-                     (ROOT / 'CraftRoster.toc').read_text().splitlines()
+                     archive.read('CraftRoster/CraftRoster.toc').decode('utf-8').splitlines()
                      if line.strip() and not line.startswith('#')]
             files += ['vendor/ProfessionDB/LICENSE', 'vendor/ProfessionDB/manifest.json']
-            files += [p.relative_to(ROOT).as_posix() for p in (ROOT/'vendor/ClassicSources').glob('*.md')]
+            files += [name[len('CraftRoster/'):] for name in archive.namelist() if name.startswith('CraftRoster/vendor/ClassicSources/') and name.endswith('.md')]
             self.assertEqual(set(archive.namelist()), {'CraftRoster/'} | {'CraftRoster/' + name for name in files})
             # The checked-in ZIP is a manually published release and may lag
             # development sources. Fresh packages are checked byte-for-byte below.
