@@ -34,7 +34,7 @@ local function trainerEligible(record)
  return ok and faction==record.faction
 end
 local function approved(record)
- return valid(record) and trainerEligible(record) and record.status=="confirmed" and type(record.url)=="string"
+ return valid(record) and record.era~="Classic" and trainerEligible(record) and record.status=="confirmed" and type(record.url)=="string"
   and record.url:match("^https://") and type(record.revision)=="string" and record.revision~=""
   and type(record.checked)=="string" and record.checked:match("^%d%d%d%d%-%d%d%-%d%d$")
 end

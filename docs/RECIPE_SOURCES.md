@@ -156,3 +156,58 @@ trainer recipes because its embedded trainer names cannot be safely filtered.
 Other acquisition categories remain visible. A message explains when no
 verified eligible trainer is listed; it does not claim that no trainer exists.
 Faction checks run again when copying or creating a marker.
+
+
+## Classic fallback (beta 20)
+
+`ClassicSources.lua` contains an indexed, deliberately small reference set:
+10 exact spell/teaching-item pairs. The original four drop references retain
+their approximate rates and provenance; six Alchemy vendor recipes now have
+Classic location examples (Frost Oil, Shadow Oil, Holy/Shadow/Frost/Nature
+Protection Potions). Sources are examples, not an exhaustive source database.
+No name matching, full second database, runtime HTTP or background scanning
+is added. New Forever recipes with new IDs do not inherit older recipes' data.
+An explicit teaching-item change also disables old Classic metadata/binding.
+
+New factual NPC/item references were checked on 2026-10-22 (Edmonton) against
+QuestieDB Classic revision `1f538335cfbb240c14a97c340f48c555fdc8a52b`:
+
+- [Item-to-source relationships](https://github.com/Questie/QuestieDB/blob/1f538335cfbb240c14a97c340f48c555fdc8a52b/data/Classic/classicItemDB.lua)
+- [NPC names, zone IDs, spawns and faction friendliness](https://github.com/Questie/QuestieDB/blob/1f538335cfbb240c14a97c340f48c555fdc8a52b/data/Classic/classicNpcDB.lua)
+- [Zone names](https://github.com/Questie/QuestieDB/blob/1f538335cfbb240c14a97c340f48c555fdc8a52b/src/corrections/enum/zones.lua)
+
+Only a small set of factual references is recorded, with attribution. No
+Questie code, assets or bulk dataset is redistributed. QuestieDB's historic data
+has mixed provenance; these references are not independent proof of live drops.
+
+Crusader item 16252 references both Scarlet Spellbinder (4494) and Scarlet
+Archmage (9451). Selected coordinates are example spawn points within spawn
+areas, not a unique stationary mob. Spellbinder has two separated WPL clusters;
+one example is shown. The old approximate 0.43% estimate applies only to
+Spellbinder. Archmage's rate stays unknown. Boss locations remain instance
+names; instance entrances are never substituted for boss coordinates.
+
+### Display and precedence
+
+- Classic location, coordinates, availability, training skill and drop estimates
+  are visibly labelled **Classic reference — unconfirmed in Forever**.
+- Compact mode shows two eligible examples; expanded mode shows up to twelve,
+  evidence URLs and dates, with an omitted-example count.
+- Coordinates require their own evidence URL; missing/malformed positions stay
+  unknown. Reference coordinates never enter navigation/action records.
+- A confirmed Forever source/location suppresses old Classic locations AND the
+  bundled library's unconfirmed source examples and stale free-form source text. A Classic rate can still fill
+  an unknown Forever rate, only for the exact same approved mob NPC ID.
+- Location confirmation never confirms a rate. A Forever rate needs its own
+  explicit `era=Forever`, confirmed flag, evidence URL, revision and review date.
+  An independently confirmed rate suppresses the Classic estimate.
+- Classic trainer examples require profession, recipe training skill and known
+  faction; only the player's faction or neutral examples appear. Known Classic
+  vendor faction restrictions are filtered too. Requirements remain references,
+  not claims of current Forever accessibility. No new trainer records were
+  guessed for this release.
+
+During normal release reviews, recheck cited Classic evidence when extending or
+changing this subset. Daily upstream monitoring remains focused on Forever;
+it does not auto-import or approve Classic facts. Publish reviewed corrections
+in the normal install ZIP. All beta 19 navigation safeguards remain in force.

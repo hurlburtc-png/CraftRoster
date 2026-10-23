@@ -12,6 +12,8 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Location tools:** Reviewed vendor, trainer and mob records can show NPC names, zones and coordinates, with copy controls and compatible TomTom/native map markers. Trainers show the required profession skill and are limited to verified trainers for your faction or neutral trainers. Unverified references cannot create waypoints. Coordinate coverage is still limited; missing positions are never guessed.
 
+**Classic fallback:** When Forever acquisition details are unknown, sourced Classic examples can show mobs, vendors, locations, coordinates and approximate drop rates. Every fallback is labelled unconfirmed in Forever; reference coordinates cannot create map markers. Confirmed Forever details take priority.
+
 ## Install
 
 1. Download **CraftRoster.zip** above, rather than GitHub’s **Code → Download ZIP**.

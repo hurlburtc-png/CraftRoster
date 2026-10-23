@@ -8,17 +8,17 @@ CraftRoster.RecipeSources = Sources
 local references = {
 	[17635] = { name = "Flask of the Titans", profession = "Alchemy", itemID = 13519,
 		itemName = "Recipe: Flask of the Titans", quality = 2, bindType = 0, skill = 300,
-		kind = "Boss", npc = "General Drakkisath", zone = "Upper Blackrock Spire", chance = 4.60 },
+	},
 	[20034] = { name = "Enchant Weapon - Crusader", profession = "Enchanting", itemID = 16252,
 		itemName = "Formula: Enchant Weapon - Crusader", quality = 2, bindType = 0, skill = 300,
-		kind = "Mob", npc = "Scarlet Spellbinder", zone = "Western Plaguelands", chance = 0.43 },
+	},
 	[19054] = { name = "Red Dragonscale Breastplate", profession = "Leatherworking", itemID = 15730,
 		itemName = "Pattern: Red Dragonscale Breastplate", quality = 3, bindType = 1, skill = 300,
 		requirement = "Dragonscale Leatherworking",
-		kind = "Boss", npc = "General Drakkisath", zone = "Upper Blackrock Spire", chance = 4.95 },
+	},
 	[23081] = { name = "Hyper-Radiant Flame Reflector", profession = "Engineering", itemID = 18657,
 		itemName = "Schematic: Hyper-Radiant Flame Reflector", quality = 2, bindType = 0, skill = 290,
-		kind = "Boss", npc = "Solakar Flamewreath", zone = "Upper Blackrock Spire", chance = 8.08 },
+	},
 }
 
 local bindingNames = {
@@ -154,6 +154,7 @@ function Sources:Get(recipeID)
 	end
 	itemID = itemID or (reference and reference.itemID)
 	if type(itemID) ~= "number" or itemID <= 0 or itemID ~= math.floor(itemID) then itemID = nil end
+	if reference and itemID~=reference.itemID then reference=nil end
 	local result = { itemID = itemID, reference = reference }
 	if not itemID then return result end
 	local getInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
@@ -188,17 +189,21 @@ function Sources:Format(recipeID, data, compact)
 	local reference = data.reference
 	local acquisition=acquisitionReferences[recipeID] or (grannyPatterns[data.itemID] and granny)
 	local lines = { "|cffffd100Where to get it|r" }
+ local locations=CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:Get(recipeID) or {}
+ local hasConfirmed=false
+ for _,location in ipairs(locations) do if location.confirmed then hasConfirmed=true end end
  local sources=libraryCall("GetRecipeSources",recipeID)
  local hasTrainers=(type(sources)=="table" and type(sources.trainer)=="table" and #sources.trainer>0)
   or (CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:HasTrainerData(recipeID))
  -- Free-form text cannot be faction-filtered safely for trainer recipes.
- if saved.sourceText and not hasTrainers then
+ if saved.sourceText and not hasTrainers and not hasConfirmed then
 		table.insert(lines, saved.sourceText)
 	end
- local locations=CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:Get(recipeID) or {}
  if #locations>0 then
   for _,location in ipairs(locations) do
    table.insert(lines,CraftRoster.RecipeLocations:Label(location))
+   local rate=CraftRoster.ClassicSources and CraftRoster.ClassicSources:ForeverRate(location)
+   if rate~=nil then table.insert(lines,("Forever drop chance: %.2f%% per kill"):format(rate)) end
    table.insert(lines,(location.source or "Database")..(location.confirmed and " · confirmed source record" or " reference; verify vendor stock in game."))
   end
  elseif acquisition and not saved.sourceText then
@@ -213,7 +218,7 @@ function Sources:Format(recipeID, data, compact)
   if not listed then table.insert(lines,"Trainer listings withheld: faction or training skill not verified for your character.") end
  end
 	data.hasLibrarySource=not not hasTrainers
-	if type(sources)=="table" then
+	if type(sources)=="table" and not hasConfirmed then
 		local labels={trainer="Trainer",vendor="Vendor",quest="Quest",container="Container",drop="Mob/boss drop"}
 		if saved.sourceText then table.insert(lines,"\nAdditional database sources:") end
 		for _,kind in ipairs({"trainer","vendor","quest","container","drop"}) do
@@ -249,16 +254,20 @@ function Sources:Format(recipeID, data, compact)
 		local borrowed=libraryCall("IsBorrowed",recipeID,"requiredSkill")
 		table.insert(lines,"Required skill: "..skill..(borrowed and (" ("..tostring(borrowed).." reference; unconfirmed)") or " (database reference)"))
 	end
-	if reference then
-		if saved.sourceText then table.insert(lines, "\nAdditional Classic reference:") end
-		table.insert(lines, reference.kind .. " drop: " .. reference.npc)
-		table.insert(lines, "Location: " .. reference.zone)
-		table.insert(lines, ("Estimated drop chance: ~%.2f%% per kill"):format(reference.chance))
-		table.insert(lines, "Classic estimate - Forever source/rate unconfirmed.")
-	elseif not saved.sourceText and not data.hasLibrarySource and not acquisition then
-		table.insert(lines, "Source unknown: no acquisition details available.")
-	end
-	if not reference and (not compact or (type(sources)=="table" and sources.drop)) then table.insert(lines, "Drop chance: unknown (no verified estimate)") end
+ local fallback=CraftRoster.ClassicSources and CraftRoster.ClassicSources:Format(recipeID,data.itemID,locations,compact)
+ if fallback then table.insert(lines,"\n"..fallback)
+ elseif not saved.sourceText and not data.hasLibrarySource and not acquisition and #locations==0 then
+  table.insert(lines,"Source unknown: no acquisition details available.")
+ end
+ local knownRate=false
+ for _,location in ipairs(locations) do
+  if CraftRoster.ClassicSources and CraftRoster.ClassicSources:ForeverRate(location)~=nil then knownRate=true end
+ end
+ local hasDrop=type(sources)=="table" and type(sources.drop)=="table" and #sources.drop>0
+ for _,location in ipairs(locations) do if location.kind=="mob" then hasDrop=true end end
+ if not fallback and not knownRate and (hasDrop or (#locations==0 and not data.hasLibrarySource)) then
+  table.insert(lines,"Drop chance: unknown (no verified estimate)")
+ end
 	if compact then return table.concat(lines,"\n") end
 	table.insert(lines, "\n|cffffd100Recipe item binding|r")
 	table.insert(lines, data.binding or "Unknown: learnable recipe item not mapped.")
