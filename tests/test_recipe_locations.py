@@ -124,12 +124,18 @@ CASES = {
  addon.Directory:Toggle()
  addon.Directory.selectedRecipe={id=42,name='Test craft',profession='Alchemy',crafters={}}
  addon.SelectedCraft:Refresh()
+ assert(#addon.SelectedCraft.locationRows==0,'collapsed source must not create location buttons')
+ addon.SelectedCraft.sourcesExpanded=true
+ addon.SelectedCraft:Refresh()
  local row=addon.SelectedCraft.locationRows[1]
  assert(row:IsShown() and row.record.npcID==123 and row.Copy:IsEnabled() and not row.Map:IsEnabled())
  local value
  StaticPopup_Show=function(which,_,__,data) assert(which=='CRAFTROSTER_COPY_LOCATION'); value=data end
  row.Copy.scripts.OnClick(); assert(value:find('/way #999',1,true))
  addon.Directory.selectedRecipe={id=1255143,name='Moonglow Boots',profession='Leatherworking',crafters={}}
+ addon.SelectedCraft:Refresh()
+ assert(not row:IsShown(),'new recipe defaults to collapsed location details')
+ addon.SelectedCraft.sourcesExpanded=true
  addon.SelectedCraft:Refresh()
  row.Copy.scripts.OnClick(); assert(value:find('/way #999',1,true),'unverified row cannot copy a command')
  assert(not row.record.confirmed and row.record.npcID==258306 and not row.Copy:IsEnabled() and not row.Map:IsEnabled())
