@@ -324,7 +324,13 @@ function View:RefreshSources()
  local column=self.column or math.max(196,self.tab.SelectedCraftScroll:GetWidth()-24)
  source:ClearAllPoints(); source:SetPoint("TOPLEFT",self.tab.Details,"TOPLEFT",12,-(self.sourceY or 164))
  source:SetWidth(column); source.Child:SetWidth(column)
- self.sourceToggle:SetText(self.sourcesExpanded and "Where to get it −" or "Where to get it +")
+ local sourceLocations=CraftRoster.RecipeLocations and CraftRoster.RecipeLocations:Get(recipe.id) or {}
+ local confirmed=false
+ for _,location in ipairs(sourceLocations) do
+  if location.confirmed then confirmed=true; break end
+ end
+ local sourceLabel=confirmed and "Where to get it" or "Where to get it (unverified)"
+ self.sourceToggle:SetText(sourceLabel..(self.sourcesExpanded and " −" or " +"))
  CraftRoster.Theme:Heading(self.sourceTitle,true)
  local text=self.sourcesExpanded and CraftRoster.RecipeSources:Format(recipe.id,nil,false) or CraftRoster.RecipeSources:Summary(recipe.id)
  text=text:gsub("^|cffffd100Where to get it|r\n","")
