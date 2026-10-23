@@ -404,6 +404,9 @@ function ShoppingList:Open(recipeID)
 	-- Some older clients lack BAG_UPDATE_DELAYED, so support both event paths.
 	pcall(function() self.frame:RegisterEvent("BAG_UPDATE_DELAYED") end)
 	self.frame:RegisterEvent("BAG_UPDATE")
+	-- Item data can arrive after the list opens; redraw placeholders when it does.
+	pcall(function() self.frame:RegisterEvent("GET_ITEM_INFO_RECEIVED") end)
+	pcall(function() self.frame:RegisterEvent("ITEM_DATA_LOAD_RESULT") end)
 	self:Refresh()
 end
 
