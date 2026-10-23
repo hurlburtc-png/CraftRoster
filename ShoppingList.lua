@@ -413,8 +413,14 @@ end
 function ShoppingList:Restore()
 	local state = GetState()
 	if not state or not state.visible or not state.recipeID then return end
-	-- Recipes can disappear after an addon/database upgrade. A saved window
-	-- must not keep pointing at a removed recipe or reopen phantom materials.
+	-- The bundled catalog is normally loaded lazily when the directory opens.
+	-- Only seed it on login when an open shopping list needs a missing ID;
+	-- otherwise valid catalog recipes would be mistaken for removed ones.
+	if not CraftRosterDB.recipes[state.recipeID] and CraftRoster.RecipeSources
+		and not CraftRoster.RecipeSources.catalogLoaded then
+		CraftRoster.RecipeSources:SeedCatalog()
+	end
+	-- Recipes can still disappear after an addon/database upgrade.
 	if not CraftRosterDB.recipes[state.recipeID] then
 		state.recipeID, state.crafter, state.visible = nil, nil, false
 		return
