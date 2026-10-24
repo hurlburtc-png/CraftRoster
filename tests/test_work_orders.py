@@ -31,6 +31,32 @@ CASES={
     assert(addon.WorkOrders.customerFilter=='Crafter-Realm')
     dispatch('TRADE_CLOSED'); assert(#addon.WorkOrders:GetOrders()==3)
 ''',
+'two_same_recipe_whispers_cannot_claim_an_arbitrary_addon_identity': '''
+    CraftRosterDB.recipes[42]={name='Boots',profession='Tailoring',itemLink='item:4320'}
+    CraftRosterDB.characters['Tester-Realm'].recipes[42]={}
+    local message='CraftRoster: Could you craft Boots? Materials: []'
+    dispatch('CHAT_MSG_WHISPER',message,'Crafter-Realm')
+    dispatch('CHAT_MSG_WHISPER',message,'Crafter-Realm')
+    assert(#addon.WorkOrders:GetOrders()==2)
+    dispatch('CHAT_MSG_ADDON','CRAFTROSTER','ORDER:42:ambiguous:Tester-Realm:Boots','GUILD','Crafter-Realm')
+    local orders=addon.WorkOrders:GetOrders()
+    assert(#orders==3,'distinct whispers must not silently collapse')
+    assert(orders[1].requestID==nil and orders[2].requestID==nil)
+    assert(orders[3].requestID=='ambiguous' and orders[3].status=='needs_review')
+    assert(not addon.WorkOrders:ConfirmDone(orders[3].id,1))
+''',
+'two_same_recipe_addon_requests_cannot_claim_an_arbitrary_whisper': '''
+    CraftRosterDB.recipes[42]={name='Boots',profession='Tailoring',itemLink='item:4320'}
+    CraftRosterDB.characters['Tester-Realm'].recipes[42]={}
+    dispatch('CHAT_MSG_ADDON','CRAFTROSTER','ORDER:42:one:Tester-Realm:Boots','GUILD','Crafter-Realm')
+    dispatch('CHAT_MSG_ADDON','CRAFTROSTER','ORDER:42:two:Tester-Realm:Boots','GUILD','Crafter-Realm')
+    assert(#addon.WorkOrders:GetOrders()==2)
+    dispatch('CHAT_MSG_WHISPER','CraftRoster: Could you craft Boots? Materials: []','Crafter-Realm')
+    local orders=addon.WorkOrders:GetOrders()
+    assert(#orders==3,'whisper cannot attach to a random addon order')
+    assert(orders[1].requestID=='one' and orders[2].requestID=='two')
+    assert(orders[3].status=='needs_review' and orders[3].requestID==nil)
+''',
 'whisper_and_addon_request_merge_without_losing_distinct_orders': '''
     CraftRosterDB.recipes[42]={name='Boots',profession='Tailoring',itemLink='item:4320'}
     CraftRosterDB.characters['Tester-Realm'].recipes[42]={}
