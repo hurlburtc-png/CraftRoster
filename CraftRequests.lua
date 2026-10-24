@@ -528,6 +528,18 @@ end
 AttachMaterials = function(mode)
 	if not pending or pending.mode ~= mode or not CraftRosterDB.settings.enabled then return end
 	if mode == "mail" then
+		-- Never redirect an addressed draft, or add materials after the player
+		-- changes the recipient of a prepared craft mail.
+		local recipient=SendMailNameEditBox and SendMailNameEditBox:GetText()
+		if type(recipient)=="string" and recipient:match("%S")
+			and Normalize(recipient)~=pending.target then
+			print("|cffffd100CraftRoster|r: this mail is addressed to someone else. Clear the recipient or open a fresh draft; no fields or attachments were changed.")
+			return
+		end
+		if pending.mailTextPrepared and SendMailNameEditBox and Normalize(recipient)~=pending.target then
+			print("|cffffd100CraftRoster|r: the craft mail recipient was cleared. Restore the intended crafter before loading materials.")
+			return
+		end
 		if not pending.mailTextPrepared then
 			local money=GetSendMailMoney and GetSendMailMoney() or 0
 			local cod=GetSendMailCOD and GetSendMailCOD() or 0
