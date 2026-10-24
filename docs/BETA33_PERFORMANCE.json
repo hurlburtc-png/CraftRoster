@@ -1,0 +1,66 @@
+{
+  "before": {
+    "lua51": {
+      "median_first_open_ms": 99.01,
+      "trials_ms": [
+        111.18,
+        95.73,
+        104.08,
+        95.11,
+        99.01
+      ],
+      "source_browsing": {
+        "runtime": "lua51",
+        "recipes_browsed": 1134,
+        "mock_retained_source_heap_kib": 7998.4
+      }
+    },
+    "luajit21": {
+      "median_first_open_ms": 52.96,
+      "trials_ms": [
+        50.46,
+        52.31,
+        56.02,
+        52.96,
+        62.97
+      ],
+      "source_browsing": {
+        "runtime": "luajit21",
+        "recipes_browsed": 1134,
+        "mock_retained_source_heap_kib": 5172.6
+      }
+    }
+  },
+  "after": {
+    "lua51": {
+      "median_first_open_ms": 86.27,
+      "trials_ms": [
+        99.46,
+        83.28,
+        83.18,
+        87.87,
+        86.27
+      ],
+      "source_browsing": {
+        "runtime": "lua51",
+        "recipes_browsed": 1134,
+        "mock_retained_source_heap_kib": 238.1
+      }
+    },
+    "luajit21": {
+      "median_first_open_ms": 48.14,
+      "trials_ms": [
+        48.14,
+        46.01,
+        51.06,
+        48.35,
+        41.6
+      ],
+      "source_browsing": {
+        "runtime": "luajit21",
+        "recipes_browsed": 1134,
+        "mock_retained_source_heap_kib": 236.6
+      }
+    }
+  }
+}
