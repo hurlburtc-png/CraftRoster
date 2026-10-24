@@ -1202,6 +1202,40 @@ CASES.update({
     """,
 })
 
+CASES.update({
+    'selected_craft_material_rows_stay_compact_at_three_six_ten': """
+        inventoryFixture(false,true)
+        addon.Directory:Toggle()
+        addon.Directory.selectedRecipe={id=42,name='Potion',profession='Alchemy',crafters={}}
+        local original=addon.ShoppingList.GetMaterialStatus
+        for _,count in ipairs({3,6,10}) do
+            addon.ShoppingList.GetMaterialStatus=function()
+                local entries={}
+                for i=1,count do
+                    entries[i]={name='Material '..i,itemID=7,icon='icon',
+                        owned=1,required=2,recipeRequired=2,delivered=0,crafterProvides=0}
+                end
+                return entries
+            end
+            addon.SelectedCraft:Refresh()
+            for i=1,count do
+                local row=addon.SelectedCraft.rows[i]
+                assert(row and row:IsShown() and row:GetHeight()==32,
+                    'selected craft material row must remain 32px high')
+                assert(row.Icon:GetWidth()==28 and row.Icon:GetHeight()==28,
+                    'compact material icon must remain 28px')
+                assert(row.Count:GetHeight()==28 and row.Label.wordWrap==false,
+                    'material counts and names must remain on one line')
+            end
+            if count<10 and addon.SelectedCraft.rows[count+1] then
+                assert(not addon.SelectedCraft.rows[count+1]:IsShown(),
+                    'unused material rows must hide after recipe change')
+            end
+        end
+        addon.ShoppingList.GetMaterialStatus=original
+    """,
+})
+
 class AddonTests(unittest.TestCase):
     pass
 
