@@ -32,6 +32,43 @@ CASES = {
         assert(addon.ItemDisplay:Click({name='Herb',itemID=42}))
         assert(inserted:find('item:42',1,true) and searches==0)
     """,
+    "shift_click_chat_failure_never_falls_through_to_ah": """
+        local searches=0
+        addon.ShoppingList.SearchAuctions=function() searches=searches+1; return true end
+        addon.ItemDisplay.Resolve=function(_,id,name) return name,'|Hitem:'..id..'|h['..name..']|h' end
+        ChatEdit_GetActiveWindow=function() return nil end
+        ChatEdit_InsertLink=function() return false end
+        IsShiftKeyDown=function() return true end
+        ChatFrame_OpenChat=function() error('chat UI blocked') end
+        assert(not addon.ItemDisplay:Click({name='Herb',itemID=42}))
+        assert(searches==0,'failed shift-click must not search the Auction House')
+        ChatFrame_OpenChat=function() return false end
+        assert(not addon.ItemDisplay:Click({name='Herb',itemID=42}))
+        assert(searches==0)
+    """,
+    "shift_click_missing_chat_api_or_item_link_never_searches_ah": """
+        local searches=0
+        addon.ShoppingList.SearchAuctions=function() searches=searches+1; return true end
+        addon.ItemDisplay.Resolve=function(_,id,name) return name,'|Hitem:'..id..'|h['..name..']|h' end
+        ChatEdit_GetActiveWindow=function() return nil end
+        ChatEdit_InsertLink=nil; ChatFrame_OpenChat=nil
+        IsShiftKeyDown=function() return true end
+        assert(not addon.ItemDisplay:Click({name='Herb',itemID=42}))
+        addon.ItemDisplay.Resolve=function(_,id,name) return name,nil end
+        assert(not addon.ItemDisplay:Click({name='Herb'}))
+        assert(searches==0)
+    """,
+    "shift_click_opens_chat_without_searching_ah": """
+        local searches,opened=0,nil
+        addon.ShoppingList.SearchAuctions=function() searches=searches+1; return true end
+        addon.ItemDisplay.Resolve=function(_,id,name) return name,'|Hitem:'..id..'|h['..name..']|h' end
+        ChatEdit_GetActiveWindow=function() return nil end
+        ChatEdit_InsertLink=function() return false end
+        IsShiftKeyDown=function() return true end
+        ChatFrame_OpenChat=function(link) opened=link end
+        assert(addon.ItemDisplay:Click({name='Herb',itemID=42}))
+        assert(opened:find('item:42',1,true) and searches==0)
+    """,
     "no_chat_routes_to_ah": """
         local searches=0
         addon.ShoppingList.SearchAuctions=function(_,entry)
