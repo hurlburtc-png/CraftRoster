@@ -1,5 +1,5 @@
 local ADDON_NAME, CraftRoster = ...
-local Items = { pending = {} }
+local Items = { pending = {}, loaded = {} }
 CraftRoster.ItemDisplay = Items
 
 -- GetItemInfo texture is return #10; pcall adds a leading success value.
@@ -14,7 +14,7 @@ function Items:Resolve(id, fallback)
  if not icon and id and type(getIcon)=="function" then
   local ok,value=pcall(getIcon,id); if ok then icon=value end
  end
- if id and not name and not self.pending[id] then
+ if id and (not name or not icon) and not self.pending[id] and not self.loaded[id] then
   -- Only mark a request pending when the client actually accepts it.
   -- Legacy clients without an async loader must remain retryable.
   if C_Item and type(C_Item.RequestLoadItemDataByID)=="function" then
@@ -88,6 +88,9 @@ events:SetScript("OnEvent",function(_,_,id,success)
  Items.pending[id]=nil
  -- A failed load is not permanent; the next Resolve may retry.
  if success==false then return end
+ -- Avoid an endless request/refresh loop if the client reports success
+ -- but still has no texture. Resolve continues checking the local cache.
+ Items.loaded[id]=true
  if CraftRoster.SelectedCraft then CraftRoster.SelectedCraft.cachedLink=nil end
  if CraftRoster.ShoppingList then CraftRoster.ShoppingList:ScheduleRefresh() end
  local directory=CraftRoster.Directory
