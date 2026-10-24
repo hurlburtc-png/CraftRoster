@@ -81,6 +81,29 @@ CASES = {
         assert(addon.ItemDisplay:Click({name='Herb',itemID=42}))
         assert(opened:find('item:42',1,true) and searches==0)
     """,
+    "missing_chat_lookup_never_opens_duplicate_after_failed_shift_insert": """
+        local searches,opened=0,0
+        addon.ShoppingList.SearchAuctions=function() searches=searches+1; return true end
+        addon.ItemDisplay.Resolve=function(_,id,name) return name,'|Hitem:'..id..'|h['..name..']|h' end
+        ChatEdit_GetActiveWindow=nil
+        ChatEdit_InsertLink=function() return false end
+        ChatFrame_OpenChat=function() opened=opened+1 end
+        IsShiftKeyDown=function() return true end
+        assert(not addon.ItemDisplay:Click({name='Herb',itemID=42}))
+        assert(searches==0 and opened==0,
+            'unknown chat state must not create a duplicate editor or search the AH')
+    """,
+    "missing_chat_lookup_keeps_successful_native_shift_insert": """
+        local inserted,opened,searches=0,0,0
+        addon.ShoppingList.SearchAuctions=function() searches=searches+1; return true end
+        addon.ItemDisplay.Resolve=function(_,id,name) return name,'|Hitem:'..id..'|h['..name..']|h' end
+        ChatEdit_GetActiveWindow=nil
+        ChatEdit_InsertLink=function() inserted=inserted+1; return true end
+        ChatFrame_OpenChat=function() opened=opened+1 end
+        IsShiftKeyDown=function() return true end
+        assert(addon.ItemDisplay:Click({name='Herb',itemID=42}))
+        assert(inserted==1 and opened==0 and searches==0)
+    """,
     "no_chat_routes_to_ah": """
         local searches=0
         addon.ShoppingList.SearchAuctions=function(_,entry)
