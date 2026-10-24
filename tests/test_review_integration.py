@@ -149,6 +149,7 @@ CASES={
 """,
 'guild_restriction_checks_fail_closed_without_losing_local_status': """
     local request={id='restricted',mode='incoming',target='Crafter-Realm',status='requested'}
+    CraftRosterDB.requests=CraftRosterDB.requests or {}
     table.insert(CraftRosterDB.requests,request)
     local warned=0
     addon.WarnChatRestricted=function() warned=warned+1 end
@@ -170,6 +171,7 @@ CASES={
 """,
 'guild_send_and_membership_errors_do_not_duplicate_requests': """
     local request={id='transport',mode='incoming',target='Crafter-Realm',status='requested'}
+    CraftRosterDB.requests=CraftRosterDB.requests or {}
     table.insert(CraftRosterDB.requests,request)
     C_ChatInfo=C_ChatInfo or {}
     local before=#sent
