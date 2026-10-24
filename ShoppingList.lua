@@ -163,22 +163,32 @@ function ShoppingList:SearchAuctions(entry)
 	-- Resolve the search field from the *visible* Auction House. Both legacy
 	-- and modern globals may exist after an AH closes or another addon loads.
 	-- Never populate a stale classic BrowseName when the modern AH is open.
-	local modernOpen = AuctionHouseFrame and AuctionHouseFrame.IsShown and AuctionHouseFrame:IsShown()
-	local legacyOpen = AuctionFrame and AuctionFrame.IsShown and AuctionFrame:IsShown()
+	-- Hybrid clients and third-party AH replacements may throw while switching
+	-- tabs. An unknown modern-AH state must not fall through to stale legacy UI.
+	local function visible(frame)
+		if not frame or type(frame.IsShown)~="function" then return false end
+		local ok,shown=pcall(frame.IsShown,frame)
+		if not ok then return nil end
+		return shown and true or false
+	end
+	local modernOpen=visible(AuctionHouseFrame)
+	-- Only consider the legacy AH after we know the modern one is closed.
+	local legacyOpen=modernOpen==false and visible(AuctionFrame)
 	local modernSearch = AuctionHouseFrame and AuctionHouseFrame.SearchBar and AuctionHouseFrame.SearchBar.SearchBox
 	local legacySearch = AuctionFrameBrowse and AuctionFrameBrowse.SearchBox or BrowseName
 	local search
 	if modernOpen then
-		-- A visible modern AH owns the search context, even if its search
-		-- bar is not available on the current tab. Never fall back to an
-		-- unrelated legacy field left behind by another addon.
-		if modernSearch and modernSearch.SetText
-			and (not modernSearch.IsShown or modernSearch:IsShown()) then
-			search = modernSearch
+		-- A visible modern AH owns the context, even when its search tab is
+		-- unavailable. Never fall back to a stale legacy BrowseName.
+		local boxVisible=modernSearch and (not modernSearch.IsShown or visible(modernSearch))
+		if modernSearch and type(modernSearch.SetText)=="function" and boxVisible then
+			search=modernSearch
 		end
-	elseif legacyOpen and legacySearch and legacySearch.SetText
-		and (not legacySearch.IsShown or legacySearch:IsShown()) then
-		search = legacySearch
+	elseif legacyOpen then
+		local boxVisible=legacySearch and (not legacySearch.IsShown or visible(legacySearch))
+		if legacySearch and type(legacySearch.SetText)=="function" and boxVisible then
+			search=legacySearch
+		end
 	end
 	if not search then
 		print("|cff00ff00CraftRoster|r: open the Auction House, then click the material again to fill its search field.")
