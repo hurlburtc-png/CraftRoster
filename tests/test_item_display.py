@@ -185,6 +185,27 @@ CASES = {
  assert(AuctionHouseFrame.SearchBar.SearchBox:GetText()=='modern untouched')
  assert(BrowseName:GetText()=='legacy untouched')
 ''',
+'auction_search_settext_error_is_reported_without_legacy_fallback': '''
+ inventoryFixture(false,true)
+ AuctionFrame=CreateFrame(); AuctionFrame:Show()
+ BrowseName=CreateFrame(); BrowseName:SetText('legacy unchanged')
+ AuctionHouseFrame=CreateFrame(); AuctionHouseFrame:Show()
+ local box=CreateFrame()
+ box.SetText=function() error('search tab is changing') end
+ AuctionHouseFrame.SearchBar={SearchBox=box}
+ assert(not addon.ShoppingList:SearchAuctions({name='Herb'}))
+ assert(BrowseName:GetText()=='legacy unchanged')
+''',
+'auction_search_focus_errors_do_not_discard_inserted_material': '''
+ inventoryFixture(false,true)
+ AuctionHouseFrame=CreateFrame(); AuctionHouseFrame:Show()
+ local box=CreateFrame()
+ box.SetFocus=function() error('focus unavailable') end
+ box.HighlightText=function() error('highlight unavailable') end
+ AuctionHouseFrame.SearchBar={SearchBox=box}
+ assert(addon.ShoppingList:SearchAuctions({name='Herb'}))
+ assert(box:GetText()=='Herb')
+''',
 'closed_auction_never_mutates_stale_search_fields': '''
  inventoryFixture(false,true)
  AuctionFrame=CreateFrame(); AuctionFrame:Hide()
