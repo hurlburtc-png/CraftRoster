@@ -69,8 +69,17 @@ function View:Initialize(tab)
  toggle:SetPoint("TOPRIGHT",0,0)
  local title=Text(toggle); title:SetAllPoints(); toggle:SetFontString(title)
  self.sourceTitle=title
- toggle:SetScript("OnClick",function() View.sourcesExpanded=not View.sourcesExpanded; View:Refresh() end)
+ toggle:SetScript("OnClick",function() GameTooltip:Hide(); View.sourcesExpanded=not View.sourcesExpanded; View:Refresh() end)
  self.sourceToggle=toggle
+ toggle:SetScript("OnEnter",function(button)
+  if not View.sourceSummaryClipped then return end
+  GameTooltip:SetOwner(button,"ANCHOR_RIGHT")
+  GameTooltip:SetText("Recipe sources")
+  GameTooltip:AddLine(View.sourceSummaryText or "",1,1,1,true)
+  GameTooltip:AddLine("Click to expand full sources and location controls.",1,0.82,0,true)
+  GameTooltip:Show()
+ end)
+ toggle:SetScript("OnLeave",function() GameTooltip:Hide() end)
  for _,frame in ipairs({tab.Details,tab.CrafterList,tab.RecipeSource}) do
   frame:EnableMouseWheel(true); frame:SetScript("OnMouseWheel",function(_,delta) View:Scroll(delta) end)
  end
@@ -348,7 +357,7 @@ function View:RefreshSources()
  if not self.tab then return end
  local source=self.tab.RecipeSource
  local recipe=CraftRoster.Directory.selectedRecipe
- if not recipe then source:Hide(); self.sourceHeight=0; return end
+ if not recipe then source:Hide(); self.sourceHeight=0; self.sourceSummaryClipped=false; self.sourceSummaryText=nil; return end
  source:Show(); source.Link:Hide(); source.Output:Hide(); source.Status:Hide()
  local column=self.column or math.max(196,self.tab.SelectedCraftScroll:GetWidth()-24)
  source:ClearAllPoints(); source:SetPoint("TOPLEFT",self.tab.Details,"TOPLEFT",12,-(self.sourceY or 164))
@@ -364,7 +373,17 @@ function View:RefreshSources()
  local text=self.sourcesExpanded and CraftRoster.RecipeSources:Format(recipe.id,nil,false) or CraftRoster.RecipeSources:Summary(recipe.id)
  text=text:gsub("^|cffffd100Where to get it|r\n","")
  source.Text:ClearAllPoints(); source.Text:SetPoint("TOPLEFT",0,-26)
- local height=Height(source.Text,text,column); source.Text:SetHeight(height)
+ -- Measure unrestricted text first, including after collapsing a prior
+ -- expansion. A long summary must not displace the material/crafter controls.
+ if source.Text.SetMaxLines then source.Text:SetMaxLines(0) end
+ local height=Height(source.Text,text,column)
+ self.sourceSummaryText=text
+ self.sourceSummaryClipped=not self.sourcesExpanded and height>72
+ if self.sourceSummaryClipped then
+  height=72
+  if source.Text.SetMaxLines then source.Text:SetMaxLines(4) end
+ end
+ source.Text:SetHeight(height)
  local y=height+32
  local locations=CraftRoster.RecipeLocations:Get(recipe.id)
  -- Only create the map/copy controls when acquisition details are expanded.
