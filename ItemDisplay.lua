@@ -93,6 +93,9 @@ function Items:Click(entry)
   end
   if IsShiftKeyDown and IsShiftKeyDown() then
    if ChatEdit_InsertLink then local ok,inserted=pcall(ChatEdit_InsertLink,link); if ok and inserted then return true end end
+   -- An absent editor lookup is not evidence that chat is closed.
+   -- Do not open a second chat window after an uncertain insert.
+   if type(ChatEdit_GetActiveWindow)~="function" then return false end
    if type(ChatFrame_OpenChat)=="function" then
     local ok,opened=pcall(ChatFrame_OpenChat,link)
     if ok and opened~=false then return true end
