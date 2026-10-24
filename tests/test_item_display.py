@@ -170,6 +170,21 @@ CASES = {
  assert(AuctionHouseFrame.SearchBar.SearchBox:GetText()=='Herb')
  assert(BrowseName:GetText()=='stale classic search')
 ''',
+'modern_auction_missing_search_does_not_write_to_legacy': '''
+ inventoryFixture(false,true)
+ AuctionFrame=CreateFrame(); AuctionFrame:Show()
+ BrowseName=CreateFrame(); BrowseName:SetText('legacy untouched')
+ AuctionHouseFrame=CreateFrame(); AuctionHouseFrame:Show()
+ AuctionHouseFrame.SearchBar={}
+ assert(not addon.ShoppingList:SearchAuctions({name='Herb'}))
+ assert(BrowseName:GetText()=='legacy untouched')
+ AuctionHouseFrame.SearchBar.SearchBox=CreateFrame()
+ AuctionHouseFrame.SearchBar.SearchBox:SetText('modern untouched')
+ AuctionHouseFrame.SearchBar.SearchBox:Hide()
+ assert(not addon.ShoppingList:SearchAuctions({name='Herb'}))
+ assert(AuctionHouseFrame.SearchBar.SearchBox:GetText()=='modern untouched')
+ assert(BrowseName:GetText()=='legacy untouched')
+''',
 'closed_auction_never_mutates_stale_search_fields': '''
  inventoryFixture(false,true)
  AuctionFrame=CreateFrame(); AuctionFrame:Hide()
