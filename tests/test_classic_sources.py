@@ -3,6 +3,25 @@ import unittest
 from test_work_orders import fresh
 
 CASES={
+'generated_source_cache_evicts_without_losing_shared_facts_or_reviewed_records': '''
+ local classic=addon.ClassicSources
+ local data=addon.ClassicSourceData
+ local reviewed=classic.records[20034]
+ data.npcs[900001]={npcID=900001,name='Cache vendor',zone='Test zone',x=1,y=2}
+ for i=1,70 do
+  data.recipes[900000+i]={spellID=900000+i,itemID=800000+i,sources={{kind='vendor',npcID=900001}}}
+ end
+ local first=classic:Get(900001,800001)
+ assert(first==classic:Get(900001,800001),'hot entries should reuse their expansion')
+ for i=2,70 do assert(classic:Get(900000+i,800000+i)) end
+ assert(not classic.records[900001],'generated copies must not grow permanent reviewed records')
+ local rebuilt=classic:Get(900001,800001)
+ assert(rebuilt and rebuilt~=first and rebuilt.sources[1].name=='Cache vendor')
+ assert(data.recipes[900001].sources[1].name==nil and data.npcs[900001].provider==nil)
+ assert(classic.records[20034]==reviewed and classic:Get(20034,16252)==reviewed)
+ assert(not classic:Get(900001,1),'wrong teaching items must still be rejected')
+''',
+
 'exact_recipe_item_pair_and_changed_forever_ids': '''
  local c=addon.ClassicSources
  assert(c:Get(20034,16252) and not c:Get(20034,99999) and not c:Get(99999,16252))
