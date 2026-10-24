@@ -4,6 +4,28 @@ import unittest
 from test_work_orders import fresh
 
 CASES={
+'version_groups_rebuild_correctly_after_singleton_and_missing_scan_filters': '''
+ for i=1,3 do CraftRosterDB.recipes[810000+i]={name='Regroup Example',profession='Alchemy'} end
+ CraftRosterDB.characters['Tester-Realm'].recipes[810001]={}
+ addon.Directory:Toggle()
+ local d=addon.Directory;local tab=d.frame.ProfessionsTab
+ local function results()
+  d.professionCache=nil;tab.SearchBox:SetText('Regroup Example');d:RefreshProfessions()
+  assert(#d.professionCache.entries==1)
+  return d.professionCache.entries[1].recipe
+ end
+ local recipe=results();assert(#recipe.versions==3)
+ CraftRosterDB.favorites={[810003]=true};CraftRosterDB.settings.favoritesOnly=true
+ recipe=results();assert(recipe.id==810003 and not recipe.versions)
+ CraftRosterDB.settings.favoritesOnly=false
+ recipe=results();assert(#recipe.versions==3)
+ CraftRosterDB.settings.recipeAvailability='missing'
+ recipe=results();assert(#recipe.versions==2)
+ for _,version in ipairs(recipe.versions) do assert(version.id~=810001) end
+ CraftRosterDB.settings.recipeAvailability='all'
+ recipe=results();assert(#recipe.versions==3)
+''',
+
 'clear_list_removes_active_recipe_without_erasing_craft_state': '''
  inventoryFixture(false,true)
  addon.ShoppingList:SetQuantity(42,4)
