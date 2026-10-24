@@ -167,6 +167,26 @@ CASES={
     assert(#messages==1 and messages[1]:find('manually',1,true))
     opened(1); assert(#messages==1)
 """,
+'visible_reader_uses_valid_open_mail_index_when_inbox_index_is_invalid': r"""
+    OpenMailFrame:Show()
+    for i,bad in ipairs({0,-1,'stale',1.5}) do
+        inbox[i]={sender='Crafter'..i..'-Realm',subject='Spidersilk Boots craft requested',
+            body='Requested item: Spidersilk Boots'}
+        InboxFrame.openMailID=bad
+        OpenMailFrame.openMailID=i
+        addon.MailOrders:CaptureOpened()
+        assert(#addon.WorkOrders:GetOrders()==i,
+            'visible reader ID must be used when inbox index is invalid')
+    end
+    OpenMailFrame:Hide()
+    InboxFrame.openMailID=0
+    OpenMailFrame.openMailID=5
+    inbox[5]={sender='Crafter5-Realm',subject='Spidersilk Boots craft requested',
+        body='Requested item: Spidersilk Boots'}
+    addon.MailOrders:CaptureOpened()
+    assert(#addon.WorkOrders:GetOrders()==4,
+        'hidden reader must never import mail')
+""",
 'opened_reader_fallback_index_and_bare_sender': r"""
     InboxFrame=nil; OpenMailFrame.openMailID=1
     inbox[1]={sender='Crafter',subject='Spidersilk Boots craft requested',body='Requested item: Spidersilk Boots'}
