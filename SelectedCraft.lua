@@ -322,7 +322,10 @@ function View:RefreshMaterials()
 	local known=recipe and own and own.recipes[recipe.id]
 	-- Put the primary action beside Quantity when both controls fit.
 	-- Long material/source sections must not push Craft below the fold.
-	self.actionInHeader=width>=360
+	-- Quantity plus native arrows occupy x=112..186. A 108px action
+	-- still fits beside them at 320px, saving 44px of vertical space
+	-- on narrow panels without obscuring the quantity controls.
+	self.actionInHeader=width>=320
 	self.craftButton:ClearAllPoints()
 	self.craftButton:SetPoint("TOPRIGHT",tab.Details,"TOPRIGHT",-12,self.actionInHeader and -68 or -bottom)
 	self.craftButton:SetSize(self.actionInHeader and math.min(160,width-212) or math.min(160,width-24),30)
