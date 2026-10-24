@@ -1,11 +1,11 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — 0.8.0-beta.45**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.46**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-[**Download tagged beta.45 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.45/CraftRoster.zip)
+[**Download tagged beta.46 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.46/CraftRoster.zip)
 
-**Version:** `0.8.0-beta.45`  
-**Released:** October 24, 2026 at 9:27:34 AM MDT (America/Edmonton; UTC−6).
+**Version:** `0.8.0-beta.46`  
+**Release status:** beta.46 publication pending automated release checks; exact America/Edmonton time to follow.
 
 
 
@@ -15,7 +15,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
-**Status:** Beta.45 release and addon checks passed: 2,019 tests (10 skipped); Forever recipe reconciliation and single-root-folder ZIP packaging passed. In-game validation remains outstanding.
+**Status:** Beta.46 source checks passed: 2,043 tests (10 skipped) and Forever recipe reconciliation. Release and single-root-folder ZIP checks pending. In-game validation remains outstanding.
 
 **Material pricing:** The recipe pane shows **Full mats** and **To buy** estimates using available local Auctioneer or TSM data. Full mats values all raw materials for your selected craft quantity. To buy subtracts bag stock, confirmed deliveries and crafter-provided materials. Missing prices show incomplete totals, never free materials. Hover for sources and coverage; click the estimate to reread local data. No scanning, external price database or purchases are added. [Pricing details and supported APIs](docs/PRICING.md).
 
@@ -26,7 +26,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Crafter data freshness:** Hover a crafter to see when their saved recipe snapshot was shared. Missing timestamps are stated explicitly. Online status does not establish that their recipe scan is current.
 
-**Latest reliability fixes:** Opened-mail capture rechecks the visible reader and sender/subject after reading the body, preventing mid-read inbox changes from attributing a request to the wrong customer. Shopping material clicks no longer crash or switch to an Auction House search when hybrid chat-window lookup fails. Hybrid clients with incomplete or throwing modern bag APIs now retry a coherent legacy bag scan. If neither can read bags safely, material counts remain unknown rather than falsely showing zero. Concurrent identical crafting requests are kept separate for review when more than one whisper/addon work order could match; no arbitrary request identity is attached.  Guild request status messages now fail safely when hybrid clients throw during restriction checks, guild membership checks or addon transport; uncertain sends are not retried automatically to avoid duplicate requests.  Trade and mail material auto-fill now tolerates unavailable modern bag APIs, falls back to legacy bag reads where possible, and skips transfers safely when bag contents cannot be read. Opened-mail imports pause when the visible reader and inbox report conflicting valid mail indices, avoiding a work order for the wrong sender. Craft mail will not overwrite an already-addressed draft or attach materials after its recipient changes. Opened-mail imports handle invalid inbox indexes on hybrid clients. Selected-recipe shift-click links tolerate chat API failures. Whisper drafts remain available for retry if the game cannot open a chat window.
+**Latest reliability fixes:** Material Auction House searches now stop safely if modern or legacy search-frame visibility fails, instead of filling an unrelated stale search field.  Opened-mail capture rechecks the visible reader and sender/subject after reading the body, preventing mid-read inbox changes from attributing a request to the wrong customer. Shopping material clicks no longer crash or switch to an Auction House search when hybrid chat-window lookup fails. Hybrid clients with incomplete or throwing modern bag APIs now retry a coherent legacy bag scan. If neither can read bags safely, material counts remain unknown rather than falsely showing zero. Concurrent identical crafting requests are kept separate for review when more than one whisper/addon work order could match; no arbitrary request identity is attached.  Guild request status messages now fail safely when hybrid clients throw during restriction checks, guild membership checks or addon transport; uncertain sends are not retried automatically to avoid duplicate requests.  Trade and mail material auto-fill now tolerates unavailable modern bag APIs, falls back to legacy bag reads where possible, and skips transfers safely when bag contents cannot be read. Opened-mail imports pause when the visible reader and inbox report conflicting valid mail indices, avoiding a work order for the wrong sender. Craft mail will not overwrite an already-addressed draft or attach materials after its recipient changes. Opened-mail imports handle invalid inbox indexes on hybrid clients. Selected-recipe shift-click links tolerate chat API failures. Whisper drafts remain available for retry if the game cannot open a chat window.
 
 **Search performance:** Version-group tables are now allocated only for duplicate recipes. Profession, guild and favorite filters run before text matching, and rarity colors reuse one shared table. Paired mock measurements are in [performance notes](docs/PERFORMANCE.md).
 
