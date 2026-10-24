@@ -927,27 +927,28 @@ local function BuildProfessionEntries()
  local availability=CraftRosterDB.settings.recipeAvailability
 
 
-	for _, recipe in ipairs(GetRecipeIndex()) do
-		local professionOK = Directory.selectedProfession == "All" or recipe.profession == Directory.selectedProfession
-		local searchOK = search == ""
-
-  if not searchOK then
+ local favorites=CraftRosterDB.favorites or {}
+ for _,recipe in ipairs(GetRecipeIndex()) do
+  -- Reject cheap filters before doing text/alias matching.
+  local eligible=(Directory.selectedProfession=="All" or recipe.profession==Directory.selectedProfession)
+   and (availability~="mine" or learned[recipe.id]~=nil)
+   and (availability~="missing" or learned[recipe.id]==nil)
+   and (not CraftRosterDB.settings.guildKnownOnly or #recipe.crafters>0)
+   and (not CraftRosterDB.settings.favoritesOnly or favorites[recipe.id])
+  local searchOK=eligible and search==""
+  if eligible and not searchOK then
    searchOK=true
+   local recipeID=tostring(recipe.id)
    for _,alternatives in ipairs(searchTerms) do
     local found=false
     for _,term in ipairs(alternatives) do
-     if recipe.searchName:find(term,1,true) or tostring(recipe.id)==term then found=true;break end
+     if recipe.searchName:find(term,1,true) or recipeID==term then found=true;break end
     end
     if not found then searchOK=false;break end
    end
   end
-
-		local availabilityOK=(availability~="mine" or learned[recipe.id]~=nil)
-   and (availability~="missing" or learned[recipe.id]==nil)
-		if availabilityOK and professionOK and searchOK and (not CraftRosterDB.settings.guildKnownOnly or #recipe.crafters>0) and (not CraftRosterDB.settings.favoritesOnly or (CraftRosterDB.favorites or {})[recipe.id]) then
-			table.insert(matching, recipe)
-		end
-	end
+  if eligible and searchOK then matching[#matching+1]=recipe end
+ end
 
 	table.sort(matching, function(a, b)
 		if sortMode == "crafters" then
@@ -960,26 +961,40 @@ local function BuildProfessionEntries()
 		return a.name < b.name
 	end)
 
+ -- Most recipes have no alternate version. Store them directly instead
+ -- of allocating a one-element versions table for every search result.
  local groups,grouped={},{}
  for _,recipe in ipairs(matching) do
   local key=recipe.profession.."\001"..recipe.searchName
-  if not groups[key] then groups[key]={};grouped[#grouped+1]=groups[key] end
-  groups[key][#groups[key]+1]=recipe
+  local position=groups[key]
+  if not position then
+   grouped[#grouped+1]=recipe;groups[key]=#grouped
+  else
+   local group=grouped[position]
+   if group.id then grouped[position]={group,recipe}
+   else group[#group+1]=recipe end
+  end
  end
  matching={}
  local player=GetCharacterKey()
- for _,versions in ipairs(grouped) do
-  if #versions>1 then table.sort(versions,function(a,b) return a.id>b.id end) end
-  local chosen=versions[1]
-  for _,version in ipairs(versions) do
-   if #version.crafters>0 then chosen=version;break end
+ for _,group in ipairs(grouped) do
+  if group.id then
+   group.versions=nil
+   matching[#matching+1]=group
+  else
+   local versions=group
+   table.sort(versions,function(a,b) return a.id>b.id end)
+   local chosen=versions[1]
+   for _,version in ipairs(versions) do
+    if #version.crafters>0 then chosen=version;break end
+   end
+   for _,version in ipairs(versions) do
+    for _,crafter in ipairs(version.crafters) do if crafter==player then chosen=version end end
+    version.versions=versions
+   end
+   for _,version in ipairs(versions) do if Directory.selectedRecipe and Directory.selectedRecipe.id==version.id then chosen=version end end
+   matching[#matching+1]=chosen
   end
-  for _,version in ipairs(versions) do
-   for _,crafter in ipairs(version.crafters) do if crafter==player then chosen=version end end
-   version.versions=#versions>1 and versions or nil
-  end
-  for _,version in ipairs(versions) do if Directory.selectedRecipe and Directory.selectedRecipe.id==version.id then chosen=version end end
-  matching[#matching+1]=chosen
  end
 	local entries = {}
 	local lastProfession = nil
