@@ -83,6 +83,30 @@ CASES = {
     end
 ''',
 
+'material_counts_and_names_remain_single_line_across_panel_widths': '''
+    local view=addon.SelectedCraft
+    local scroll=addon.Directory.frame.ProfessionsTab.SelectedCraftScroll
+    local original=addon.ShoppingList.GetMaterialStatus
+    addon.ShoppingList.GetMaterialStatus=function()
+        local entries={}
+        for i=1,10 do
+            entries[i]={name='Extra Long Material Name '..i,itemID=7,icon='icon',
+                owned=1,required=20,recipeRequired=20,delivered=0,crafterProvides=0}
+        end
+        return entries
+    end
+    for _,width in ipairs({320,399,400,436,600}) do
+        scroll:SetWidth(width);view:Refresh()
+        for i=1,10 do
+            local row=view.rows[i]
+            assert(row:IsShown() and row:GetHeight()==32)
+            assert(row.Icon:GetWidth()==28 and row.Count:GetHeight()==28)
+            assert(row.Count:GetText():find('1 / 20',1,true))
+            assert(row.Label:GetText():find('Extra Long Material Name',1,true))
+        end
+    end
+    addon.ShoppingList.GetMaterialStatus=original
+''',
 'quantity_keeps_native_arrows_across_theme_changes_and_accepts_typing': '''
     local tab=addon.Directory.frame.ProfessionsTab
     for _,arrow in ipairs({tab.CraftRosterQuantityUp,tab.CraftRosterQuantityDown}) do
