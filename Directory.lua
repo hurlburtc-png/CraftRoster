@@ -54,6 +54,8 @@ local SORT_LABELS = {
 }
 
 local sortMode = "name"
+local AVAILABILITY_LABELS={all="Recipes: All",mine="I know",missing="Not in my scan"}
+local AVAILABILITY_NEXT={all="mine",mine="missing",missing="all"}
 
 local function NormalizeSearch(value)
  value=tostring(value or ""):gsub("|H.-|h(.-)|h","%1"):gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")
@@ -695,6 +697,25 @@ function Directory:Initialize()
   GameTooltip:Show()
  end)
  professionsTab.GuildKnownCheck:SetScript("OnLeave",function() GameTooltip:Hide() end)
+ professionsTab.AvailabilityButton=CreateFrame("Button",nil,professionsTab,"UIPanelButtonTemplate")
+ local availability=AVAILABILITY_LABELS[CraftRosterDB.settings.recipeAvailability] and CraftRosterDB.settings.recipeAvailability or "all"
+ professionsTab.AvailabilityButton:SetText(AVAILABILITY_LABELS[availability])
+ CraftRoster.Theme:Button(professionsTab.AvailabilityButton)
+ professionsTab.AvailabilityButton:SetScript("OnClick",function(button)
+  local current=CraftRosterDB.settings.recipeAvailability or "all"
+  local nextMode=AVAILABILITY_NEXT[current] or "all"
+  CraftRosterDB.settings.recipeAvailability=nextMode
+  button:SetText(AVAILABILITY_LABELS[nextMode])
+  Directory:RefreshProfessions()
+ end)
+ professionsTab.AvailabilityButton:SetScript("OnEnter",function(button)
+  GameTooltip:SetOwner(button,"ANCHOR_RIGHT");GameTooltip:SetText("Recipe availability")
+  GameTooltip:AddLine("Click to cycle: All, I know, Not in my scan.",1,1,1,true)
+  GameTooltip:AddLine("Uses this character's saved learned recipes. Open and scan your professions to update them. Not in my scan does not prove a recipe is unlearned.",1,1,1,true)
+  GameTooltip:AddLine("Known by guild, Favorites and profession filters still apply. Missing guild sync data is not proof that nobody knows a recipe.",1,1,1,true)
+  GameTooltip:Show()
+ end)
+ professionsTab.AvailabilityButton:SetScript("OnLeave",function() GameTooltip:Hide() end)
 
 	professionsTab.SortButton = CreateFrame("Button", nil, professionsTab, "GameMenuButtonTemplate")
 	professionsTab.SortButton:SetSize(140, 22)
@@ -896,11 +917,15 @@ local function BuildProfessionEntries()
 	local tab = Directory.frame.ProfessionsTab
 	local search = NormalizeSearch(tab.SearchBox:GetText())
 	local cacheKey = search .. "\001" .. (Directory.selectedProfession or "All") .. "\001" .. sortMode
-		.. tostring(CraftRosterDB.settings.favoritesOnly).."\001"..tostring(CraftRosterDB.settings.guildKnownOnly)
+		.. tostring(CraftRosterDB.settings.favoritesOnly).."\001"..tostring(CraftRosterDB.settings.guildKnownOnly).."\001"..tostring(CraftRosterDB.settings.recipeAvailability)
 	if Directory.professionCache and Directory.professionCache.key == cacheKey then return Directory.professionCache.entries end
 	if Directory.lastQueryKey~=cacheKey then tab.Results:SetVerticalScroll(0);Directory.lastQueryKey=cacheKey end
  local searchTerms = GetSearchTerms(search)
 	local matching = {}
+ local own=CraftRosterDB.characters[GetCharacterKey()]
+ local learned=own and own.recipes or {}
+ local availability=CraftRosterDB.settings.recipeAvailability
+
 
 	for _, recipe in ipairs(GetRecipeIndex()) do
 		local professionOK = Directory.selectedProfession == "All" or recipe.profession == Directory.selectedProfession
@@ -917,7 +942,9 @@ local function BuildProfessionEntries()
    end
   end
 
-		if professionOK and searchOK and (not CraftRosterDB.settings.guildKnownOnly or #recipe.crafters>0) and (not CraftRosterDB.settings.favoritesOnly or (CraftRosterDB.favorites or {})[recipe.id]) then
+		local availabilityOK=(availability~="mine" or learned[recipe.id]~=nil)
+   and (availability~="missing" or learned[recipe.id]==nil)
+		if availabilityOK and professionOK and searchOK and (not CraftRosterDB.settings.guildKnownOnly or #recipe.crafters>0) and (not CraftRosterDB.settings.favoritesOnly or (CraftRosterDB.favorites or {})[recipe.id]) then
 			table.insert(matching, recipe)
 		end
 	end
@@ -1158,6 +1185,8 @@ function Directory:RefreshPlayers()
 				UIDropDownMenu_SetText(professions.Dropdown, "All")
 				CraftRosterDB.settings.favoritesOnly = false
 				professions.FavoritesCheck:SetChecked(false)
+                CraftRosterDB.settings.recipeAvailability="all"
+                professions.AvailabilityButton:SetText(AVAILABILITY_LABELS.all)
 				Directory:ShowTab(1)
 				Directory.selectedRecipe, Directory.selectedCrafter = target, nil
 				Directory:RefreshDetails()
