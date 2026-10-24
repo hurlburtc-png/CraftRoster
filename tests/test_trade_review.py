@@ -231,6 +231,43 @@ CASES = {
     ''',
 }
 
+# Mail inspection must fail closed when hybrid client APIs throw. Retry the
+# same pending draft after the API recovers; never mutate a pre-existing draft.
+for api in ('GetSendMailMoney', 'GetSendMailCOD', 'GetSendMailItem'):
+    CASES[f'mail_inspection_{api}_error_is_retryable'] = f"""
+        inventoryFixture(false,true)
+        MailFrame=CreateFrame(); MailFrame:Show()
+        SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame(); SendMailBodyEditBox=CreateFrame()
+        local original={api}
+        {api}=function() error('hybrid mail API temporarily unavailable') end
+        addon.Requests:MailPlayer(42,'Crafter-Realm')
+        assert(moved==0 and SendMailNameEditBox:GetText()=='' and
+            SendMailSubjectEditBox:GetText()=='' and SendMailBodyEditBox:GetText()=='',
+            'unknown mail state must not change the outgoing draft')
+        {api}=original
+        dispatch('MAIL_SHOW')
+        assert(moved==3 and SendMailNameEditBox:GetText()=='Crafter-Realm' and
+            SendMailSubjectEditBox:GetText()=='Potion craft requested',
+            'recovered mail inspection should prepare the same pending request')
+    """
+
+for field in ('SendMailNameEditBox', 'SendMailSubjectEditBox', 'SendMailBodyEditBox'):
+    CASES[f'mail_inspection_{field}_error_is_retryable'] = f"""
+        inventoryFixture(false,true)
+        MailFrame=CreateFrame(); MailFrame:Show()
+        SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame(); SendMailBodyEditBox=CreateFrame()
+        local original={field}.GetText
+        {field}.GetText=function() error('mail edit box not ready') end
+        addon.Requests:MailPlayer(42,'Crafter-Realm')
+        assert(moved==0 and SendMailNameEditBox.text=='' and
+            SendMailSubjectEditBox.text=='' and SendMailBodyEditBox.text=='',
+            'unreadable draft fields must not authorize attachment or overwrite')
+        {field}.GetText=original
+        dispatch('MAIL_SHOW')
+        assert(moved==3 and SendMailNameEditBox:GetText()=='Crafter-Realm' and
+            SendMailSubjectEditBox:GetText()=='Potion craft requested')
+    """
+
 for final_status in ('completed','declined','cancelled'):
     CASES[f'final_request_{final_status}_does_not_resume_old_delivery'] = f'''
         inventoryFixture(false,true)
