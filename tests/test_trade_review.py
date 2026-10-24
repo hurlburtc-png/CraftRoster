@@ -8,6 +8,55 @@ import unittest
 from test_work_orders import fresh
 
 CASES = {
+    'hybrid_container_errors_fall_back_to_legacy_bag_reads': '''
+        inventoryFixture(false,true)
+        local slots=C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
+        local link=C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
+        GetContainerNumSlots=slots; GetContainerItemLink=link
+        C_Container=C_Container or {}
+        C_Container.GetContainerNumSlots=function() error('modern slots unavailable') end
+        C_Container.GetContainerItemLink=function() error('modern link unavailable') end
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+        dispatch('TRADE_SHOW')
+        assert(moved==3 and attachments[1]==3,
+            'legacy bag functions should safely supply the intended reagent')
+    ''',
+    'hybrid_container_missing_results_fall_back_to_legacy': '''
+        inventoryFixture(false,true)
+        local slots=C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
+        local link=C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
+        GetContainerNumSlots=slots; GetContainerItemLink=link
+        C_Container=C_Container or {}
+        C_Container.GetContainerNumSlots=function() return nil end
+        C_Container.GetContainerItemLink=function() return nil end
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+        dispatch('TRADE_SHOW')
+        assert(moved==3 and attachments[1]==3,
+            'nil modern bag data must not hide available legacy item data')
+    ''',
+    'broken_both_container_apis_skip_automatic_transfer': '''
+        inventoryFixture(false,true)
+        C_Container=C_Container or {}
+        C_Container.GetContainerNumSlots=function() error('modern slots broken') end
+        GetContainerNumSlots=function() error('legacy slots broken') end
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+        local id=CraftRosterDB.requests[1].id
+        dispatch('TRADE_SHOW')
+        assert(moved==0 and not next(attachments),
+            'unreadable bags must not attach an arbitrary item')
+        assert(addon.Requests:GetTradeProgress(id).remaining==3,
+            'failed bag read must preserve undelivered material ledger')
+    ''',
+    'valid_empty_modern_bag_does_not_reopen_stale_legacy_slots': '''
+        inventoryFixture(false,true)
+        GetContainerNumSlots=function() return 2 end
+        C_Container=C_Container or {}
+        C_Container.GetContainerNumSlots=function() return 0 end
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+        dispatch('TRADE_SHOW')
+        assert(moved==0 and not next(attachments),
+            'a valid modern zero-slot result must not be overridden by stale legacy slots')
+    ''',
     'outstanding_delivery_ledger_survives_short_history_trimming': '''
         inventoryFixture(false,true)
         CraftRosterDB.recipes[42].materials[1].count=30
