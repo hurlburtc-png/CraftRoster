@@ -91,8 +91,8 @@ function Sources:GetMaterials(recipeID)
 end
 function Sources:GetRecipeIcon(recipeID,fallback,cachedOnly)
  local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
- local itemID=self:GetOutputItemID(recipeID)
- if not cachedOnly and itemID and CraftRoster.ItemDisplay then
+ local itemID=not cachedOnly and self:GetOutputItemID(recipeID)
+ if itemID and CraftRoster.ItemDisplay then
   local _,_,icon=CraftRoster.ItemDisplay:Resolve(itemID)
   if icon then return icon end
  end
