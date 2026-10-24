@@ -151,7 +151,8 @@ CASES = {
 ''',
 'shift_click_opens_native_chat_and_plain_click_keeps_ah_search': '''
  inventoryFixture(false,true); addon.ShoppingList:Open(42)
- ChatEdit_GetActiveWindow=nil; ChatEdit_InsertLink=nil
+ -- Explicitly confirm no editor is active before testing the open-chat fallback.
+ ChatEdit_GetActiveWindow=function() return nil end; ChatEdit_InsertLink=nil
  local opened; ChatFrame_OpenChat=function(link) opened=link end
  IsShiftKeyDown=function() return true end
  local row=addon.ShoppingList.frame.Rows[1]; row.scripts.OnClick(row,'LeftButton')
