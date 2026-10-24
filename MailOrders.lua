@@ -47,7 +47,12 @@ local function OpenIndex()
 	-- Some clients leave InboxFrame.openMailID at 0 while the visible reader
 	-- tracks its actual message on OpenMailFrame. Lua treats 0 as truthy.
 	local index=InboxFrame and InboxFrame.openMailID
-	if not valid(index) then index=OpenMailFrame.openMailID end
+	local readerIndex=OpenMailFrame.openMailID
+	-- Never attribute the visible mail to a different inbox entry when both
+	-- frames report valid but conflicting indices. Wait for the reader state
+	-- to settle rather than recording an order for the wrong sender.
+	if valid(index) and valid(readerIndex) and index~=readerIndex then return end
+	if not valid(index) then index=readerIndex end
 	if valid(index) then return index end
 end
 local function PlainName(value)
