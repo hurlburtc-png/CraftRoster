@@ -41,8 +41,14 @@ local function OpenIndex()
 	if not OpenMailFrame or type(OpenMailFrame.IsShown)~="function" then return end
 	local ok,shown=pcall(OpenMailFrame.IsShown,OpenMailFrame)
 	if not ok or not shown then return end
-	local index=InboxFrame and InboxFrame.openMailID or OpenMailFrame.openMailID
-	if type(index)=="number" and index>0 and index==math.floor(index) then return index end
+	local function valid(index)
+		return type(index)=="number" and index>0 and index==math.floor(index)
+	end
+	-- Some clients leave InboxFrame.openMailID at 0 while the visible reader
+	-- tracks its actual message on OpenMailFrame. Lua treats 0 as truthy.
+	local index=InboxFrame and InboxFrame.openMailID
+	if not valid(index) then index=OpenMailFrame.openMailID end
+	if valid(index) then return index end
 end
 local function PlainName(value)
 	local itemID=tonumber(value:match("|Hitem:(%d+)"))
