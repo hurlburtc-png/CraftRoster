@@ -274,13 +274,17 @@ function View:RefreshMaterials()
 	local bottom=math.max(y+8,self.sourceY+(self.sourceHeight or 0)+8)
 	local own=CraftRosterDB.characters[UnitName("player").."-"..(GetRealmName() or "")]
 	local known=recipe and own and own.recipes[recipe.id]
-	self.craftButton:ClearAllPoints(); self.craftButton:SetPoint("TOPRIGHT",tab.Details,"TOPRIGHT",-12,-bottom)
-	self.craftButton:SetSize(math.min(160,width-24),32)
+	-- Put the primary action beside Quantity when both controls fit.
+	-- Long material/source sections must not push Craft below the fold.
+	self.actionInHeader=width>=360
+	self.craftButton:ClearAllPoints()
+	self.craftButton:SetPoint("TOPRIGHT",tab.Details,"TOPRIGHT",-12,self.actionInHeader and -68 or -bottom)
+	self.craftButton:SetSize(self.actionInHeader and math.min(160,width-212) or math.min(160,width-24),30)
 	-- Keep the action visible at narrow widths without overlapping the source
 	-- and materials sections; the unified scroll still handles long recipes.
 	self.craftButton:SetText(known and "Craft" or "Request craft")
 	self.craftButton:SetEnabled(recipe and CraftRosterDB.settings.enabled and (known or CraftRoster.Directory.selectedCrafter) and true or false)
-	bottom=bottom+44
+	if not self.actionInHeader then bottom=bottom+44 end
 	tab.Details:SetHeight(bottom)
 	self.crafterTitle:ClearAllPoints(); self.crafterTitle:SetPoint("TOPLEFT",tab.SelectedCraftContent,"TOPLEFT",12,-(bottom+8))
 	self.crafterTitle:SetSize(math.max(100,width-160),24)
