@@ -305,7 +305,9 @@ function View:Refresh()
 		self.tab.SelectedCraftScroll:SetVerticalScroll(0)
 	end
 	local width=math.max(220,self.tab.SelectedCraftScroll:GetWidth())
-	self.stacked=width<460
+	-- Two readable columns fit from 400px; stacking at 460px made the
+	-- default 1000px window needlessly tall.
+	self.stacked=width<400
 	local column=self.stacked and width-24 or math.floor((width-36)/2)
 	self.column=column
 	self.recipeTitle:ClearAllPoints(); self.recipeTitle:SetPoint("TOPLEFT",12,-102); self.recipeTitle:SetSize(column,26)
