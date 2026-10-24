@@ -118,18 +118,32 @@ function Requests:SetIncomingStatus(requestID,customer,status)
 	return false
 end
 
+-- Hybrid clients can expose modern container helpers before they are usable.
+-- A failed bag read must never crash or select an unrelated attachment.
 local function GetNumSlots(bag)
-	if C_Container and C_Container.GetContainerNumSlots then
-		return C_Container.GetContainerNumSlots(bag)
+	local modern=C_Container and C_Container.GetContainerNumSlots
+	if type(modern)=="function" then
+		local ok,slots=pcall(modern,bag)
+		if ok and type(slots)=="number" and slots>=0 and slots==math.floor(slots) then return slots end
 	end
-	return GetContainerNumSlots and GetContainerNumSlots(bag) or 0
+	if type(GetContainerNumSlots)=="function" then
+		local ok,slots=pcall(GetContainerNumSlots,bag)
+		if ok and type(slots)=="number" and slots>=0 and slots==math.floor(slots) then return slots end
+	end
+	return 0
 end
 
 local function GetItemLink(bag, slot)
-	if C_Container and C_Container.GetContainerItemLink then
-		return C_Container.GetContainerItemLink(bag, slot)
+	local modern=C_Container and C_Container.GetContainerItemLink
+	if type(modern)=="function" then
+		local ok,link=pcall(modern,bag,slot)
+		if ok and type(link)=="string" and link~="" then return link end
 	end
-	return GetContainerItemLink and GetContainerItemLink(bag, slot)
+	if type(GetContainerItemLink)=="function" then
+		local ok,link=pcall(GetContainerItemLink,bag,slot)
+		if ok and type(link)=="string" and link~="" then return link end
+	end
+	return nil
 end
 
 function Requests:TrimHistory()
