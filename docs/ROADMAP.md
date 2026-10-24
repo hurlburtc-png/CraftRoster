@@ -22,9 +22,9 @@ implemented. Trades, mail sending and crafting completion remain user-confirmed.
 
 ## Remaining usability targets
 
-1. Complete recipe availability filters: **Known by guild** is implemented;
-   **I know** and **Missing recipe** remain. Missing sync data must not imply
-   that a recipe is genuinely unknown.
+1. Availability filters are implemented: **Known by guild**, **I know** and
+   **Not in my scan**. The latter uses saved data rather than claiming confirmed
+   unlearned status; complete scan freshness remains below.
 2. Crafter tooltips now show shared snapshot age. Profession-specific scan
    freshness and offline last-seen details remain.
 3. A shared multi-recipe shopping list that combines reagents and separates
