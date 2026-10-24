@@ -2,8 +2,10 @@
 
 [**Download CraftRoster.zip — 0.8.0-beta.33**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
+[**Download tagged beta.33 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.33/CraftRoster.zip)
+
 **Version:** `0.8.0-beta.33`  
-**Released:** Pending beta.33 release validation; publication time will be recorded in America/Edmonton.
+**Released:** October 23, 2026 at 11:27:40 PM MDT (America/Edmonton; October 24, 12:27:40 AM EST).
 
 
 
@@ -13,7 +15,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
-**Status:** Beta. Beta 33 release validation pending; beta.32 passed 1,766 tests (10 skipped). In-game verification is still required.
+**Status:** Beta. Beta 33 release validation passed: 1,796 tests run, 10 skipped; single-root-folder ZIP packaging checks passed. In-game verification is still required.
 
 **Location tools:** Reviewed vendor, trainer and mob records can show NPC names, zones and coordinates, with copy controls and compatible TomTom/native map markers. Trainers show the required profession skill and are limited to verified trainers for your faction or neutral trainers. Unverified references cannot create waypoints. Coordinate coverage is still limited; missing positions are never guessed.
 
@@ -22,7 +24,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Crafter data freshness:** Hover a crafter to see when their saved recipe snapshot was shared. Missing timestamps are stated explicitly. Online status does not establish that their recipe scan is current.
 
-**Latest reliability fixes:** Whisper drafts remain available for retry if the game cannot open a chat window. Shift-clicking a material no longer falls through to Auction House search when chat insertion fails.\n\n**Latest usability fixes:** Click the availability button below **Known by guild** to cycle **All**, **I know** and **Not in my scan**. These use this character’s saved learned recipes and combine with guild, profession and favorite filters. Scan your professions to update the results; absence from a scan does not establish that a recipe is unlearned. Long source previews are limited to four lines; hover the source heading for the complete summary or expand it for full sources and navigation controls. Craft / Request craft sits beside Quantity on normal-width panes, saving 44 pixels below the materials. Narrow panes keep the controls separate to prevent overlap. The default window keeps recipe details and materials side by side; narrow panes stack them for readability. Beta 29’s installable ZIP passed its automated suite: 1,670 tests run, 10 skipped.
+**Latest reliability fixes:** Whisper drafts remain available for retry if the game cannot open a chat window. Shift-clicking a material no longer falls through to Auction House search when chat insertion fails.\n\n**Latest usability fixes:** Click the availability button below **Known by guild** to cycle **All**, **I know** and **Not in my scan**. These use this character’s saved learned recipes and combine with guild, profession and favorite filters. Scan your professions to update the results; absence from a scan does not establish that a recipe is unlearned. Long source previews are limited to four lines; hover the source heading for the complete summary or expand it for full sources and navigation controls. Craft / Request craft sits beside Quantity on normal-width panes, saving 44 pixels below the materials. Narrow panes keep the controls separate to prevent overlap. The default window keeps recipe details and materials side by side; narrow panes stack them for readability. 
 
  Clear the active shopping list with **Clear list**. Search matches all entered words, including aliases such as wrist/bracer. Tick **Known by guild** below the search to show only recipes in your own or saved guildmates’ scans, including offline members. Same-name recipes share one result with a **Version** selector; each version keeps its own crafters, materials and sources. The selected-recipe pane uses more width and shows a short source overview; expand it for full details. Ten Enchanting recipes now include named Classic vendor examples and sourced coordinates, clearly unconfirmed for Forever.
 
