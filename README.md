@@ -5,7 +5,7 @@
 [**Download tagged beta.38 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.38/CraftRoster.zip)
 
 **Version:** `0.8.0-beta.38`  
-**Released:** Pending release verification; exact America/Edmonton timestamp will follow.
+**Released:** October 24, 2026 at 3:19:59 AM MDT (America/Edmonton)
 
 
 
@@ -15,7 +15,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
-**Status:** Beta. Beta 38 pre-release checks passed: 1,868 tests run, 10 skipped; release packaging verification pending. In-game verification is still required.
+**Status:** Beta. Beta 38 release and addon checks passed: 1,868 tests run, 10 skipped. Automated packaging confirms a single `CraftRoster/` root. In-game verification is still required.
 
 **Location tools:** Reviewed vendor, trainer and mob records can show NPC names, zones and coordinates, with copy controls and compatible TomTom/native map markers. Trainers show the required profession skill and are limited to verified trainers for your faction or neutral trainers. Unverified references cannot create waypoints. Coordinate coverage is still limited; missing positions are never guessed.
 
