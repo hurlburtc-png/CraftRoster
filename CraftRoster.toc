@@ -3,7 +3,7 @@
 ## IconTexture: Interface\Icons\INV_Potion_97
 ## Notes: Find guild crafters, recipes and required materials.
 ## Author: hurlburtc-png
-## Version: 0.8.0-beta.29
+## Version: 0.8.0-beta.30
 ## X-ReleaseChannel: beta
 ## OptionalDeps: TomTom
 ## SavedVariables: CraftRosterDB
