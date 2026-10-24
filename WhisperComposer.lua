@@ -137,7 +137,15 @@ function Composer:SendNext()
 	if not CraftRosterDB.settings.enabled then self:Status("Enable CraftRoster before sending."); return false end
 	if type(SendChatMessage)~="function" then
 		CraftRoster.Requests.whisperDrafts=self.queue; CraftRoster.Requests.whisperTarget=self.target
-		CraftRoster.Requests:NextWhisper(); self.queue=nil
+		local ok,opened=pcall(CraftRoster.Requests.NextWhisper,CraftRoster.Requests)
+		if not ok or not opened then
+			-- A missing or broken chat editor must not discard the only copy
+			-- of the request. Keep the composer queue for a manual retry.
+			CraftRoster.Requests.whisperDrafts=nil; CraftRoster.Requests.whisperTarget=nil
+			self:Status("Whisper draft could not open. Message kept for retry or copying.")
+			return false
+		end
+		self.queue=nil
 		self:Status("Whisper draft opened. Press Enter to send; /crwhisper opens any remaining lines.")
 		return false
 	end
