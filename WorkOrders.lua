@@ -71,6 +71,8 @@ function Orders:Find(id)
 	for _, order in ipairs(State().orders) do if order.id == id then return order end end
 end
 function Orders:FindRequest(requestID,customer)
+	-- Nil is not an identity: manual/whisper orders have no addon request ID.
+	if type(requestID)~="string" or requestID=="" then return nil end
 	for _,order in ipairs(State().orders) do
 		if order.requestID==requestID and Normalize(order.customer)==Normalize(customer) then return order end
 	end
@@ -97,7 +99,14 @@ function Orders:Add(customer, recipeID, quantity, requestID, source)
 	if not state or identity == Normalize(UnitName("player")) then return end
 	if requestID then
 		for _, order in ipairs(state.orders) do
-			if order.requestID == requestID and Normalize(order.customer)==identity then return order end
+			if order.requestID == requestID and Normalize(order.customer)==identity then
+				-- Never silently discard a different recipe or quantity just because
+				-- a restarted client reused an old request ID. Status updates also
+				-- use this ID, so accepting a collision would target the wrong job.
+				if order.recipeID==recipeID and order.quantity==quantity then return order end
+				Say("Conflicting request ID from " .. customer .. ". No order was added; ask for a fresh request or add it manually.")
+				return nil
+			end
 		end
 	end
 	local needsReview=false
