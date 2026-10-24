@@ -11,6 +11,22 @@ addon.Directory:RefreshDetails()
 '''
 
 CASES = {
+'readable_columns_at_default_width_and_stack_only_when_narrow': '''
+    local view=addon.SelectedCraft
+    local scroll=addon.Directory.frame.ProfessionsTab.SelectedCraftScroll
+    for _,width in ipairs({436,400,399,600,436}) do
+        scroll:SetWidth(width)
+        view:Refresh()
+        assert(view.stacked==(width<400))
+        if width>=400 then
+            assert(view.column>=182)
+            assert(view.rows[1]:GetWidth()==view.column)
+        else
+            assert(view.column==width-24)
+        end
+    end
+''',
+
 'quantity_keeps_native_arrows_across_theme_changes_and_accepts_typing': '''
     local tab=addon.Directory.frame.ProfessionsTab
     for _,arrow in ipairs({tab.CraftRosterQuantityUp,tab.CraftRosterQuantityDown}) do
