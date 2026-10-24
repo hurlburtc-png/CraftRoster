@@ -35,6 +35,28 @@ CASES = {
         addon.SelectedCraft.recipeButton.scripts.OnClick(addon.SelectedCraft.recipeButton,'LeftButton')
         assert(opened==0,'two failed chat APIs must not create another editor')
     """,
+    'missing_chat_lookup_after_failed_insert_never_opens_duplicate': """
+        local attempted,opened=0,0
+        ChatEdit_InsertLink=function() attempted=attempted+1; return false end
+        ChatEdit_GetActiveWindow=nil
+        ChatFrame_OpenChat=function() opened=opened+1 end
+        local tab=addon.Directory.frame.ProfessionsTab
+        tab.CraftItemHover.scripts.OnClick(tab.CraftItemHover,'LeftButton')
+        addon.SelectedCraft.recipeButton.scripts.OnClick(addon.SelectedCraft.recipeButton,'LeftButton')
+        assert(attempted==2 and opened==0,
+            'missing editor lookup must not be treated as a confirmed closed editor')
+    """,
+    'missing_chat_lookup_does_not_block_successful_insert': """
+        local attempted,opened=0,0
+        ChatEdit_InsertLink=function() attempted=attempted+1; return true end
+        ChatEdit_GetActiveWindow=nil
+        ChatFrame_OpenChat=function() opened=opened+1 end
+        local tab=addon.Directory.frame.ProfessionsTab
+        tab.CraftItemHover.scripts.OnClick(tab.CraftItemHover,'LeftButton')
+        addon.SelectedCraft.recipeButton.scripts.OnClick(addon.SelectedCraft.recipeButton,'LeftButton')
+        assert(attempted==2 and opened==0,
+            'successful native inserts must still work without an editor lookup')
+    """,
     'successful_chat_insert_never_queries_or_opens_another_editor': """
         local attempted,opened,lookups=0,0,0
         ChatEdit_InsertLink=function() attempted=attempted+1;return true end
