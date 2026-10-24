@@ -21,8 +21,18 @@ local function Click(link,button,owner)
 	if not link then return end
 	if button=="RightButton" then StaticPopup_Show("CRAFTROSTER_COPY_LINK",nil,nil,link)
 	elseif IsShiftKeyDown and IsShiftKeyDown() then
-		if ChatEdit_InsertLink and ChatEdit_InsertLink(link) then return end
-		if ChatFrame_OpenChat then ChatFrame_OpenChat(link) end
+		-- A failed chat insert must not open a second chat box over an active
+		-- editor. Some hybrid clients expose chat helpers that can throw.
+		if ChatEdit_InsertLink then
+			local ok,inserted=pcall(ChatEdit_InsertLink,link)
+			if ok and inserted then return end
+		end
+		local active
+		if ChatEdit_GetActiveWindow then
+			local ok,editor=pcall(ChatEdit_GetActiveWindow)
+			if ok then active=editor end
+		end
+		if not active and ChatFrame_OpenChat then pcall(ChatFrame_OpenChat,link) end
 	elseif SetItemRef then
 		local payload=link:match("|H(.-)|h")
 		if payload and pcall(SetItemRef,payload,link,"LeftButton") then return end
