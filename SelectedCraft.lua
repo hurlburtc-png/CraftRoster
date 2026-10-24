@@ -30,7 +30,10 @@ local function Click(link,button,owner)
 		local active
 		if ChatEdit_GetActiveWindow then
 			local ok,editor=pcall(ChatEdit_GetActiveWindow)
-			if ok then active=editor end
+			-- A throwing hybrid API does not prove that no editor is open.
+			-- Never create a second chat window when the active one is unknown.
+			if not ok then return end
+			active=editor
 		end
 		if not active and ChatFrame_OpenChat then pcall(ChatFrame_OpenChat,link) end
 	elseif SetItemRef then
