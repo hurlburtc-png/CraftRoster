@@ -25,6 +25,7 @@ function methods:GetFrameLevel() return rawget(self,'frameLevel') or 1 end
 function methods:IsMovable() return self.movable == true end
 function methods:GetWidth() return rawget(self,'width') or 100 end
 function methods:GetHeight() return rawget(self,'height') or 100 end
+function methods:SetWordWrap(enabled) self.wordWrap=enabled end
 function methods:SetText(t) self.text=t end
 function methods:GetNumLines() local _,n=(rawget(self,'text') or ''):gsub('\n',''); return n+1 end
 function methods:SetFocus() self.focused=true end
