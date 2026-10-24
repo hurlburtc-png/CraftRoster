@@ -218,7 +218,7 @@ function View:RefreshMaterials()
 		if not row then
 			row=CreateFrame("Button",nil,tab.Details); self.rows[index]=row
 			row.Label=Text(row); row.Label:SetPoint("TOPLEFT",34,-2); row.Label:SetPoint("BOTTOMRIGHT",0,2); row:SetFontString(row.Label)
-			row.Count=Text(row); row.Count:SetJustifyH("RIGHT")
+			row.Count=Text(row); row.Count:SetJustifyH("RIGHT"); row.Count:SetWordWrap(false)
 			row.Count:SetPoint("TOPRIGHT",row,"TOPRIGHT",0,-2); row.Count:SetSize(76,32)
 			row.Icon=row:CreateTexture(nil,"ARTWORK"); row.Icon:SetSize(32,32); row.Icon:SetPoint("TOPLEFT",0,-2)
 			row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
