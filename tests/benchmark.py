@@ -121,7 +121,36 @@ def source_browsing(runtime):
                 mock_retained_source_heap_kib=round(lua.eval('sourceAfter-sourceBase'),1),
                 mock_second_pass_heap_delta_kib=round(lua.eval('sourceRepeated-sourceAfter'),1))
 
+def search_refresh(runtime):
+    from test_work_orders import fresh
+    lua=fresh(runtime,'modern')
+    lua.execute("""
+        for id=800001,805000 do
+            CraftRosterDB.recipes[id]={name=('Search Potion %05d'):format(id-800000),profession='Alchemy'}
+        end
+        addon.Directory:Toggle()
+        local tab=addon.Directory.frame.ProfessionsTab
+        tab.SearchBox:SetText('search potion');addon.Directory:RefreshProfessions()
+        collectgarbage('collect');searchBefore=collectgarbage('count')
+        collectgarbage('stop')
+    """)
+    started=time.perf_counter()
+    lua.execute("""
+        local tab=addon.Directory.frame.ProfessionsTab
+        for i=1,10 do
+            tab.SearchBox:SetText(i%2==0 and 'search potion' or 'search potion 0')
+            addon.Directory:RefreshProfessions()
+        end
+        searchAfter=collectgarbage('count')
+        collectgarbage('restart')
+    """)
+    elapsed=(time.perf_counter()-started)*1000
+    return dict(runtime=runtime,recipes=5000,query_changes=10,
+                mock_ten_searches_ms=round(elapsed,2),
+                mock_uncollected_heap_delta_kib=round(lua.eval('searchAfter-searchBefore'),1))
+
 if __name__ == '__main__':
     print(json.dumps({'directory_stress':[run(name) for name in ('lua51','luajit21')],
                       'work_order_stress':[work_orders(name) for name in ('lua51','luajit21')],
-                      'source_browsing':[source_browsing(name) for name in ('lua51','luajit21')]},indent=2))
+                      'source_browsing':[source_browsing(name) for name in ('lua51','luajit21')],
+                      'search_refresh':[search_refresh(name) for name in ('lua51','luajit21')]},indent=2))
