@@ -555,7 +555,17 @@ AttachMaterials = function(mode)
 	if mode == "mail" then
 		-- Never redirect an addressed draft, or add materials after the player
 		-- changes the recipient of a prepared craft mail.
-		local recipient=SendMailNameEditBox and SendMailNameEditBox:GetText()
+		-- A hybrid client may expose mail fields that throw while the mailbox
+		-- is opening. Unknown recipient state must never authorize attachments.
+		local recipient
+		if SendMailNameEditBox then
+			local ok,value=pcall(SendMailNameEditBox.GetText,SendMailNameEditBox)
+			if not ok or type(value)~="string" then
+				print("|cffffd100CraftRoster|r: mail recipient could not be read; draft left untouched.")
+				return
+			end
+			recipient=value
+		end
 		if type(recipient)=="string" and recipient:match("%S")
 			and Normalize(recipient)~=pending.target then
 			print("|cffffd100CraftRoster|r: this mail is addressed to someone else. Clear the recipient or open a fresh draft; no fields or attachments were changed.")
@@ -566,10 +576,20 @@ AttachMaterials = function(mode)
 			return
 		end
 		if not pending.mailTextPrepared then
-			local money=GetSendMailMoney and GetSendMailMoney() or 0
-			local cod=GetSendMailCOD and GetSendMailCOD() or 0
-			local subject=SendMailSubjectEditBox and SendMailSubjectEditBox:GetText() or ""
-			local body=SendMailBodyEditBox and SendMailBodyEditBox:GetText() or ""
+			local moneyOK,money=true,0
+			local codOK,cod=true,0
+			if GetSendMailMoney then moneyOK,money=pcall(GetSendMailMoney) end
+			if GetSendMailCOD then codOK,cod=pcall(GetSendMailCOD) end
+			local subjectOK,subject=true,""
+			local bodyOK,body=true,""
+			if SendMailSubjectEditBox then subjectOK,subject=pcall(SendMailSubjectEditBox.GetText,SendMailSubjectEditBox) end
+			if SendMailBodyEditBox then bodyOK,body=pcall(SendMailBodyEditBox.GetText,SendMailBodyEditBox) end
+			if not moneyOK or not codOK or not subjectOK or not bodyOK
+				or type(money)~="number" or type(cod)~="number"
+				or type(subject)~="string" or type(body)~="string" then
+				print("|cffffd100CraftRoster|r: outgoing mail contents could not be checked; draft left untouched.")
+				return
+			end
 			if money>0 or cod>0 or subject~="" or body~="" then
 				print("|cffffd100CraftRoster|r: this mail already contains text, gold or COD. Clear or send the draft first; it was left untouched.")
 				return
@@ -577,7 +597,12 @@ AttachMaterials = function(mode)
 		end
 		if not pending.mailTextPrepared and GetSendMailItem then
 			for slot=1,12 do
-				if GetSendMailItem(slot) then
+				local ok,item=pcall(GetSendMailItem,slot)
+				if not ok then
+					print("|cffffd100CraftRoster|r: outgoing mail attachments could not be checked; draft left untouched.")
+					return
+				end
+				if item then
 					print("|cffffd100CraftRoster|r: this mail already has attachments. Clear or send the existing draft before preparing craft mail; its fields and items were left untouched.")
 					return
 				end
