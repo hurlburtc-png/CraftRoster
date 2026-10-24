@@ -179,17 +179,26 @@ function Sources:Get(recipeID)
 	if reference and itemID~=reference.itemID then reference=nil end
 	local result = { itemID = itemID, reference = reference }
 	if not itemID then return result end
-	local getInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
-	if type(getInfo) == "function" then
-		local ok, name, link, quality, _, _, _, _, _, _, icon, _, _, _, bindType = pcall(getInfo, itemID)
-		if ok and type(name) == "string" and name ~= "" then
-			result.name, result.link, result.quality, result.icon = name, link, quality, icon
-			result.bindType = bindType
+	-- A hybrid client may expose C_Item before its cache is populated. Use
+	-- legacy item metadata for the same ID if modern data is incomplete.
+	local modern = C_Item and C_Item.GetItemInfo
+	local function readInfo(fn)
+		if type(fn)~="function" then return end
+		local ok, name, link, quality, _, _, _, _, _, _, icon, _, _, _, bindType = pcall(fn,itemID)
+		if ok and type(name)=="string" and name~="" then
+			result.name=result.name or name
+			result.link=result.link or link
+			if result.quality==nil then result.quality=quality end
+			result.icon=result.icon or icon
+			if result.bindType==nil then result.bindType=bindType end
 		end
 	end
+	readInfo(modern)
+	if (not result.name or not result.icon) and GetItemInfo~=modern then readInfo(GetItemInfo) end
 	if not result.name and not requested[itemID] and C_Item and type(C_Item.RequestLoadItemDataByID) == "function" then
-		requested[itemID] = true
-		pcall(C_Item.RequestLoadItemDataByID, itemID)
+		local ok,accepted=pcall(C_Item.RequestLoadItemDataByID,itemID)
+		-- A rejected/throwing async request must remain retryable.
+		if ok and accepted~=false then requested[itemID]=true end
 	end
 	result.name = result.name or (reference and reference.itemName) or ("Recipe item " .. itemID)
 	local colors = { [0] = "ff9d9d9d", [1] = "ffffffff", [2] = "ff1eff00", [3] = "ff0070dd", [4] = "ffa335ee", [5] = "ffff8000", [6] = "ffe6cc80", [7] = "ff00ccff" }
