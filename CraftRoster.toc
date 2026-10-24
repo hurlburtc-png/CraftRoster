@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: CraftRoster
 ## IconTexture: Interface\Icons\INV_Potion_97
-## Notes: Find guild crafters, recipes and required materials.
+## Notes: Find guild crafters, recipe sources and required materials.
 ## Author: hurlburtc-png
 ## Version: 0.8.0-beta.30
 ## X-ReleaseChannel: beta
