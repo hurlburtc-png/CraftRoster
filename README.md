@@ -1,11 +1,11 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — 0.8.0-beta.36**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.37**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-[**Download tagged beta.36 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.36/CraftRoster.zip)
+[**Download tagged beta.37 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.37/CraftRoster.zip)
 
-**Version:** `0.8.0-beta.36`  
-**Released:** October 24, 2026 at 1:35 AM EST (fixed UTC−5)
+**Version:** `0.8.0-beta.37`  
+**Released:** Pending release verification; exact America/Edmonton timestamp will follow.
 
 
 
@@ -15,7 +15,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
-**Status:** Beta. Beta 36 release validation passed: 1826 tests run, 10 skipped. In-game verification is still required.
+**Status:** Beta. Beta 37 pre-release checks passed: 1,862 tests run, 10 skipped; release packaging verification is pending. In-game verification is still required.
 
 **Location tools:** Reviewed vendor, trainer and mob records can show NPC names, zones and coordinates, with copy controls and compatible TomTom/native map markers. Trainers show the required profession skill and are limited to verified trainers for your faction or neutral trainers. Unverified references cannot create waypoints. Coordinate coverage is still limited; missing positions are never guessed.
 
@@ -24,7 +24,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Crafter data freshness:** Hover a crafter to see when their saved recipe snapshot was shared. Missing timestamps are stated explicitly. Online status does not establish that their recipe scan is current.
 
-**Latest reliability fixes:** Whisper drafts remain available for retry if the game cannot open a chat window. Shift-clicking a material no longer falls through to Auction House search when chat insertion fails.
+**Latest reliability fixes:** Craft mail will not overwrite an already-addressed draft or attach materials after its recipient changes. Opened-mail imports handle invalid inbox indexes on hybrid clients. Selected-recipe shift-click links tolerate chat API failures. Whisper drafts remain available for retry if the game cannot open a chat window.
 
 **Search performance:** Version-group tables are now allocated only for duplicate recipes. Profession, guild and favorite filters run before text matching, and rarity colors reuse one shared table. Paired mock measurements are in [performance notes](docs/PERFORMANCE.md).
 
