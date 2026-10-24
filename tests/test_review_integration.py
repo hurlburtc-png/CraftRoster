@@ -147,7 +147,47 @@ CASES={
     assert(#CraftRosterDB.requests==100 and CraftRosterDB.requests[1].recipeID==100)
     for _,request in ipairs(CraftRosterDB.requests) do assert(request.materialLedger[1].remaining==1) end
 """,
+,
 
+'guild_restriction_checks_fail_closed_without_losing_local_status': """
+    local request={id='restricted',mode='incoming',target='Crafter-Realm',status='requested'}
+    table.insert(CraftRosterDB.requests,request)
+    local warned=0
+    addon.WarnChatRestricted=function() warned=warned+1 end
+    C_ChatInfo=C_ChatInfo or {}
+    C_ChatInfo.AreOutgoingAddonChatMessagesRestricted=function() error('restriction unavailable') end
+    local before=#sent
+    assert(not addon.Requests:SetIncomingStatus('restricted','Crafter-Realm','accepted'))
+    assert(request.status=='accepted' and #sent==before and warned==1)
+    C_ChatInfo.AreOutgoingAddonChatMessagesRestricted=function() return false end
+    C_ChatInfo.InChatMessagingLockdown=function() error('lockdown unavailable') end
+    assert(not addon.Requests:SetIncomingStatus('restricted','Crafter-Realm','declined'))
+    assert(request.status=='declined' and #sent==before and warned==2)
+    C_ChatInfo.InChatMessagingLockdown=function() return false end
+    C_ChatInfo.SendAddonMessage=function(prefix,message,channel)
+        table.insert(sent,{prefix,message,channel}); return true
+    end
+    assert(addon.Requests:SetIncomingStatus('restricted','Crafter-Realm','accepted'))
+    assert(#sent==before+1 and sent[#sent][2]=='RSTAT:restricted:accepted')
+""",
+'guild_send_and_membership_errors_do_not_duplicate_requests': """
+    local request={id='transport',mode='incoming',target='Crafter-Realm',status='requested'}
+    table.insert(CraftRosterDB.requests,request)
+    C_ChatInfo=C_ChatInfo or {}
+    local before=#sent
+    IsInGuild=function() error('guild state unavailable') end
+    assert(not addon.Requests:SetIncomingStatus('transport','Crafter-Realm','accepted'))
+    assert(#sent==before and request.status=='accepted')
+    IsInGuild=function() return true end
+    C_ChatInfo.SendAddonMessage=function() error('send unavailable') end
+    assert(not addon.Requests:SetIncomingStatus('transport','Crafter-Realm','declined'))
+    assert(#sent==before and request.status=='declined')
+    C_ChatInfo.SendAddonMessage=function(prefix,message,channel)
+        table.insert(sent,{prefix,message,channel}); return true
+    end
+    assert(addon.Requests:SetIncomingStatus('transport','Crafter-Realm','accepted'))
+    assert(#sent==before+1 and sent[#sent][2]=='RSTAT:transport:accepted')
+""",
 }
 class ReviewIntegrationTests(unittest.TestCase): pass
 for runtime in ('lua51','luajit21'):
