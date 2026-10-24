@@ -147,8 +147,6 @@ CASES={
     assert(#CraftRosterDB.requests==100 and CraftRosterDB.requests[1].recipeID==100)
     for _,request in ipairs(CraftRosterDB.requests) do assert(request.materialLedger[1].remaining==1) end
 """,
-,
-
 'guild_restriction_checks_fail_closed_without_losing_local_status': """
     local request={id='restricted',mode='incoming',target='Crafter-Realm',status='requested'}
     table.insert(CraftRosterDB.requests,request)
