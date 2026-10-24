@@ -109,7 +109,7 @@ CASES = {
  assert(tab.RecipeSource:GetParent()==tab.Details)
  assert(tab.SelectedCraftContent:GetHeight()==tab.CrafterList.contentOffset+tab.CrafterListChild:GetHeight())
  local row=addon.SelectedCraft.rows[1]
- assert(row.Icon:GetWidth()==32 and row:GetHeight()<=50)
+ assert(row.Icon:GetWidth()==28 and row:GetHeight()==32, 'compact material icon/row dimensions')
  local old=tab.SelectedCraftScroll:GetVerticalScroll()
  row.scripts.OnMouseWheel(row,-1)
  assert(tab.SelectedCraftScroll:GetVerticalScroll()>=old)
