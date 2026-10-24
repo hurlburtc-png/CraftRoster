@@ -1208,7 +1208,7 @@ CASES.update({
         addon.Directory:Toggle()
         addon.Directory.selectedRecipe={id=42,name='Potion',profession='Alchemy',crafters={}}
         local original=addon.ShoppingList.GetMaterialStatus
-        for _,count in ipairs({3,6,10}) do
+        for _,count in ipairs({10,6,3}) do
             addon.ShoppingList.GetMaterialStatus=function()
                 local entries={}
                 for i=1,count do
