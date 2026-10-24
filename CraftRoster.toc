@@ -3,10 +3,10 @@
 ## IconTexture: Interface\Icons\INV_Potion_97
 ## Notes: Find guild crafters, recipe sources and required materials.
 ## Author: hurlburtc-png
-## Version: 0.8.0-beta.39
+## Version: 0.8.0-beta.40
 ## X-ReleaseChannel: beta
-## X-ReleaseNotes: Guard hybrid container bag reads during trade and mail auto-fill
-## OptionalDeps: TomTom
+## X-ReleaseNotes: Optional local Auctioneer and TSM material cost estimates
+## OptionalDeps: TomTom, Auctioneer, TradeSkillMaster
 ## SavedVariables: CraftRosterDB
 
 ErrorReporter.lua
@@ -43,6 +43,7 @@ Core.lua
 Theme.lua
 Recipes.lua
 BankMaterials.lua
+Pricing.lua
 ShoppingList.lua
 Panel.lua
 ItemDisplay.lua

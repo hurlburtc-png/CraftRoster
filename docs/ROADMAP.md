@@ -32,8 +32,11 @@ implemented. Trades, mail sending and crafting completion remain user-confirmed.
 4. Optional item-tooltip guild-crafter lookup, with online/favorite priority.
 5. Clearer next-action guidance through crafter selection, materials and delivery;
    keep native profession terminology and user-confirmed trade/mail actions.
-6. Optional Auctioneer/TSM pricing for a complete craft and the materials missing
-   from bags. Provider support on Forever still needs investigation.
+6. Initial local Auctioneer/TSM material estimates are implemented: full raw-material
+   value and remaining purchase estimate, with incomplete-price and unknown-bag
+   states. Actual Forever provider integration still needs testing. Provider
+   selection settings, scan-age metadata and additional auction addons remain
+   possible follow-ups.
 7. Finish the one-pane layout goal. Recipe/material columns, compact rows,
    primary actions beside Quantity and bounded source previews reduce scrolling.
    Expanded sources, large material lists and many crafters can still overflow;

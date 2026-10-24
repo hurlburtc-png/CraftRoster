@@ -1,11 +1,11 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — 0.8.0-beta.39**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.40**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-[**Download tagged beta.39 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.39/CraftRoster.zip)
+[**Download tagged beta.40 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.40/CraftRoster.zip)
 
-**Version:** `0.8.0-beta.39`  
-**Released:** October 24, 2026 at 4:20:13 AM MDT (America/Edmonton)
+**Version:** `0.8.0-beta.40`  
+**Released:** ZIP validation in progress.
 
 
 
@@ -15,7 +15,9 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
-**Status:** Beta. Beta 39 passed 1,892 automated tests (10 skipped), Forever reconciliation, release checks, and single-root `CraftRoster/` ZIP packaging checks. In-game verification is still required.
+**Status:** Beta. 0.8.0-beta.40 release validation is in progress; in-game verification is still required.
+
+**Material pricing:** The recipe pane shows **Full mats** and **To buy** estimates using available local Auctioneer or TSM data. Full mats values all raw materials for your selected craft quantity. To buy subtracts bag stock, confirmed deliveries and crafter-provided materials. Missing prices show incomplete totals, never free materials. Hover for sources and coverage; click the estimate to reread local data. No scanning, external price database or purchases are added. [Pricing details and supported APIs](docs/PRICING.md).
 
 **Location tools:** Reviewed vendor, trainer and mob records can show NPC names, zones and coordinates, with copy controls and compatible TomTom/native map markers. Trainers show the required profession skill and are limited to verified trainers for your faction or neutral trainers. Unverified references cannot create waypoints. Coordinate coverage is still limited; missing positions are never guessed.
 

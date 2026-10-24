@@ -111,7 +111,25 @@ function View:Initialize(tab)
 	self.recipeTitle=Text(tab.Details); self.recipeTitle:SetText("Recipe"); CraftRoster.Theme:Heading(self.recipeTitle)
 	self.recipeIcon=self.recipeButton:CreateTexture(nil,"ARTWORK")
 	self.recipeIcon:SetSize(32,32); self.recipeIcon:SetPoint("RIGHT",self.recipeButton,"LEFT",-8,0)
-	self.materialTitle=Text(tab.Details); self.materialTitle:SetText("Materials")
+	self.priceButton=CreateFrame("Button",nil,tab.Details)
+ self.priceText=Text(self.priceButton);self.priceText:SetAllPoints()
+ self.priceText:SetFontObject("GameFontHighlightSmall")
+ self.priceButton:SetScript("OnEnter",function(button)
+  if not CraftRoster.Pricing or not View.priceEstimate then return end
+  GameTooltip:SetOwner(button,"ANCHOR_RIGHT")
+  for index,line in ipairs(CraftRoster.Pricing:Tooltip(View.priceEstimate)) do
+   if index==1 then GameTooltip:SetText(line) else GameTooltip:AddLine(line,1,1,1,true) end
+  end
+  GameTooltip:Show()
+ end)
+ self.priceButton:SetScript("OnLeave",function() GameTooltip:Hide() end)
+ self.priceButton:SetScript("OnClick",function()
+  if CraftRoster.Pricing then CraftRoster.Pricing:Clear();View:RefreshMaterials() end
+  GameTooltip:Hide()
+ end)
+ self.priceButton:EnableMouseWheel(true)
+ self.priceButton:SetScript("OnMouseWheel",function(_,delta) View:Scroll(delta) end)
+ self.materialTitle=Text(tab.Details); self.materialTitle:SetText("Materials")
 	CraftRoster.Theme:Heading(self.materialTitle)
 	self.crafterTitle=Text(content); self.crafterTitle:SetText("Crafters"); CraftRoster.Theme:Heading(self.crafterTitle)
 	self.rows={}
@@ -248,6 +266,9 @@ function View:RefreshMaterials()
 				GameTooltip:AddLine(("In bags: %s · still needed: %d · total: %d"):format(material.owned or "?",material.required,material.recipeRequired),1,1,1,true)
 				CraftRoster.ShoppingList:AddBankTooltip(material)
 				GameTooltip:AddLine(("Delivered: %d · crafter provides: %d"):format(material.delivered,material.crafterProvides),1,1,1,true)
+    if material.unitPrice and CraftRoster.Pricing then
+     GameTooltip:AddLine("Unit estimate: "..CraftRoster.Pricing:Money(material.unitPrice).." · "..material.priceSource,1,1,1,true)
+    end
 				GameTooltip:AddLine("Click: insert whisper/chat link, or fill AH search",1,1,1); GameTooltip:Show()
 			end)
 			row:EnableMouseWheel(true); row:SetScript("OnMouseWheel",function(_,delta) View:Scroll(delta) end)
@@ -290,6 +311,12 @@ function View:RefreshMaterials()
 	end
 	for index=#self.entries+1,#self.rows do self.rows[index]:Hide() end
 	self.materialTitle:SetText(entries and "Materials" or "Materials unavailable")
+ self.priceEstimate=CraftRoster.Pricing and CraftRoster.Pricing:Estimate(entries)
+ if self.priceEstimate then
+  self.priceButton:ClearAllPoints();self.priceButton:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",materialX,-y)
+  self.priceButton:SetSize(column,36);self.priceText:SetText(CraftRoster.Pricing:Summary(self.priceEstimate))
+  self.priceButton:Show();y=y+40
+ else self.priceButton:Hide() end
 	local bottom=math.max(y+8,self.sourceY+(self.sourceHeight or 0)+8)
 	local own=CraftRosterDB.characters[UnitName("player").."-"..(GetRealmName() or "")]
 	local known=recipe and own and own.recipes[recipe.id]
