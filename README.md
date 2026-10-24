@@ -5,7 +5,7 @@
 [**Download tagged beta.46 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.46/CraftRoster.zip)
 
 **Version:** `0.8.0-beta.46`  
-**Release status:** beta.46 publication pending automated release checks; exact America/Edmonton time to follow.
+**Released:** October 24, 2026 at 10:26:30 AM MDT (America/Edmonton; UTC−6).
 
 
 
@@ -15,7 +15,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
-**Status:** Beta.46 source checks passed: 2,043 tests (10 skipped) and Forever recipe reconciliation. Release and single-root-folder ZIP checks pending. In-game validation remains outstanding.
+**Status:** Beta.46 release and addon checks passed: 2,043 tests (10 skipped); Forever recipe reconciliation and automated single-root-folder ZIP packaging passed. In-game validation remains outstanding.
 
 **Material pricing:** The recipe pane shows **Full mats** and **To buy** estimates using available local Auctioneer or TSM data. Full mats values all raw materials for your selected craft quantity. To buy subtracts bag stock, confirmed deliveries and crafter-provided materials. Missing prices show incomplete totals, never free materials. Hover for sources and coverage; click the estimate to reread local data. No scanning, external price database or purchases are added. [Pricing details and supported APIs](docs/PRICING.md).
 
