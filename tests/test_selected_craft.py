@@ -11,6 +11,32 @@ addon.Directory:RefreshDetails()
 '''
 
 CASES = {
+'long_source_summary_is_bounded_but_full_details_remain_available': '''
+    local view=addon.SelectedCraft
+    local source=view.tab.RecipeSource
+    local summary=addon.RecipeSources.Summary
+    local full=addon.RecipeSources.Format
+    local text=('Named vendor in a recorded location, Classic reference.\\\\n'):rep(20)
+    addon.RecipeSources.Summary=function() return text end
+    addon.RecipeSources.Format=function() return text end
+    source.Text.GetStringHeight=function() return 400 end
+    view.sourcesExpanded=false;view:Refresh()
+    local compact=view.sourceHeight
+    assert(source.Text:GetHeight()==72 and view.sourceSummaryClipped)
+    assert(view.sourceSummaryText==text,'keep complete summary for hover')
+    local captured
+    GameTooltip.AddLine=function(_,value) if value==text then captured=value end end
+    view.sourceToggle.scripts.OnEnter(view.sourceToggle)
+    assert(captured==text,'hover must expose text omitted by compact preview')
+    view.sourceToggle.scripts.OnClick()
+    assert(view.sourcesExpanded and source.Text:GetHeight()==400)
+    assert(not view.sourceSummaryClipped and view.sourceHeight>compact)
+    view.sourceToggle.scripts.OnClick()
+    assert(not view.sourcesExpanded and source.Text:GetHeight()==72)
+    assert(view.sourceHeight==compact)
+    addon.RecipeSources.Summary=summary;addon.RecipeSources.Format=full
+''',
+
 'primary_action_stays_beside_quantity_with_long_material_lists': '''
     local view=addon.SelectedCraft
     local tab=addon.Directory.frame.ProfessionsTab
