@@ -2,10 +2,10 @@
 
 [**Download CraftRoster.zip — 0.8.0-beta.34**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-[**Download tagged beta.33 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.34/CraftRoster.zip)
+[**Download tagged beta.34 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.34/CraftRoster.zip)
 
 **Version:** `0.8.0-beta.34`  
-**Released:** October 24, 2026 at 12:37 AM EST (fixed UTC−5)
+**Released:** October 23, 2026 at 11:37 PM MDT (America/Edmonton)
 
 
 
@@ -24,7 +24,9 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Crafter data freshness:** Hover a crafter to see when their saved recipe snapshot was shared. Missing timestamps are stated explicitly. Online status does not establish that their recipe scan is current.
 
-**Latest reliability fixes:** Whisper drafts remain available for retry if the game cannot open a chat window. Shift-clicking a material no longer falls through to Auction House search when chat insertion fails.\n\n**Loading and memory:** Generated source expansions now use a bounded 32-entry cache. The full catalogue and reviewed source records remain available. Mock benchmarks show less retained memory after browsing and faster directory opening; these are not in-game FPS or login-speed measurements. [Measured comparison](docs/PERFORMANCE.md).
+**Latest reliability fixes:** Whisper drafts remain available for retry if the game cannot open a chat window. Shift-clicking a material no longer falls through to Auction House search when chat insertion fails.
+
+**Loading and memory:** Generated source expansions now use a bounded 32-entry cache. The full catalogue and reviewed source records remain available. Mock benchmarks show less retained memory after browsing and faster directory opening; these are not in-game FPS or login-speed measurements. [Measured comparison](docs/PERFORMANCE.md).
 
 **Latest usability fixes:** Click the availability button below **Known by guild** to cycle **All**, **I know** and **Not in my scan**. These use this character’s saved learned recipes and combine with guild, profession and favorite filters. Scan your professions to update the results; absence from a scan does not establish that a recipe is unlearned. Long source previews are limited to four lines; hover the source heading for the complete summary or expand it for full sources and navigation controls. Craft / Request craft sits beside Quantity on normal-width panes, saving 44 pixels below the materials. Narrow panes keep the controls separate to prevent overlap. The default window keeps recipe details and materials side by side; narrow panes stack them for readability. 
 
