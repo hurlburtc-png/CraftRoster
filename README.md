@@ -2,7 +2,7 @@
 
 [**Download CraftRoster.zip — 0.8.0-beta.50 (release pending)**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-[**Latest verified beta.49 ZIP (until beta.50 checks pass)**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.49/CraftRoster.zip)
+[**Download tagged beta.50 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.50/CraftRoster.zip)
 
 **Version:** `0.8.0-beta.50` (candidate; release pending)  
 **Released:** Pending beta.50 release CI and publication; beta.49 was released October 24, 2026 at 1:26:19 PM MDT.
