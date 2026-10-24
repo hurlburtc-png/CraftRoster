@@ -5,7 +5,7 @@
 [**Download tagged beta.40 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.40/CraftRoster.zip)
 
 **Version:** `0.8.0-beta.40`  
-**Released:** October 24, 2026 at 6:15 AM EST (fixed UTC−5)
+**Released:** October 24, 2026 at 5:14:16 AM MDT (America/Edmonton; UTC−6).
 
 
 
