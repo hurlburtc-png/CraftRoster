@@ -20,16 +20,24 @@ features. In-game testing remains required for the current candidate.
 Roster updates are event-driven plus manual Refresh; periodic polling is not
 implemented. Trades, mail sending and crafting completion remain user-confirmed.
 
-## Next usability targets (not implemented)
+## Remaining usability targets
 
-1. Recipe availability filters: guild knows / I know / missing recipe, with a
-   clear distinction between missing sync data and a genuinely unknown recipe.
-2. Surface scan/sync freshness and offline last-seen details beside crafters.
+1. Complete recipe availability filters: **Known by guild** is implemented;
+   **I know** and **Missing recipe** remain. Missing sync data must not imply
+   that a recipe is genuinely unknown.
+2. Crafter tooltips now show shared snapshot age. Profession-specific scan
+   freshness and offline last-seen details remain.
 3. A shared multi-recipe shopping list that combines reagents and separates
    bag stock, deliveries and crafter-provided materials.
 4. Optional item-tooltip guild-crafter lookup, with online/favorite priority.
 5. Clearer next-action guidance through crafter selection, materials and delivery;
    keep native profession terminology and user-confirmed trade/mail actions.
+6. Optional Auctioneer/TSM pricing for a complete craft and the materials missing
+   from bags. Provider support on Forever still needs investigation.
+7. Finish the one-pane layout goal. Recipe/material columns, compact rows,
+   primary actions beside Quantity and bounded source previews reduce scrolling.
+   Expanded sources, large material lists and many crafters can still overflow;
+   an absolute no-scroll layout is not implemented.
 
 Comparison references: author descriptions of
 [GuildWorkshop](https://www.curseforge.com/wow/addons/guildworkshop),
