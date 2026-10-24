@@ -1,5 +1,34 @@
 # Performance baseline and resource limits
 
+## Beta 33: bounded source expansions and cheaper catalogue indexing
+
+Measured in identical mock workloads before and after this change. Directory
+figures are medians of five fresh-runtime trials with 5,000 recipes and 105,000
+ownership links. Source figures are extra Lua heap retained after browsing all
+1,134 expandable generated source records, then collecting garbage in the
+benchmark. They are not total addon memory, client FPS or login-time measurements.
+
+| Workload | Lua 5.1 before | Lua 5.1 after | LuaJIT before | LuaJIT after |
+| --- | ---: | ---: | ---: | ---: |
+| Directory first open, median | 99.01 ms | 86.27 ms | 52.96 ms | 48.14 ms |
+| Extra retained source heap after full browse | 7,998.4 KiB | 238.1 KiB | 5,172.6 KiB | 236.6 KiB |
+
+- Generated source expansions use a 32-entry FIFO cache instead of accumulating
+  permanently. Evicted entries rebuild from the complete shared catalogue.
+- Manually reviewed records remain permanent; shared recipe/NPC facts are unchanged.
+- Cached-only icon indexing skips output-item lookups whose results were unused.
+  Visible rows still resolve crafted-item icons.
+- No forced garbage collection or new timers were added to addon runtime code.
+  The benchmark collects garbage to compare retained allocations; LuaJIT's
+  compiled traces can also contribute to repeated-pass heap measurements.
+- This does not reduce the bundled database's fixed startup cost. Actual Forever
+  memory and frame profiling are still required.
+
+Run `python tests/benchmark.py` to include the new full-catalogue browsing workload.
+Raw paired measurements are in [beta 33 comparison](BETA33_PERFORMANCE.json).
+
+## Historical baseline
+
 Measured with `tests/benchmark.py` in the container on 2026-10-21. These Lua 5.1
 and LuaJIT mocked-client results are reproducible workload checks, not in-game
 FPS, taint, network-latency or native-frame-memory measurements.
