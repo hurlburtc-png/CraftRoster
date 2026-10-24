@@ -122,6 +122,16 @@ CASES = {
         assert(CraftRosterDB.requests[1].id~=originalID and CraftRosterDB.requests[1].quantity==3)
         dispatch('TRADE_SHOW'); assert(moved==9)
     ''',
+    'matching_preaddressed_mail_can_still_prepare': '''
+        inventoryFixture(false,true)
+        MailFrame=CreateFrame(); MailFrame:Show()
+        SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame(); SendMailBodyEditBox=CreateFrame()
+        SendMailNameEditBox:SetText('Crafter-Realm')
+        addon.Requests:MailPlayer(42,'Crafter-Realm')
+        assert(SendMailNameEditBox:GetText()=='Crafter-Realm')
+        assert(SendMailSubjectEditBox:GetText()=='Potion craft requested' and moved==3,
+          'an already-correct recipient must not block normal mail preparation')
+    ''',
     'recipient_only_mail_draft_is_not_readdressed': '''
         inventoryFixture(false,true)
         MailFrame=CreateFrame(); MailFrame:Show()
