@@ -237,8 +237,11 @@ end
 function ShoppingList:GetMaterialStatus(recipeID, crafter)
 	local entries=Materials({materials=CraftRoster.RecipeSources and CraftRoster.RecipeSources:GetMaterials(recipeID)},self:GetQuantity(recipeID))
 	if not entries then return nil,0,false end
-	local getCount=C_Item and C_Item.GetItemCount or GetItemCount
-	local counts=not getCount and BagCounts() or nil
+	local modernCount=C_Item and C_Item.GetItemCount
+	local legacyCount=GetItemCount
+	-- Hybrid clients can expose modern count APIs before they work. Keep the
+	-- legacy count path available and build a bag index only if both fail.
+	local counts
 	local ready,unavailable=0,false
 	local contribution=Contribution(recipeID,crafter)
 	local delivered=crafter and CraftRoster.Requests and CraftRoster.Requests:GetDeliveredMaterials(recipeID,crafter,self:GetQuantity(recipeID)) or {}
@@ -256,10 +259,21 @@ function ShoppingList:GetMaterialStatus(recipeID, crafter)
 		entry.crafterProvides=math.min(entry.required,contribution[entry.itemID or entry.name] or 0)
 		entry.delivered=math.min(entry.required-entry.crafterProvides,delivered[entry.itemID or entry.name] or 0)
 		entry.required=math.max(0,entry.required-entry.crafterProvides-entry.delivered)
-		if getCount then
-			local ok,value=pcall(getCount,entry.itemID or entry.name,false,false,false,false)
-			if ok and type(value)=="number" and value>=0 then entry.owned=value end
-		elseif counts then entry.owned=counts[entry.itemID or entry.name] or 0 end
+		local key=entry.itemID or entry.name
+		local owned
+		if type(modernCount)=="function" then
+			local ok,value=pcall(modernCount,key,false,false,false,false)
+			if ok and type(value)=="number" and value>=0 then owned=value end
+		end
+		if owned==nil and type(legacyCount)=="function" and legacyCount~=modernCount then
+			local ok,value=pcall(legacyCount,key,false,false,false,false)
+			if ok and type(value)=="number" and value>=0 then owned=value end
+		end
+		if owned==nil then
+			if not counts then counts=BagCounts() or {} end
+			owned=counts[key]
+		end
+		if owned~=nil then entry.owned=owned end
 		entry.bank=CraftRoster.BankMaterials:GetCount(entry.itemID or entry.name,snapshot or false)
 		entry.bankDirty=snapshot and snapshot.dirty
 		entry.bankScannedAt=snapshot and snapshot.scannedAt
