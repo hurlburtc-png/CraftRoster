@@ -100,6 +100,28 @@ def work_orders(runtime):
                 mock_100_order_scrolls_ms=round(scroll_ms,2),mock_average_full_queue_refresh_ms=round(refresh_ms,3),
                 onupdate_handlers=lua.globals().periodicHandlers)
 
+def source_browsing(runtime):
+    from test_work_orders import fresh
+    lua=fresh(runtime,'modern')
+    lua.execute("""
+        collectgarbage('collect'); sourceBase=collectgarbage('count')
+        browsedSources=0
+        for recipeID,raw in pairs(addon.ClassicSourceData.recipes) do
+            if addon.ClassicSources:Get(recipeID,raw.itemID) then
+                browsedSources=browsedSources+1
+            end
+        end
+        collectgarbage('collect'); sourceAfter=collectgarbage('count')
+        for recipeID,raw in pairs(addon.ClassicSourceData.recipes) do
+            addon.ClassicSources:Get(recipeID,raw.itemID)
+        end
+        collectgarbage('collect'); sourceRepeated=collectgarbage('count')
+    """)
+    return dict(runtime=runtime,recipes_browsed=lua.globals().browsedSources,
+                mock_retained_source_heap_kib=round(lua.eval('sourceAfter-sourceBase'),1),
+                mock_second_pass_heap_delta_kib=round(lua.eval('sourceRepeated-sourceAfter'),1))
+
 if __name__ == '__main__':
     print(json.dumps({'directory_stress':[run(name) for name in ('lua51','luajit21')],
-                      'work_order_stress':[work_orders(name) for name in ('lua51','luajit21')]},indent=2))
+                      'work_order_stress':[work_orders(name) for name in ('lua51','luajit21')],
+                      'source_browsing':[source_browsing(name) for name in ('lua51','luajit21')]},indent=2))
