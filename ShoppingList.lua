@@ -125,7 +125,7 @@ StaticPopupDialogs["CRAFTROSTER_CRAFTER_SHARE"] = {
 -- A malformed hybrid inventory API must not turn an unknown bag count into
 -- a false material balance (or an unbounded slot loop).
 local function ValidCount(value)
-\treturn type(value)=="number" and value>=0 and value<math.huge and value==math.floor(value)
+	return type(value)=="number" and value>=0 and value<math.huge and value==math.floor(value)
 end
 
 -- Build one inventory index only when a count API is unavailable.
