@@ -20,6 +20,41 @@ class RecipeSourceTests(unittest.TestCase):
         lua.execute("dispatch('ADDON_LOADED','CraftRoster')")
         return lua
 
+    def test_teaching_item_metadata_falls_back_to_legacy_and_retries_rejected_loads(self):
+        for runtime in ('lua51', 'luajit21'):
+            for profile in ('modern', 'legacy', 'minimal'):
+                with self.subTest(runtime=runtime, profile=profile):
+                    lua = self.fresh(runtime, profile)
+                    lua.execute('''
+                        CraftRosterDB.recipes[42]={name='Potion',profession='Alchemy',recipeItemID=987654}
+                        local calls=0
+                        C_Item={
+                            GetItemInfo=function() error('hybrid cache unavailable') end,
+                            RequestLoadItemDataByID=function() calls=calls+1; return false end,
+                        }
+                        GetItemInfo=function(id)
+                            assert(id==987654)
+                            return 'Teaching Scroll','|Hitem:987654|h[Teaching Scroll]|h',3,
+                                nil,nil,nil,nil,nil,nil,'Interface\\\\Icons\\\\INV_Scroll_03',
+                                nil,nil,nil,1
+                        end
+                        local source=addon.RecipeSources:Get(42)
+                        assert(source.name=='Teaching Scroll')
+                        assert(source.quality==3 and source.icon=='Interface\\\\Icons\\\\INV_Scroll_03')
+                        assert(source.binding=='Binds when picked up')
+                        assert(calls==0,'legacy metadata avoids needless async loads')
+                        -- Both synchronous APIs empty: rejected loads must retry.
+                        GetItemInfo=function() return nil end
+                        C_Item.GetItemInfo=function() return nil end
+                        addon.RecipeSources:Get(42)
+                        addon.RecipeSources:Get(42)
+                        assert(calls==2,'rejected requests must not poison the cache')
+                        C_Item.RequestLoadItemDataByID=function() calls=calls+1; return true end
+                        addon.RecipeSources:Get(42)
+                        addon.RecipeSources:Get(42)
+                        assert(calls==3,'accepted loads should be requested once')
+                    ''')
+
     def test_unlearned_catalogue_source_and_link_do_not_claim_ownership(self):
         for runtime in ('lua51', 'luajit21'):
             for profile in ('modern', 'legacy', 'minimal'):
