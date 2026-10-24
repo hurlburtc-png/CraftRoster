@@ -6,6 +6,20 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 
 CASES = {
+    'cached_icon_indexing_avoids_output_lookups_but_visible_icons_resolve': """
+        local sources=addon.RecipeSources
+        local lookup=sources.GetOutputItemID
+        local calls=0
+        sources.GetOutputItemID=function() calls=calls+1; return 7 end
+        CraftRosterDB.recipes[42]={icon='saved-icon'}
+        assert(sources:GetRecipeIcon(42,'fallback',true)=='saved-icon' and calls==0)
+        C_Item=C_Item or {}
+        C_Item.GetItemInfo=function() return 'Herb','item:7',1,1,1,'','',1,'','visible-icon' end
+        sources:GetRecipeIcon(42,'fallback',false)
+        assert(calls==1,'visible rows still resolve crafted-item icons')
+        sources.GetOutputItemID=lookup
+    """,
+
     'teaching_item_binding_and_reference_rates': """
         addon.RecipeSources:SeedCatalog()
         assert(not CraftRosterDB.characters['Tester-Realm'].recipes[19054])
