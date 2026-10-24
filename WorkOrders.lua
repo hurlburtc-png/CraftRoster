@@ -101,21 +101,32 @@ function Orders:Add(customer, recipeID, quantity, requestID, source)
 		end
 	end
 	local needsReview=false
-	-- Merge the addon request and its human-readable whisper, not two distinct orders.
+	-- A human-readable whisper has no request ID. Merge only when exactly
+	-- one outstanding order could be its matching addon request. Multiple
+	-- same-customer/same-recipe orders must remain separate for review.
 	if source == "addon" or source == "whisper" then
 		local other = source=="addon" and "whisper" or "addon"
+		local candidate, ambiguous
 		for _, order in ipairs(state.orders) do
-			if not Active(order) and Normalize(order.customer)==identity and order.recipeID==recipeID and order.quantity==quantity
-				and order.sources and order.sources[other] and not order.sources[source] and time()-(order.closedAt or order.at)<=30 then needsReview=true end
-			if Active(order) and Normalize(order.customer)==identity and order.recipeID==recipeID and order.quantity==quantity
+			if Normalize(order.customer)==identity and order.recipeID==recipeID and order.quantity==quantity
 				and order.sources and order.sources[other] and not order.sources[source] then
-				order.sources[source]=true; order.requestID=requestID or order.requestID
-				if requestID and order.status=="accepted" and CraftRoster.Requests and CraftRoster.Requests.SetIncomingStatus then
-					CraftRoster.Requests:SetIncomingStatus(requestID,order.customer,"accepted")
+				if not Active(order) then
+					if time()-(order.closedAt or order.at)<=30 then needsReview=true end
+				elseif candidate then
+					ambiguous=true
+				else
+					candidate=order
 				end
-				self:Refresh(); return order
 			end
 		end
+		if candidate and not ambiguous then
+			candidate.sources[source]=true; candidate.requestID=requestID or candidate.requestID
+			if requestID and candidate.status=="accepted" and CraftRoster.Requests and CraftRoster.Requests.SetIncomingStatus then
+				CraftRoster.Requests:SetIncomingStatus(requestID,candidate.customer,"accepted")
+			end
+			self:Refresh(); return candidate
+		end
+		if ambiguous then needsReview=true end
 	end
 	-- Prune closed history only; never silently discard an outstanding order.
 	while #state.orders >= MAX_ORDERS do
