@@ -311,7 +311,7 @@ CASES = {
       end
     end
     error('selected search result missing')
-''',,
+''',
 'hybrid_bag_scan_recovers_from_throwing_modern_slots': '''
     C_Item={GetItemCount=function() error('count unavailable') end}
     GetItemCount=nil
