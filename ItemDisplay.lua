@@ -70,7 +70,14 @@ function Items:Click(entry)
    end
    return false
   end
-  local active=ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow()
+  local active
+  if type(ChatEdit_GetActiveWindow)=="function" then
+   local ok,editor=pcall(ChatEdit_GetActiveWindow)
+   -- If the hybrid chat API errors, an editor may still be active.
+   -- Do not guess that the user wanted an Auction House search.
+   if not ok then return false end
+   active=editor
+  end
   if active then
    if ChatEdit_InsertLink then
     local ok,inserted=pcall(ChatEdit_InsertLink,link)

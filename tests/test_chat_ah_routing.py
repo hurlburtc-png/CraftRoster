@@ -14,6 +14,18 @@ CASES = {
         assert(not addon.ItemDisplay:Click({name='Herb',itemID=42}))
         assert(searches==0,'failed chat insertion must not search the AH')
     """,
+    "throwing_active_chat_lookup_never_opens_ah": """
+        local searches=0
+        addon.ShoppingList.SearchAuctions=function() searches=searches+1; return true end
+        addon.ItemDisplay.Resolve=function(_,id,name) return name,'|Hitem:'..id..'|h['..name..']|h' end
+        ChatEdit_GetActiveWindow=function() error('hybrid chat editor lookup failed') end
+        ChatEdit_InsertLink=function() error('should not insert into unknown editor') end
+        IsShiftKeyDown=function() return false end
+        assert(not addon.ItemDisplay:Click({name='Herb',itemID=42}))
+        IsShiftKeyDown=function() return true end
+        assert(not addon.ItemDisplay:Click({name='Herb',itemID=42}))
+        assert(searches==0,'unknown chat context must not become an AH search')
+    """,
     "active_chat_without_insert_never_searches_ah": """
         local searches=0
         addon.ShoppingList.SearchAuctions=function() searches=searches+1; return true end
