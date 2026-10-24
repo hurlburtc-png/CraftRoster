@@ -1,6 +1,6 @@
 # Performance baseline and resource limits
 
-## Beta 33: bounded source expansions and cheaper catalogue indexing
+## Beta 34: bounded source expansions and cheaper catalogue indexing
 
 Measured in identical mock workloads before and after this change. Directory
 figures are medians of five fresh-runtime trials with 5,000 recipes and 105,000
@@ -25,7 +25,7 @@ benchmark. They are not total addon memory, client FPS or login-time measurement
   memory and frame profiling are still required.
 
 Run `python tests/benchmark.py` to include the new full-catalogue browsing workload.
-Raw paired measurements are in [beta 33 comparison](BETA33_PERFORMANCE.json).
+Raw paired measurements are in [paired comparison](BETA33_PERFORMANCE.json).
 
 ## Historical baseline
 
