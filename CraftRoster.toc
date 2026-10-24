@@ -5,6 +5,7 @@
 ## Author: hurlburtc-png
 ## Version: 0.8.0-beta.36
 ## X-ReleaseChannel: beta
+## X-ReleaseNotes: Lower transient search allocations
 ## OptionalDeps: TomTom
 ## SavedVariables: CraftRosterDB
 
