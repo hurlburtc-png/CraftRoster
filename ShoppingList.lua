@@ -149,12 +149,20 @@ end
 
 -- Fill the native auction search field without submitting a query or purchase.
 function ShoppingList:SearchAuctions(entry)
-	local search = AuctionFrameBrowse and AuctionFrameBrowse.SearchBox or BrowseName
-	local auction = AuctionFrame or AuctionHouseFrame
-	if not search and AuctionHouseFrame and AuctionHouseFrame.SearchBar then
-		search = AuctionHouseFrame.SearchBar.SearchBox
+	-- Resolve the search field from the *visible* Auction House. Both legacy
+	-- and modern globals may exist after an AH closes or another addon loads.
+	-- Never populate a stale classic BrowseName when the modern AH is open.
+	local modernOpen = AuctionHouseFrame and AuctionHouseFrame.IsShown and AuctionHouseFrame:IsShown()
+	local legacyOpen = AuctionFrame and AuctionFrame.IsShown and AuctionFrame:IsShown()
+	local modernSearch = AuctionHouseFrame and AuctionHouseFrame.SearchBar and AuctionHouseFrame.SearchBar.SearchBox
+	local legacySearch = AuctionFrameBrowse and AuctionFrameBrowse.SearchBox or BrowseName
+	local search
+	if modernOpen and modernSearch and modernSearch.SetText then
+		search = modernSearch
+	elseif legacyOpen and legacySearch and legacySearch.SetText then
+		search = legacySearch
 	end
-	if not auction or not auction:IsShown() or not search or not search.SetText then
+	if not search then
 		print("|cff00ff00CraftRoster|r: open the Auction House, then click the material again to fill its search field.")
 		return false
 	end
