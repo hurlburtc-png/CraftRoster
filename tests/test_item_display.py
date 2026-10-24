@@ -58,6 +58,39 @@ CASES = {
  items:Resolve(779,'Item 779')
  assert(items.pending[779]==nil and requests==2)
 ''',
+'known_item_without_icon_requests_one_async_refresh': '''
+ inventoryFixture(false,true)
+ local items=addon.ItemDisplay
+ items.pending={}; items.loaded={}
+ C_Item=C_Item or {}
+ local ready=false
+ local requests=0
+ C_Item.GetItemInfo=function(id) return 'Known Herb','|Hitem:777|h[Known Herb]|h',1 end
+ C_Item.GetItemIconByID=function(id) if ready then return 'Icon777' end end
+ C_Item.RequestLoadItemDataByID=function(id) requests=requests+1; return true end
+ local name,link,icon=items:Resolve(777,'Known Herb')
+ assert(name=='Known Herb' and not icon and requests==1 and items.pending[777])
+ ready=true
+ dispatch('GET_ITEM_INFO_RECEIVED',777,true)
+ assert(not items.pending[777] and items.loaded[777])
+ local _,_,resolvedIcon=items:Resolve(777,'Known Herb')
+ assert(resolvedIcon=='Icon777' and requests==1)
+''',
+'successful_item_load_without_icon_does_not_spin': '''
+ inventoryFixture(false,true)
+ local items=addon.ItemDisplay
+ items.pending={}; items.loaded={}
+ C_Item=C_Item or {}
+ local requests=0
+ C_Item.GetItemInfo=function() return 'Known Herb','|Hitem:778|h[Known Herb]|h',1 end
+ C_Item.GetItemIconByID=function() return nil end
+ C_Item.RequestLoadItemDataByID=function() requests=requests+1; return true end
+ items:Resolve(778,'Known Herb')
+ dispatch('GET_ITEM_INFO_RECEIVED',778,true)
+ items:Resolve(778,'Known Herb')
+ items:Resolve(778,'Known Herb')
+ assert(requests==1 and items.loaded[778],'successful load with no icon must not loop')
+''',
 'failed_whisper_composer_insert_does_not_fall_through_to_ah_or_chat': '''
  inventoryFixture(false,true); addon.ShoppingList:Open(42)
  local composer=addon.WhisperComposer; assert(composer:Open(42))
