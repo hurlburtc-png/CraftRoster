@@ -260,6 +260,7 @@ function View:RefreshMaterials()
 		row.Count:SetWidth(countWidth)
 		row.Label:ClearAllPoints(); row.Label:SetPoint("TOPLEFT",34,-2)
 		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",-(countWidth+4),2)
+		row.Label:SetWordWrap(false)
 		row.Label:SetText(entry.name)
 		local height=32
 		row.Icon:SetSize(28,28)
