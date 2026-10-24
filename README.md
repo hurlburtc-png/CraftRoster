@@ -1,11 +1,11 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — 0.8.0-beta.34**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.35**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-[**Download tagged beta.34 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.34/CraftRoster.zip)
+[**Download tagged beta.35 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.35/CraftRoster.zip)
 
-**Version:** `0.8.0-beta.34`  
-**Released:** October 23, 2026 at 11:37 PM MDT (America/Edmonton)
+**Version:** `0.8.0-beta.35`  
+**Released:** Validation in progress; America/Edmonton publication time will be recorded after release.
 
 
 
@@ -15,7 +15,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
-**Status:** Beta. Beta 34 release validation passed: 1808 tests run, 10 skipped. In-game verification is still required.
+**Status:** Beta. Beta 35 release validation in progress; 1,820 pre-release tests run (10 skipped). In-game verification is still required.
 
 **Location tools:** Reviewed vendor, trainer and mob records can show NPC names, zones and coordinates, with copy controls and compatible TomTom/native map markers. Trainers show the required profession skill and are limited to verified trainers for your faction or neutral trainers. Unverified references cannot create waypoints. Coordinate coverage is still limited; missing positions are never guessed.
 
