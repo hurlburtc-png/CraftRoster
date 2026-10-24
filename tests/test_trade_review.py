@@ -122,6 +122,37 @@ CASES = {
         assert(CraftRosterDB.requests[1].id~=originalID and CraftRosterDB.requests[1].quantity==3)
         dispatch('TRADE_SHOW'); assert(moved==9)
     ''',
+    'recipient_only_mail_draft_is_not_readdressed': '''
+        inventoryFixture(false,true)
+        MailFrame=CreateFrame(); MailFrame:Show()
+        SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame(); SendMailBodyEditBox=CreateFrame()
+        SendMailNameEditBox:SetText('Previous-Realm')
+        addon.Requests:MailPlayer(42,'Crafter-Realm')
+        dispatch('MAIL_SHOW')
+        assert(moved==0 and SendMailNameEditBox:GetText()=='Previous-Realm',
+          'recipient-only draft must not be redirected or loaded')
+        assert(SendMailSubjectEditBox:GetText()=='' and SendMailBodyEditBox:GetText()=='',
+          'recipient-only draft fields must remain untouched')
+    ''',
+    'changed_mail_recipient_blocks_subsequent_auto_load': '''
+        inventoryFixture(false,true)
+        MailFrame=CreateFrame(); MailFrame:Show()
+        SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame(); SendMailBodyEditBox=CreateFrame()
+        CraftRosterDB.settings.autoLoadItems=false
+        addon.Requests:MailPlayer(42,'Crafter-Realm')
+        assert(SendMailNameEditBox:GetText()=='Crafter-Realm')
+        local subject=SendMailSubjectEditBox:GetText()
+        local body=SendMailBodyEditBox:GetText()
+        CraftRosterDB.settings.autoLoadItems=true
+        SendMailNameEditBox:SetText('Different-Realm')
+        dispatch('MAIL_SHOW')
+        assert(moved==0 and SendMailNameEditBox:GetText()=='Different-Realm',
+          'recipient change after draft preparation must block attachments')
+        assert(SendMailSubjectEditBox:GetText()==subject and SendMailBodyEditBox:GetText()==body)
+        SendMailNameEditBox:SetText('')
+        dispatch('MAIL_SHOW')
+        assert(moved==0, 'cleared recipient must also block attachments')
+    ''',
     'occupied_mail_compose_is_not_readdressed_or_overfilled': '''
         inventoryFixture(false,true)
         attachments[1]=3
