@@ -190,6 +190,30 @@ CASES = {
     local old=addon.RecipeSources:Format(8322)
     assert(not old:find('Granny Finespindle',1,true),'different recipes must not inherit acquisition by name')
 ''',
+'hybrid_inventory_uses_legacy_count_when_modern_api_errors': '''
+    C_Item=C_Item or {}
+    C_Item.GetItemCount=function() error('modern count API unavailable') end
+    GetItemCount=function(id)
+        if id==7 then return 9 end
+        return 0
+    end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries and entries[1].owned==9 and entries[1].required==3)
+    assert(ready==#entries and not unavailable)
+    addon.SelectedCraft:Refresh()
+    assert(addon.SelectedCraft.entries[1].owned==9)
+''',
+'hybrid_inventory_uses_legacy_count_when_modern_returns_nil': '''
+    C_Item=C_Item or {}
+    C_Item.GetItemCount=function() return nil end
+    GetItemCount=function(id)
+        if id==7 then return 6 end
+        return 0
+    end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries and entries[1].owned==6 and entries[1].required==3)
+    assert(ready==#entries and not unavailable)
+''',
 'closed_shopping_list_still_tracks_bag_changes_and_quantity': '''
     assert(not addon.ShoppingList.frame)
     assert(addon.SelectedCraft.entries[1].owned==24 and addon.SelectedCraft.entries[1].required==3)
