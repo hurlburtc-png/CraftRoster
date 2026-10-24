@@ -296,6 +296,35 @@ for terminal_status in ('completed','declined','cancelled'):
     """
 
 
+
+# Completed, declined and cancelled deliveries belong to previous jobs.
+# Their material ledgers must not discount a new identical craft request.
+for terminal_status in ('completed','declined','cancelled'):
+    CASES[f'closed_{terminal_status}_trade_does_not_discount_new_shopping_list'] = f"""
+        inventoryFixture(false,true)
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+        local previous=CraftRosterDB.requests[1]
+        assert(previous and previous.materialLedger and previous.materialLedger[1].count==3)
+        previous.materialLedger[1].remaining=0
+        previous.status='{terminal_status}'
+        local oldCredit=addon.Requests:GetDeliveredMaterials(42,'Crafter-Realm',1)
+        assert(not next(oldCredit),'closed trades must not credit an unrelated new order')
+        local entries=addon.ShoppingList:GetMaterialStatus(42,'Crafter-Realm')
+        assert(entries and entries[1].delivered==0 and entries[1].required==3,
+          'shopping list must show all three materials for a new craft')
+        addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+        local current=CraftRosterDB.requests[1]
+        assert(current~=previous and current.materialLedger[1].remaining==3,
+          'starting a new order must retain its full material requirement')
+        current.materialLedger[1].remaining=2
+        local credit=addon.Requests:GetDeliveredMaterials(42,'Crafter-Realm',1)
+        assert(credit[7]==1,'verified progress on the active order must still count')
+        entries=addon.ShoppingList:GetMaterialStatus(42,'Crafter-Realm')
+        assert(entries[1].delivered==1 and entries[1].required==2,
+          'only the active order should reduce outstanding materials')
+    """
+
+
 class TradeReviewTests(unittest.TestCase):
     pass
 

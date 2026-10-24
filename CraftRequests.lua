@@ -206,7 +206,9 @@ end
 
 function Requests:GetDeliveredMaterials(recipeID,target,quantity)
 	for _,request in ipairs(CraftRosterDB.requests or {}) do
-		if OwnRequest(request) and request.mode=="trade" and not request.tradeAbandoned and request.recipeID==recipeID and Normalize(request.target)==Normalize(target)
+		if OwnRequest(request) and request.mode=="trade" and not request.tradeAbandoned
+			and request.status~="completed" and request.status~="declined" and request.status~="cancelled"
+			and request.recipeID==recipeID and Normalize(request.target)==Normalize(target)
 			and request.quantity==quantity and request.materialLedger then
 			local delivered={}
 			for _,material in ipairs(request.materialLedger) do delivered[material.itemID or material.name]=math.max(0,material.count-material.remaining) end
