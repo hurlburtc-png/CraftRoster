@@ -1,11 +1,11 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — 0.8.0-beta.38**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.39**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-[**Download tagged beta.38 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.38/CraftRoster.zip)
+[**Download tagged beta.39 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.39/CraftRoster.zip)
 
-**Version:** `0.8.0-beta.38`  
-**Released:** October 24, 2026 at 3:19:59 AM MDT (America/Edmonton)
+**Version:** `0.8.0-beta.39`  
+**Released:** Pending GitHub Actions publication (America/Edmonton)
 
 
 
@@ -15,7 +15,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
-**Status:** Beta. Beta 38 release and addon checks passed: 1,868 tests run, 10 skipped. Automated packaging confirms a single `CraftRoster/` root. In-game verification is still required.
+**Status:** Beta. Beta 39 candidate passed 1,892 pre-release automated tests (10 skipped) and Forever reconciliation. Tagged release and ZIP packaging verification pending; in-game verification is still required.
 
 **Location tools:** Reviewed vendor, trainer and mob records can show NPC names, zones and coordinates, with copy controls and compatible TomTom/native map markers. Trainers show the required profession skill and are limited to verified trainers for your faction or neutral trainers. Unverified references cannot create waypoints. Coordinate coverage is still limited; missing positions are never guessed.
 
@@ -24,7 +24,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Crafter data freshness:** Hover a crafter to see when their saved recipe snapshot was shared. Missing timestamps are stated explicitly. Online status does not establish that their recipe scan is current.
 
-**Latest reliability fixes:** Opened-mail imports pause when the visible reader and inbox report conflicting valid mail indices, avoiding a work order for the wrong sender. Craft mail will not overwrite an already-addressed draft or attach materials after its recipient changes. Opened-mail imports handle invalid inbox indexes on hybrid clients. Selected-recipe shift-click links tolerate chat API failures. Whisper drafts remain available for retry if the game cannot open a chat window.
+**Latest reliability fixes:** Trade and mail material auto-fill now tolerates unavailable modern bag APIs, falls back to legacy bag reads where possible, and skips transfers safely when bag contents cannot be read. Opened-mail imports pause when the visible reader and inbox report conflicting valid mail indices, avoiding a work order for the wrong sender. Craft mail will not overwrite an already-addressed draft or attach materials after its recipient changes. Opened-mail imports handle invalid inbox indexes on hybrid clients. Selected-recipe shift-click links tolerate chat API failures. Whisper drafts remain available for retry if the game cannot open a chat window.
 
 **Search performance:** Version-group tables are now allocated only for duplicate recipes. Profession, guild and favorite filters run before text matching, and rarity colors reuse one shared table. Paired mock measurements are in [performance notes](docs/PERFORMANCE.md).
 
