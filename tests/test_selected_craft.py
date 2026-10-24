@@ -311,7 +311,72 @@ CASES = {
       end
     end
     error('selected search result missing')
+''',,
+'hybrid_bag_scan_recovers_from_throwing_modern_slots': '''
+    C_Item={GetItemCount=function() error('count unavailable') end}
+    GetItemCount=nil
+    NUM_BAG_SLOTS=0
+    C_Container={
+        GetContainerNumSlots=function() error('modern slots unavailable') end,
+        GetContainerItemLink=function() return nil end,
+        GetContainerItemInfo=function() return nil end
+    }
+    GetContainerNumSlots=function() return 1 end
+    GetContainerItemLink=function() return '|Hitem:7|h[Herb]|h' end
+    GetContainerItemInfo=function() return 'texture',4 end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries[1].owned==4 and ready==#entries and not unavailable,
+        'legacy bag contents must survive a throwing modern slots API')
 ''',
+'hybrid_bag_scan_recovers_from_partial_modern_item_info': '''
+    C_Item={GetItemCount=function() return nil end}
+    GetItemCount=nil
+    NUM_BAG_SLOTS=0
+    C_Container={
+        GetContainerNumSlots=function() return 1 end,
+        GetContainerItemLink=function() return '|Hitem:7|h[Herb]|h' end,
+        GetContainerItemInfo=function() return {stackCount=nil} end
+    }
+    GetContainerNumSlots=function() return 1 end
+    GetContainerItemLink=function() return '|Hitem:7|h[Herb]|h' end
+    GetContainerItemInfo=function() return 'texture',5 end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries[1].owned==5 and ready==#entries and not unavailable,
+        'partial modern item info must not suppress complete legacy bag data')
+''',
+'hybrid_bag_scan_reports_unknown_when_both_container_families_fail': '''
+    C_Item={GetItemCount=function() error('count unavailable') end}
+    GetItemCount=nil
+    NUM_BAG_SLOTS=0
+    C_Container={
+        GetContainerNumSlots=function() return 1 end,
+        GetContainerItemLink=function() error('modern bag read failed') end,
+        GetContainerItemInfo=function() return nil end
+    }
+    GetContainerNumSlots=function() error('legacy bag read failed') end
+    GetContainerItemLink=function() return nil end
+    GetContainerItemInfo=function() return nil end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries[1].owned==nil and ready==0 and unavailable,
+        'unreadable bags must not be misreported as empty')
+''',
+'hybrid_bag_scan_trusts_valid_modern_empty_bag': '''
+    C_Item={GetItemCount=function() return nil end}
+    GetItemCount=nil
+    NUM_BAG_SLOTS=0
+    C_Container={
+        GetContainerNumSlots=function() return 0 end,
+        GetContainerItemLink=function() error('empty bag must not read links') end,
+        GetContainerItemInfo=function() error('empty bag must not read item info') end
+    }
+    GetContainerNumSlots=function() error('valid modern empty bag must not fall back') end
+    GetContainerItemLink=function() return nil end
+    GetContainerItemInfo=function() return nil end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries[1].owned==0 and ready==0 and not unavailable,
+        'a valid zero-slot scan is a known empty inventory, not an API failure')
+''',
+
 }
 
 class SelectedCraftTests(unittest.TestCase): pass
