@@ -86,9 +86,16 @@ function Items:Click(entry)
   end
   if IsShiftKeyDown and IsShiftKeyDown() then
    if ChatEdit_InsertLink then local ok,inserted=pcall(ChatEdit_InsertLink,link); if ok and inserted then return true end end
-   if ChatFrame_OpenChat then ChatFrame_OpenChat(link); return true end
+   if type(ChatFrame_OpenChat)=="function" then
+    local ok,opened=pcall(ChatFrame_OpenChat,link)
+    if ok and opened~=false then return true end
+   end
+   -- Shift-click explicitly means chat, not an Auction House search.
+   -- If the chat API fails, leave the material untouched for a retry.
+   return false
   end
  end
+ if IsShiftKeyDown and IsShiftKeyDown() then return false end
  return CraftRoster.ShoppingList:SearchAuctions(entry)
 end
 
