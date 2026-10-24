@@ -95,6 +95,22 @@ local function GetCharacterKey()
 	return UnitName("player") .. "-" .. (GetRealmName() or "")
 end
 
+-- A sync timestamp describes the saved recipe snapshot, not the player's
+-- last login or the time a particular profession was scanned.
+local function GetSnapshotStatus(character)
+ local stamp=tonumber(character and character.lastSync)
+ if not stamp or stamp<=0 or stamp~=stamp then
+  return "Recipe snapshot: update time unavailable."
+ end
+ local age=math.max(0,time()-stamp)
+ local elapsed
+ if age<60 then elapsed="less than a minute ago"
+ elseif age<3600 then elapsed=math.floor(age/60).." minute(s) ago"
+ elseif age<86400 then elapsed=math.floor(age/3600).." hour(s) ago"
+ else elapsed=math.floor(age/86400).." day(s) ago" end
+ return "Recipe snapshot shared: "..elapsed..". Open professions and Refresh to update."
+end
+
 local function GetProfessionIcon(profession)
 	return PROFESSION_ICONS[profession] or "Interface\\Icons\\Trade_Tailoring"
 end
@@ -1040,7 +1056,7 @@ function Directory:RefreshCrafters()
 				icon = "Interface\\Icons\\Achievement_Character_Human_Male",
 				offline = not isOnline,
 				characterKey = characterKey,
-				tooltipLines = { characterKey, professionText, self.selectedRecipe.name or "Unknown recipe", "Select for Whisper Player or Mail Player." },
+				tooltipLines = { characterKey, professionText, self.selectedRecipe.name or "Unknown recipe", GetSnapshotStatus(character), "Online status does not confirm that the recipe scan is current.", "Select for Whisper Player or Mail Player." },
 				rightText = isOnline and "|cff33ff66Online|r" or "|cff888888Offline|r",
 			}
 
