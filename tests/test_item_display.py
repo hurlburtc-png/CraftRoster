@@ -98,6 +98,27 @@ CASES = {
  AuctionFrame=CreateFrame(); BrowseName=CreateFrame()
  row.scripts.OnClick(row,'LeftButton'); assert(BrowseName:GetText()=='Herb')
 ''',
+'modern_auction_uses_visible_search_instead_of_stale_classic_field': '''
+ inventoryFixture(false,true)
+ AuctionFrame=CreateFrame(); AuctionFrame:Hide()
+ BrowseName=CreateFrame(); BrowseName:SetText('stale classic search')
+ AuctionHouseFrame=CreateFrame(); AuctionHouseFrame:Show()
+ AuctionHouseFrame.SearchBar={SearchBox=CreateFrame()}
+ assert(addon.ShoppingList:SearchAuctions({name='Herb'}))
+ assert(AuctionHouseFrame.SearchBar.SearchBox:GetText()=='Herb')
+ assert(BrowseName:GetText()=='stale classic search')
+''',
+'closed_auction_never_mutates_stale_search_fields': '''
+ inventoryFixture(false,true)
+ AuctionFrame=CreateFrame(); AuctionFrame:Hide()
+ BrowseName=CreateFrame(); BrowseName:SetText('classic unchanged')
+ AuctionHouseFrame=CreateFrame(); AuctionHouseFrame:Hide()
+ AuctionHouseFrame.SearchBar={SearchBox=CreateFrame()}
+ AuctionHouseFrame.SearchBar.SearchBox:SetText('modern unchanged')
+ assert(not addon.ShoppingList:SearchAuctions({name='Herb'}))
+ assert(BrowseName:GetText()=='classic unchanged')
+ assert(AuctionHouseFrame.SearchBar.SearchBox:GetText()=='modern unchanged')
+''',
 'unified_scroll_and_compact_material_geometry': '''
  inventoryFixture(false,true)
  addon.Directory:Toggle()
