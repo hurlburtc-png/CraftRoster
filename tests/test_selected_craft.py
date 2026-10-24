@@ -11,6 +11,52 @@ addon.Directory:RefreshDetails()
 '''
 
 CASES = {
+'hybrid_nonfinite_item_count_falls_back_to_legacy': '''
+    C_Item={GetItemCount=function() return math.huge end}
+    GetItemCount=function(id) return id==7 and 6 or 0 end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries[1].owned==6 and ready==#entries and not unavailable,
+        'infinite modern count must not override a valid legacy count')
+''',
+'hybrid_fractional_item_count_falls_back_to_legacy': '''
+    C_Item={GetItemCount=function() return 1.5 end}
+    GetItemCount=function(id) return id==7 and 5 or 0 end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries[1].owned==5 and ready==#entries and not unavailable,
+        'fractional item counts must not be treated as inventory')
+''',
+'hybrid_nonfinite_bag_slots_fall_back_to_legacy': '''
+    C_Item={GetItemCount=function() return nil end}
+    GetItemCount=nil
+    NUM_BAG_SLOTS=0
+    C_Container={
+        GetContainerNumSlots=function() return math.huge end,
+        GetContainerItemLink=function() error('invalid modern slots must not be scanned') end,
+        GetContainerItemInfo=function() return nil end
+    }
+    GetContainerNumSlots=function() return 1 end
+    GetContainerItemLink=function() return '|Hitem:7|h[Herb]|h' end
+    GetContainerItemInfo=function() return 'texture',5 end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries[1].owned==5 and ready==#entries and not unavailable,
+        'invalid modern bag slots must retry a valid legacy bag scan')
+''',
+'hybrid_invalid_stack_counts_remain_unknown': '''
+    C_Item={GetItemCount=function() return 0/0 end}
+    GetItemCount=function() return math.huge end
+    NUM_BAG_SLOTS=0
+    C_Container={
+        GetContainerNumSlots=function() return 1 end,
+        GetContainerItemLink=function() return '|Hitem:7|h[Herb]|h' end,
+        GetContainerItemInfo=function() return {stackCount=math.huge} end
+    }
+    GetContainerNumSlots=function() return 1 end
+    GetContainerItemLink=function() return '|Hitem:7|h[Herb]|h' end
+    GetContainerItemInfo=function() return 'texture',1.5 end
+    local entries,ready,unavailable=addon.ShoppingList:GetMaterialStatus(42)
+    assert(entries[1].owned==nil and ready==0 and unavailable,
+        'invalid stack counts in both API families must remain unknown')
+''',
 'shift_click_recipe_links_keep_active_chat_context_on_failure': '''
     addon.Directory.GetSearchLinks=function()
         return {craft='|Hitem:99|h[Craft]|h',recipe='|Hitem:100|h[Pattern]|h'}

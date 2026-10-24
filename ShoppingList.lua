@@ -122,6 +122,12 @@ StaticPopupDialogs["CRAFTROSTER_CRAFTER_SHARE"] = {
 	end,
 }
 
+-- A malformed hybrid inventory API must not turn an unknown bag count into
+-- a false material balance (or an unbounded slot loop).
+local function ValidCount(value)
+\treturn type(value)=="number" and value>=0 and value<math.huge and value==math.floor(value)
+end
+
 -- Build one inventory index only when a count API is unavailable.
 local function BagCounts()
 	-- A hybrid client can expose modern container helpers before all of them
@@ -132,7 +138,7 @@ local function BagCounts()
 		local counts={}
 		for bag=0,(NUM_BAG_SLOTS or 4) do
 			local ok,slotCount=pcall(slots,bag)
-			if not ok or type(slotCount)~="number" or slotCount<0 or slotCount~=math.floor(slotCount) then return nil end
+			if not ok or not ValidCount(slotCount) or slotCount>1000 then return nil end
 			for slot=1,slotCount do
 				local linkOK,itemLink=pcall(link,bag,slot)
 				if not linkOK then return nil end
@@ -140,7 +146,7 @@ local function BagCounts()
 					local infoOK,item,count=pcall(info,bag,slot)
 					if not infoOK then return nil end
 					if type(item)=="table" then count=item.stackCount end
-					if type(count)~="number" or count<0 then return nil end
+					if not ValidCount(count) or count>1000000 then return nil end
 					if type(itemLink)~="string" then return nil end
 					local id=tonumber(itemLink:match("item:(%d+)"))
 					local name=itemLink:match("%[(.-)%]")
@@ -292,11 +298,11 @@ function ShoppingList:GetMaterialStatus(recipeID, crafter)
 		local owned
 		if type(modernCount)=="function" then
 			local ok,value=pcall(modernCount,key,false,false,false,false)
-			if ok and type(value)=="number" and value>=0 then owned=value end
+			if ok and ValidCount(value) then owned=value end
 		end
 		if owned==nil and type(legacyCount)=="function" and legacyCount~=modernCount then
 			local ok,value=pcall(legacyCount,key,false,false,false,false)
-			if ok and type(value)=="number" and value>=0 then owned=value end
+			if ok and ValidCount(value) then owned=value end
 		end
 		if owned==nil then
 			-- Scan at most once, including when the client has no bag APIs.
