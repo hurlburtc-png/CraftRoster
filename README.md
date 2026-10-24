@@ -22,7 +22,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Crafter data freshness:** Hover a crafter to see when their saved recipe snapshot was shared. Missing timestamps are stated explicitly. Online status does not establish that their recipe scan is current.
 
-**Latest usability fixes:** The default window keeps recipe details and materials side by side; narrow panes stack them for readability. Beta 29’s installable ZIP passed 1,670 automated checks (10 skipped).
+**Latest usability fixes:** The default window keeps recipe details and materials side by side; narrow panes stack them for readability. Beta 29’s installable ZIP passed its automated suite: 1,670 tests run, 10 skipped.
 
  Clear the active shopping list with **Clear list**. Search matches all entered words, including aliases such as wrist/bracer. Tick **Known by guild** below the search to show only recipes in your own or saved guildmates’ scans, including offline members. Same-name recipes share one result with a **Version** selector; each version keeps its own crafters, materials and sources. The selected-recipe pane uses more width and shows a short source overview; expand it for full details. Ten Enchanting recipes now include named Classic vendor examples and sourced coordinates, clearly unconfirmed for Forever.
 
