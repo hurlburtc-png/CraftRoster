@@ -85,7 +85,7 @@ CASES = {
         assert(view.actionInHeader==(width>=320))
         if width>=320 then
             assert(lastPoint[5]==-68)
-            assert(view.craftButton:GetWidth()>=148)
+            assert(view.craftButton:GetWidth()>=108,'320px pane needs a usable action button')
             assert(width-12-view.craftButton:GetWidth()>=200,
                 'craft action must leave quantity arrows unobscured')
         else
