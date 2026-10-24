@@ -173,9 +173,17 @@ function ShoppingList:SearchAuctions(entry)
 		print("|cff00ff00CraftRoster|r: open the Auction House, then click the material again to fill its search field.")
 		return false
 	end
-	search:SetText(entry.name)
-	if search.SetFocus then search:SetFocus() end
-	if search.HighlightText then search:HighlightText() end
+	-- Third-party AH replacements may expose a search box whose methods throw
+	-- during tab changes. A failed SetText must not claim that a search was filled.
+	local ok = pcall(search.SetText, search, entry.name)
+	if not ok then
+		print("|cff00ff00CraftRoster|r: Auction House search is unavailable on this tab. Try again after opening its search view.")
+		return false
+	end
+	-- Focus and highlighting are optional presentation, not prerequisites for
+	-- inserting the material name. Keep these failures from breaking a click.
+	if type(search.SetFocus) == "function" then pcall(search.SetFocus, search) end
+	if type(search.HighlightText) == "function" then pcall(search.HighlightText, search) end
 	return true
 end
 
