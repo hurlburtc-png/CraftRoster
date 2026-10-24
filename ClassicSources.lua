@@ -102,8 +102,20 @@ local function factionAllowed(source)
  local ok,faction=pcall(UnitFactionGroup,"player")
  return ok and faction==source.faction
 end
+-- Keep only the most recent generated expansions. The shared factual
+-- catalogue and manually reviewed records remain complete and immutable.
+local expandedCache,expandedSlots={},{}
+local nextExpandedSlot=1
+local EXPANDED_CACHE_LIMIT=32
+local function CacheExpansion(recipeID,record)
+ local previous=expandedSlots[nextExpandedSlot]
+ if previous then expandedCache[previous]=nil end
+ expandedSlots[nextExpandedSlot]=recipeID
+ expandedCache[recipeID]=record
+ nextExpandedSlot=nextExpandedSlot%EXPANDED_CACHE_LIMIT+1
+end
 function Classic:Get(recipeID,itemID)
- local record=self.records[recipeID]
+ local record=self.records[recipeID] or expandedCache[recipeID]
  if not record then
   local data=CraftRoster.ClassicSourceData
   local raw=data and data.recipes[recipeID]
@@ -125,8 +137,8 @@ function Classic:Get(recipeID,itemID)
      record.sources[#record.sources+1]=source
     end
    end
-   -- Shared NPC data stays immutable; only the selected recipe is expanded.
-   self.records[recipeID]=record
+   -- Expanded copies are disposable; original facts stay in shared data.
+   CacheExpansion(recipeID,record)
   end
  end
  if type(record)~="table" or record.spellID~=recipeID or type(record.sources)~="table" then return nil end
@@ -227,6 +239,7 @@ for recipeID,record in pairs(originals) do
  Classic.records[recipeID]=nil
  local generated=Classic:Get(recipeID,record.itemID)
  Classic.records[recipeID]=record
+ expandedCache[recipeID]=nil -- reviewed records own their retained source rows
  if generated then
   for _,source in ipairs(generated.sources) do
    local found=false
