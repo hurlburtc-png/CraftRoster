@@ -1,5 +1,27 @@
 # Performance baseline and resource limits
 
+## 0.8.0-beta.36: fewer temporary search allocations
+
+The catalogue now allocates version lists only for actual duplicate recipes;
+single-version recipes are stored directly while grouping results. Cheap
+profession, learned-recipe, guild and favorite filters run before text matching.
+The item-rarity color table is shared instead of recreated for each displayed label.
+
+The same 5,000-recipe workload alternates two broad matching queries ten times.
+Figures below are medians of five fresh-runtime trials. Garbage collection is
+paused **only inside the benchmark** to expose temporary allocation churn:
+uncollected heap growth is not steady-state addon memory or peak game memory.
+
+| Workload | Lua 5.1 before | Lua 5.1 after | LuaJIT before | LuaJIT after |
+| --- | ---: | ---: | ---: | ---: |
+| Ten search refreshes | 210.33 ms | 187.63 ms | 70.12 ms | 68.09 ms |
+| Uncollected Lua heap growth | 32,788.7 KiB | 29,023.1 KiB | 22,500.9 KiB | 18,345.6 KiB |
+
+Normal in-game collection remains enabled and unchanged. Version selection,
+per-version ownership/materials, filter intersections and cold-cache icons still
+require the regression suite and actual Forever verification.
+
+
 ## Beta 34: bounded source expansions and cheaper catalogue indexing
 
 Measured in identical mock workloads before and after this change. Directory
