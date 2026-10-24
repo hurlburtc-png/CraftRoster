@@ -3,9 +3,9 @@
 ## IconTexture: Interface\Icons\INV_Potion_97
 ## Notes: Find guild crafters, recipe sources and required materials.
 ## Author: hurlburtc-png
-## Version: 0.8.0-beta.49
+## Version: 0.8.0-beta.50
 ## X-ReleaseChannel: beta
-## X-ReleaseNotes: Reject invalid inventory counts and safely retry legacy bag APIs
+## X-ReleaseNotes: Guard selected-recipe chat links against unknown active editor state
 ## OptionalDeps: TomTom, Auctioneer, TradeSkillMaster
 ## SavedVariables: CraftRosterDB
 
