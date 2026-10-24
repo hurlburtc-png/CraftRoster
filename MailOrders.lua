@@ -120,8 +120,16 @@ function MailOrders:Capture(index)
 	reading=true
 	local headerOK,_,_,sender,subject=pcall(GetInboxHeaderInfo,index)
 	local bodyOK,body=pcall(read,index)
+	-- Mail indices can change while the client loads the opened message.
+	-- A stable reader index alone is insufficient if the inbox reassigns
+	-- that slot during GetInboxText. Recheck both the visible index and the
+	-- sender/subject before associating the body with a customer.
+	local sameReader=OpenIndex()==index
+	local verifyOK,_,_,verifiedSender,verifiedSubject=pcall(GetInboxHeaderInfo,index)
 	reading=false
-	if not headerOK or not bodyOK or type(sender)~="string" or type(subject)~="string" or type(body)~="string" then return end
+	if not sameReader or not headerOK or not bodyOK or not verifyOK
+		or sender~=verifiedSender or subject~=verifiedSubject
+		or type(sender)~="string" or type(subject)~="string" or type(body)~="string" then return end
 	if #sender>100 or #subject>256 or #body>MAX_BODY then return end
 	local normalizedSender=Normalize(sender)
 	if not normalizedSender or normalizedSender==Normalize(UnitName("player")) then return end

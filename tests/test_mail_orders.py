@@ -206,6 +206,46 @@ CASES={
     assert(#orders==1 and orders[1].customer=='Correct-Realm',
         'import only when visible mail reader and inbox agree')
 """,
+'opened_mail_index_switch_during_body_read_is_not_misattributed': r"""
+    inbox[1]={sender='First-Realm',subject='Spidersilk Boots craft requested',
+        body='Requested item: Spidersilk Boots'}
+    inbox[2]={sender='Second-Realm',subject='Spidersilk Boots craft requested',
+        body='Requested item: Spidersilk Boots'}
+    local original=GetInboxText
+    GetInboxText=function(index)
+        local body=original(index)
+        InboxFrame.openMailID=2
+        OpenMailFrame.openMailID=2
+        return body
+    end
+    opened(1)
+    assert(#addon.WorkOrders:GetOrders()==0,
+        'changing the visible reader during a body read must abort import')
+    GetInboxText=original
+    addon.MailOrders:CaptureOpened()
+    local orders=addon.WorkOrders:GetOrders()
+    assert(#orders==1 and orders[1].customer=='Second-Realm',
+        'the newly opened message can be imported after the reader settles')
+""",
+'opened_mail_reindexed_header_during_body_read_is_not_misattributed': r"""
+    inbox[1]={sender='First-Realm',subject='Spidersilk Boots craft requested',
+        body='Requested item: Spidersilk Boots'}
+    local original=GetInboxText
+    GetInboxText=function(index)
+        local body=original(index)
+        inbox[index]={sender='Second-Realm',subject='Spidersilk Boots craft requested',
+            body='Requested item: Spidersilk Boots'}
+        return body
+    end
+    opened(1)
+    assert(#addon.WorkOrders:GetOrders()==0,
+        'mail slot reassignment with the same index must abort import')
+    GetInboxText=original
+    addon.MailOrders:CaptureOpened()
+    local orders=addon.WorkOrders:GetOrders()
+    assert(#orders==1 and orders[1].customer=='Second-Realm',
+        'mail may be captured after its sender and body stabilize')
+""",
 'opened_reader_fallback_index_and_bare_sender': r"""
     InboxFrame=nil; OpenMailFrame.openMailID=1
     inbox[1]={sender='Crafter',subject='Spidersilk Boots craft requested',body='Requested item: Spidersilk Boots'}
