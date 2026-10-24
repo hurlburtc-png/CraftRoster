@@ -12,6 +12,8 @@ function methods:RegisterEvent(k) self.events[k]=true end
 function methods:UnregisterAllEvents() self.events={} end
 function methods:UnregisterEvent(k) self.events[k]=nil end
 function methods:SetSize(w,h) self.width=w; self.height=h end
+function methods:SetHeight(h) self.height=h end
+function methods:SetWidth(w) self.width=w end
 function methods:SetScale(value) self.scale=value end
 function methods:SetAlpha(value) self.alpha=value end
 function methods:GetAlpha() return rawget(self,'alpha') or 1 end
