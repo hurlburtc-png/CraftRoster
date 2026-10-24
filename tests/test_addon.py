@@ -1390,6 +1390,11 @@ class ForeverManifestTests(unittest.TestCase):
         self.assertIn(f'**Version:** `{version}`', readme,
                       'README version metadata must match the TOC, not just a download link')
         self.assertIn(f'Download CraftRoster.zip — {version}', readme)
+        beta = version.rsplit('.', 1)[-1]
+        tagged = (f'[**Download tagged beta.{beta} ZIP**]'
+                  f'(https://github.com/hurlburtc-png/CraftRoster/releases/download/'
+                  f'v{version}/CraftRoster.zip)')
+        self.assertIn(tagged, readme, 'Tagged ZIP label and destination must match TOC version')
         self.assertIn('CraftRoster.zip', readme)
         for line in lines:
             if line and not line.startswith('#'):
