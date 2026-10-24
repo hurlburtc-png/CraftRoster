@@ -80,10 +80,10 @@ CASES = {
     end
     local lastPoint
     view.craftButton.SetPoint=function(_,...) lastPoint={...} end
-    for _,width in ipairs({436,360,359,600,436}) do
+    for _,width in ipairs({436,360,320,319,600,436}) do
         tab.SelectedCraftScroll:SetWidth(width); view:Refresh()
-        assert(view.actionInHeader==(width>=360))
-        if width>=360 then
+        assert(view.actionInHeader==(width>=320))
+        if width>=320 then
             assert(lastPoint[5]==-68)
             assert(view.craftButton:GetWidth()>=148)
             assert(width-12-view.craftButton:GetWidth()>=200,
