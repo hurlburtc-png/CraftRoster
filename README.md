@@ -1,8 +1,8 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — 0.8.0-beta.29**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.30**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-**Version:** `0.8.0-beta.29`  
+**Version:** `0.8.0-beta.30`  
 **Released:** October 23, 2026 at 7:22 PM MDT (America/Edmonton; 8:22 PM EST, fixed UTC−5)
 
 
@@ -13,7 +13,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Target:** Forever 1.60.1, build 70450 · Interface 16001
 
-**Status:** Beta. Release and automated checks passed for beta.29; in-game verification is still required.
+**Status:** Beta. Beta 30 release validation is in progress; in-game verification is still required.
 
 **Location tools:** Reviewed vendor, trainer and mob records can show NPC names, zones and coordinates, with copy controls and compatible TomTom/native map markers. Trainers show the required profession skill and are limited to verified trainers for your faction or neutral trainers. Unverified references cannot create waypoints. Coordinate coverage is still limited; missing positions are never guessed.
 
@@ -22,7 +22,7 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Crafter data freshness:** Hover a crafter to see when their saved recipe snapshot was shared. Missing timestamps are stated explicitly. Online status does not establish that their recipe scan is current.
 
-**Latest usability fixes:** The default window keeps recipe details and materials side by side; narrow panes stack them for readability. Beta 29’s installable ZIP passed its automated suite: 1,670 tests run, 10 skipped.
+**Latest usability fixes:** Craft / Request craft sits beside Quantity on normal-width panes, saving 44 pixels below the materials. Narrow panes keep the controls separate to prevent overlap. The default window keeps recipe details and materials side by side; narrow panes stack them for readability. Beta 29’s installable ZIP passed its automated suite: 1,670 tests run, 10 skipped.
 
  Clear the active shopping list with **Clear list**. Search matches all entered words, including aliases such as wrist/bracer. Tick **Known by guild** below the search to show only recipes in your own or saved guildmates’ scans, including offline members. Same-name recipes share one result with a **Version** selector; each version keeps its own crafters, materials and sources. The selected-recipe pane uses more width and shows a short source overview; expand it for full details. Ten Enchanting recipes now include named Classic vendor examples and sourced coordinates, clearly unconfirmed for Forever.
 
