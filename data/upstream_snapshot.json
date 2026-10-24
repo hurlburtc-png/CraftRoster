@@ -1,8 +1,8 @@
 {
   "att": {
-    "commit": "621afde3b52e30b8435ffa61f49c1e729608aeac",
+    "commit": "6df7a9c0c638a11207313eaf5f0a942cbe901d6b",
     "files": {
-      ".config/.main.lua": "c86469e3f91447082a892b0a50d8c285d34687d1",
+      ".config/.main.lua": "1f1c647fc608f2020b8b39c24e30fe0e88256c7a",
       ".config/constants/currencies.lua": "aaf1083c58d59f542e43aaf7b9bd29a0ef3f9ba9",
       ".config/constants/maps.lua": "10e9b852e7a67f8538ba38a368a2b61c0c149b5a",
       ".config/constants/races.lua": "5ffb8f7a3db898c82bde6ec611312980cf85173a",
@@ -118,7 +118,7 @@
       "professions/engineering.lua": "b23d196f1c089ee5f6b1b308c7623fd1342a85d6",
       "professions/leatherworking.lua": "df183ba236331e1d7725e130099270e9cd383d3a",
       "professions/tailoring.lua": "50cde56f30be80e169573c1cc139c3253297a501",
-      "promotions/collector's editions.lua": "31f072fc763c7609524b57bc9a3f5124658eca0b",
+      "promotions/collector's editions.lua": "fec74c5f67641bde7483a56d69f669f7eae0cdc1",
       "pvp/.metadata.lua": "bf556c09f66441181eaf6d2cda78770729a0e1a1",
       "pvp/achievements.lua": "941bc4a0c210aae0d41995cc1fd06cf70d756eb5",
       "pvp/battlegrounds/alterac valley.lua": "7b76217d9f8e849a3725dce32943d5beb3ad734c",
@@ -128,7 +128,7 @@
       "pvp/honor titles.lua": "0930c2079d328a93a1a957b22edf7d4e68312195",
       "pvp/pvp gear.lua": "44c4159bfdf8aca868c5a64cdb59c7556ce8f049",
       "pvp/quests.lua": "ce4c64d81f6f2205bc37f3d933433ad556488294",
-      "world drops/world drops.lua": "4f7222c53a1059fa315eb96b11c2c4c9bf8b8e4a",
+      "world drops/world drops.lua": "2ec3232383b1f1106bda9c11f21876ea7379ef1e",
       "world events/Elemental Invasions.lua": "ba13a0f1c7f75a0b3a84101d8604983eba42847a",
       "world events/The Ahn'Qiraj War Effort.lua": "488ab1b5b417412a6c42388ae3c0581b587eb5a1",
       "world events/The Scepter of the Shifting Sands.lua": "d44f2d288ebe6f02e7c9bc6922c46780d29b3a7e",
@@ -164,7 +164,7 @@
       "zones/eastern kingdoms/wetlands.lua": "64180b0adf8761c74230157cdb3d26d5144f435c",
       "zones/kalimdor/.metadata.lua": "23c9a41e6943fd1522485af261a2631cb273f8e9",
       "zones/kalimdor/1 - darnassus.lua": "6a4222f479cee00249ed89408b84fa4a5999944b",
-      "zones/kalimdor/1 - orgrimmar.lua": "a5a58aa975147ed8b96eb9a1476c04659c0c113d",
+      "zones/kalimdor/1 - orgrimmar.lua": "b73de7dff8b3ce688499ab7a405db5c34d4ede98",
       "zones/kalimdor/1 - thunder bluff.lua": "e8625a45f72e8ff6b30ab2aeddaa7ecb5e70892c",
       "zones/kalimdor/ashenvale.lua": "ce4647999c26104ae46a9506986a4b38499f5e01",
       "zones/kalimdor/azshara.lua": "cbefc56bc2260bb83841ccff5ee6b1d3a63fbf9a",
