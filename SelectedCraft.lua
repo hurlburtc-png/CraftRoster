@@ -217,7 +217,7 @@ function View:RefreshMaterials()
 		local row=self.rows[index]
 		if not row then
 			row=CreateFrame("Button",nil,tab.Details); self.rows[index]=row
-			row.Label=Text(row); row.Label:SetPoint("TOPLEFT",40,-2); row.Label:SetPoint("BOTTOMRIGHT",0,2); row:SetFontString(row.Label)
+			row.Label=Text(row); row.Label:SetPoint("TOPLEFT",34,-2); row.Label:SetPoint("BOTTOMRIGHT",0,2); row:SetFontString(row.Label)
 			row.Count=Text(row); row.Count:SetJustifyH("RIGHT")
 			row.Count:SetPoint("TOPRIGHT",row,"TOPRIGHT",0,-2); row.Count:SetSize(76,32)
 			row.Icon=row:CreateTexture(nil,"ARTWORK"); row.Icon:SetSize(32,32); row.Icon:SetPoint("TOPLEFT",0,-2)
@@ -258,7 +258,7 @@ function View:RefreshMaterials()
 		-- a dedicated quantity column and the full tooltip on hover.
 		local countWidth=column<260 and 62 or 76
 		row.Count:SetWidth(countWidth)
-		row.Label:ClearAllPoints(); row.Label:SetPoint("TOPLEFT",40,-2)
+		row.Label:ClearAllPoints(); row.Label:SetPoint("TOPLEFT",34,-2)
 		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",-(countWidth+4),2)
 		row.Label:SetText(entry.name)
 		local height=32
