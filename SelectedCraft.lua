@@ -27,15 +27,14 @@ local function Click(link,button,owner)
 			local ok,inserted=pcall(ChatEdit_InsertLink,link)
 			if ok and inserted then return end
 		end
-		local active
-		if ChatEdit_GetActiveWindow then
-			local ok,editor=pcall(ChatEdit_GetActiveWindow)
-			-- A throwing hybrid API does not prove that no editor is open.
-			-- Never create a second chat window when the active one is unknown.
-			if not ok then return end
-			active=editor
-		end
-		if not active and ChatFrame_OpenChat then pcall(ChatFrame_OpenChat,link) end
+		-- Without an active-editor lookup, a failed insert cannot establish
+		-- that it is safe to open another chat box. Fail closed on hybrids.
+		if type(ChatEdit_GetActiveWindow)~="function" then return end
+		local ok,active=pcall(ChatEdit_GetActiveWindow)
+		-- A throwing hybrid API does not prove that no editor is open.
+		-- Never create a second chat window when the active one is unknown.
+		if not ok then return end
+		if not active and type(ChatFrame_OpenChat)=="function" then pcall(ChatFrame_OpenChat,link) end
 	elseif SetItemRef then
 		local payload=link:match("|H(.-)|h")
 		if payload and pcall(SetItemRef,payload,link,"LeftButton") then return end
