@@ -5,14 +5,26 @@ CraftRoster.ItemDisplay = Items
 -- GetItemInfo texture is return #10; pcall adds a leading success value.
 function Items:Resolve(id, fallback)
  local name,link,icon,quality
- local getInfo=C_Item and C_Item.GetItemInfo or GetItemInfo
- if id and type(getInfo)=="function" then
-  local ok,n,l,q,_,_,_,_,_,_,texture=pcall(getInfo,id)
+ -- Hybrid clients may expose C_Item while its cache is still empty.
+ -- Fall back to legacy APIs when modern calls fail or return no usable data.
+ local modernInfo=C_Item and C_Item.GetItemInfo
+ if id and type(modernInfo)=="function" then
+  local ok,n,l,q,_,_,_,_,_,_,texture=pcall(modernInfo,id)
   if ok then name,link,icon,quality=n,l,texture,q end
  end
- local getIcon=C_Item and (C_Item.GetItemIconByID or C_Item.GetItemIcon) or GetItemIcon
- if not icon and id and type(getIcon)=="function" then
-  local ok,value=pcall(getIcon,id); if ok then icon=value end
+ if id and (not name or not icon) and type(GetItemInfo)=="function"
+   and GetItemInfo~=modernInfo then
+  local ok,n,l,q,_,_,_,_,_,_,texture=pcall(GetItemInfo,id)
+  if ok then
+   name=name or n; link=link or l; quality=quality or q; icon=icon or texture
+  end
+ end
+ local modernIcon=C_Item and (C_Item.GetItemIconByID or C_Item.GetItemIcon)
+ if not icon and id and type(modernIcon)=="function" then
+  local ok,value=pcall(modernIcon,id); if ok then icon=value end
+ end
+ if not icon and id and type(GetItemIcon)=="function" and GetItemIcon~=modernIcon then
+  local ok,value=pcall(GetItemIcon,id); if ok then icon=value end
  end
  if id and (not name or not icon) and not self.pending[id] and not self.loaded[id] then
   -- Only mark a request pending when the client actually accepts it.
