@@ -1,0 +1,170 @@
+{
+  "before": {
+    "lua51": {
+      "median_ten_searches_ms": 210.33,
+      "median_uncollected_heap_delta_kib": 32788.7,
+      "trials": [
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 210.33,
+          "mock_uncollected_heap_delta_kib": 32788.7
+        },
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 211.98,
+          "mock_uncollected_heap_delta_kib": 32788.7
+        },
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 277.49,
+          "mock_uncollected_heap_delta_kib": 32788.7
+        },
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 194.09,
+          "mock_uncollected_heap_delta_kib": 32788.7
+        },
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 191.63,
+          "mock_uncollected_heap_delta_kib": 32788.7
+        }
+      ]
+    },
+    "luajit21": {
+      "median_ten_searches_ms": 70.12,
+      "median_uncollected_heap_delta_kib": 22500.9,
+      "trials": [
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 70.12,
+          "mock_uncollected_heap_delta_kib": 22506.6
+        },
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 71.18,
+          "mock_uncollected_heap_delta_kib": 22502.1
+        },
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 73.38,
+          "mock_uncollected_heap_delta_kib": 22500.9
+        },
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 65.66,
+          "mock_uncollected_heap_delta_kib": 22483.5
+        },
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 65.34,
+          "mock_uncollected_heap_delta_kib": 22499.5
+        }
+      ]
+    }
+  },
+  "after": {
+    "lua51": {
+      "median_ten_searches_ms": 187.63,
+      "median_uncollected_heap_delta_kib": 29023.1,
+      "trials": [
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 182.19,
+          "mock_uncollected_heap_delta_kib": 29023.1
+        },
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 187.79,
+          "mock_uncollected_heap_delta_kib": 29023.1
+        },
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 232.12,
+          "mock_uncollected_heap_delta_kib": 29023.1
+        },
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 180.68,
+          "mock_uncollected_heap_delta_kib": 29023.1
+        },
+        {
+          "runtime": "lua51",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 187.63,
+          "mock_uncollected_heap_delta_kib": 29023.1
+        }
+      ]
+    },
+    "luajit21": {
+      "median_ten_searches_ms": 68.09,
+      "median_uncollected_heap_delta_kib": 18345.6,
+      "trials": [
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 68.39,
+          "mock_uncollected_heap_delta_kib": 18349.2
+        },
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 62.49,
+          "mock_uncollected_heap_delta_kib": 18335.6
+        },
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 62.47,
+          "mock_uncollected_heap_delta_kib": 18343.9
+        },
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 69.69,
+          "mock_uncollected_heap_delta_kib": 18345.6
+        },
+        {
+          "runtime": "luajit21",
+          "recipes": 5000,
+          "query_changes": 10,
+          "mock_ten_searches_ms": 68.09,
+          "mock_uncollected_heap_delta_kib": 18350.7
+        }
+      ]
+    }
+  }
+}
