@@ -1,9 +1,9 @@
 # CraftRoster
 
-[**Download CraftRoster.zip — 0.8.0-beta.28**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
+[**Download CraftRoster.zip — 0.8.0-beta.29**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-**Version:** `0.8.0-beta.28`  
-**Released:** October 23, 2026 at 5:21 PM MDT (America/Edmonton)
+**Version:** `0.8.0-beta.29`  
+**Released:** October 23, 2026 at 8:12 PM EST (fixed UTC−5)
 
 
 
@@ -19,6 +19,8 @@ Unsure which guildie can craft it? Is their name an abomination you can’t type
 
 **Classic sources by default:** When confirmed Forever details are missing, exact Classic matches show named vendors, trainers, drops or quest sources. Vendor/trainer details include full NPC names, trainer titles, zones, coordinates where recorded, and training requirements. Boss and dungeon/raid drops show the boss or mob and instance, without coordinate clutter. Faction-specific trainers and vendors are filtered for your character. The catalogue-wide build checks all 2,510 recipes and supplies detailed Classic records for 1,135; 1,257 have no exact Classic counterpart and 118 need further acquisition evidence. These references are labelled unconfirmed in Forever and cannot create map markers. [Coverage and build details](docs/CLASSIC_SOURCE_BUILD.md).
 
+
+**Crafter data freshness:** Hover a crafter to see when their saved recipe snapshot was shared. Missing timestamps are stated explicitly. Online status does not establish that their recipe scan is current.
 
 **Latest usability fixes:** Clear the active shopping list with **Clear list**. Search matches all entered words, including aliases such as wrist/bracer. Tick **Known by guild** below the search to show only recipes in your own or saved guildmates’ scans, including offline members. Same-name recipes share one result with a **Version** selector; each version keeps its own crafters, materials and sources. The selected-recipe pane uses more width and shows a short source overview; expand it for full details. Ten Enchanting recipes now include named Classic vendor examples and sourced coordinates, clearly unconfirmed for Forever.
 
