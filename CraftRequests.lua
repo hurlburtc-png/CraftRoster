@@ -83,21 +83,30 @@ end
 
 local function SendAddonData(message)
 	if not CraftRosterDB.settings.enabled or #message > 255 then return false end
-	if C_ChatInfo and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted
-		and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted() then
-		CraftRoster:WarnChatRestricted()
+	-- Some hybrid clients expose restriction APIs that throw before the chat
+	-- subsystem is ready. Fail closed rather than crashing or assuming sending
+	-- is permitted when a restriction check cannot be completed.
+	local function Restricted(check)
+		if type(check) ~= "function" then return false end
+		local ok,blocked = pcall(check)
+		if not ok or blocked then
+			CraftRoster:WarnChatRestricted()
+			return true
+		end
 		return false
 	end
-	if C_ChatInfo and C_ChatInfo.InChatMessagingLockdown
-		and C_ChatInfo.InChatMessagingLockdown() then
-		CraftRoster:WarnChatRestricted()
-		return false
+	if C_ChatInfo and (Restricted(C_ChatInfo.AreOutgoingAddonChatMessagesRestricted)
+		or Restricted(C_ChatInfo.InChatMessagingLockdown)) then return false end
+	if IsInGuild then
+		local ok,inGuild=pcall(IsInGuild)
+		if not ok or not inGuild then return false end
 	end
-	if IsInGuild and not IsInGuild() then return false end
 	local send = C_ChatInfo and C_ChatInfo.SendAddonMessage or SendAddonMessage
 	if type(send) == "function" then
-		local result = send(PREFIX, message, "GUILD")
-		if result == false then return false end
+		-- Never retry a throwing modern send through the legacy API: it may
+		-- have transmitted before raising, and a retry could duplicate orders.
+		local ok,result=pcall(send,PREFIX,message,"GUILD")
+		if not ok or result == false then return false end
 		local success = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.Success
 		return result == nil or result == true or success == nil or result == success
 	end
