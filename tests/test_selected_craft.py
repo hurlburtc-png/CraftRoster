@@ -11,6 +11,35 @@ addon.Directory:RefreshDetails()
 '''
 
 CASES = {
+'shift_click_recipe_links_keep_active_chat_context_on_failure': '''
+    addon.Directory.GetSearchLinks=function()
+        return {craft='|Hitem:99|h[Craft]|h',recipe='|Hitem:100|h[Pattern]|h'}
+    end
+    IsShiftKeyDown=function() return true end
+    local attempts,opened=0,0
+    ChatEdit_GetActiveWindow=function() return CreateFrame() end
+    ChatEdit_InsertLink=function() attempts=attempts+1;error('hybrid chat insert failed') end
+    ChatFrame_OpenChat=function() opened=opened+1 end
+    local tab=addon.Directory.frame.ProfessionsTab
+    tab.CraftItemHover.scripts.OnClick(tab.CraftItemHover,'LeftButton')
+    addon.SelectedCraft.recipeButton.scripts.OnClick(addon.SelectedCraft.recipeButton,'LeftButton')
+    assert(attempts==2,'both recipe link buttons should attempt the active editor')
+    assert(opened==0,'never replace an active chat editor after a failed insert')
+''',
+'shift_click_recipe_links_guard_failed_open_chat': '''
+    addon.Directory.GetSearchLinks=function()
+        return {craft='|Hitem:99|h[Craft]|h',recipe='|Hitem:100|h[Pattern]|h'}
+    end
+    IsShiftKeyDown=function() return true end
+    ChatEdit_InsertLink=function() return false end
+    ChatEdit_GetActiveWindow=function() return nil end
+    local opened=0
+    ChatFrame_OpenChat=function() opened=opened+1;error('chat UI unavailable') end
+    local tab=addon.Directory.frame.ProfessionsTab
+    tab.CraftItemHover.scripts.OnClick(tab.CraftItemHover,'LeftButton')
+    addon.SelectedCraft.recipeButton.scripts.OnClick(addon.SelectedCraft.recipeButton,'LeftButton')
+    assert(opened==2,'fallback should try to open chat without throwing')
+''',
 'long_source_summary_is_bounded_but_full_details_remain_available': '''
     local view=addon.SelectedCraft
     local source=view.tab.RecipeSource
