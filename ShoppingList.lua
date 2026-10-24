@@ -157,9 +157,16 @@ function ShoppingList:SearchAuctions(entry)
 	local modernSearch = AuctionHouseFrame and AuctionHouseFrame.SearchBar and AuctionHouseFrame.SearchBar.SearchBox
 	local legacySearch = AuctionFrameBrowse and AuctionFrameBrowse.SearchBox or BrowseName
 	local search
-	if modernOpen and modernSearch and modernSearch.SetText then
-		search = modernSearch
-	elseif legacyOpen and legacySearch and legacySearch.SetText then
+	if modernOpen then
+		-- A visible modern AH owns the search context, even if its search
+		-- bar is not available on the current tab. Never fall back to an
+		-- unrelated legacy field left behind by another addon.
+		if modernSearch and modernSearch.SetText
+			and (not modernSearch.IsShown or modernSearch:IsShown()) then
+			search = modernSearch
+		end
+	elseif legacyOpen and legacySearch and legacySearch.SetText
+		and (not legacySearch.IsShown or legacySearch:IsShown()) then
 		search = legacySearch
 	end
 	if not search then
