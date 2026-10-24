@@ -205,17 +205,27 @@ function Requests:GetTradeProgress(requestID)
 end
 
 function Requests:GetDeliveredMaterials(recipeID,target,quantity)
+	local match
 	for _,request in ipairs(CraftRosterDB.requests or {}) do
 		if OwnRequest(request) and request.mode=="trade" and not request.tradeAbandoned
 			and request.status~="completed" and request.status~="declined" and request.status~="cancelled"
 			and request.recipeID==recipeID and Normalize(request.target)==Normalize(target)
-			and request.quantity==quantity and request.materialLedger then
-			local delivered={}
-			for _,material in ipairs(request.materialLedger) do delivered[material.itemID or material.name]=math.max(0,material.count-material.remaining) end
-			return delivered
+			and request.quantity==quantity then
+			-- The shopping list is recipe-scoped, not request-ID-scoped.
+			-- With two live identical orders, choosing the first ledger would
+			-- silently credit another order's delivered materials. Fail closed.
+			if match then return {} end
+			match=request
 		end
 	end
-	return {}
+	local delivered={}
+	if match and match.materialLedger then
+		for _,material in ipairs(match.materialLedger) do
+			local key=material.itemID or material.name
+			delivered[key]=(delivered[key] or 0)+math.max(0,material.count-material.remaining)
+		end
+	end
+	return delivered
 end
 
 SaveTradeProgress = function(request)

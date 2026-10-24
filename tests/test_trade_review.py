@@ -362,6 +362,58 @@ for terminal_status in ('completed','declined','cancelled'):
     """
 
 
+
+# The shopping list has no selected request ID. Concurrent identical active
+# trade requests must not inherit each other's verified material deliveries.
+CASES['concurrent_identical_trades_do_not_cross_credit_shopping_list'] = """
+    inventoryFixture(false,true)
+    addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+    local first=CraftRosterDB.requests[1]
+    first.materialLedger[1].remaining=1
+    local second={id='other-order',target='Crafter-Realm',recipeID=42,
+        quantity=1,mode='trade',status='requested',
+        materialLedger={{itemID=7,name='Herb',count=3,remaining=3}}}
+    table.insert(CraftRosterDB.requests,1,second)
+    assert(not next(addon.Requests:GetDeliveredMaterials(42,'Crafter-Realm',1)),
+        'ambiguous concurrent trades must not credit an arbitrary ledger')
+    local entries=addon.ShoppingList:GetMaterialStatus(42,'Crafter-Realm')
+    assert(entries[1].delivered==0 and entries[1].required==3,
+        'the selected recipe must show full materials until a request is unambiguous')
+    second.status='cancelled'
+    assert(addon.Requests:GetDeliveredMaterials(42,'Crafter-Realm',1)[7]==2,
+        'closing the competing order restores verified active delivery credit')
+"""
+
+CASES['concurrent_trade_without_ledger_is_still_ambiguous'] = """
+    inventoryFixture(false,true)
+    addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+    local first=CraftRosterDB.requests[1]
+    first.materialLedger[1].remaining=2
+    table.insert(CraftRosterDB.requests,1,{id='pending-ledger',
+        target='Crafter-Realm',recipeID=42,quantity=1,mode='trade',
+        status='requested'})
+    assert(not next(addon.Requests:GetDeliveredMaterials(42,'Crafter-Realm',1)),
+        'a matching pending trade without a ledger is still a competing order')
+    CraftRosterDB.requests[1].status='completed'
+    assert(addon.Requests:GetDeliveredMaterials(42,'Crafter-Realm',1)[7]==1,
+        'the single remaining active ledger should retain its verified credit')
+"""
+
+CASES['different_crafter_or_quantity_does_not_hide_active_trade_credit'] = """
+    inventoryFixture(false,true)
+    addon.Requests:StartTradeRequest(42,'Crafter-Realm')
+    local first=CraftRosterDB.requests[1]
+    first.materialLedger[1].remaining=1
+    table.insert(CraftRosterDB.requests,1,{id='other-crafter',
+        target='Other-Realm',recipeID=42,quantity=1,mode='trade',
+        status='requested',materialLedger={{itemID=7,name='Herb',count=3,remaining=3}}})
+    table.insert(CraftRosterDB.requests,1,{id='other-quantity',
+        target='Crafter-Realm',recipeID=42,quantity=2,mode='trade',
+        status='requested',materialLedger={{itemID=7,name='Herb',count=6,remaining=6}}})
+    assert(addon.Requests:GetDeliveredMaterials(42,'Crafter-Realm',1)[7]==2,
+        'unrelated orders must not suppress the unique active delivery credit')
+"""
+
 class TradeReviewTests(unittest.TestCase):
     pass
 
