@@ -124,27 +124,38 @@ StaticPopupDialogs["CRAFTROSTER_CRAFTER_SHARE"] = {
 
 -- Build one inventory index only when a count API is unavailable.
 local function BagCounts()
-	local slots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
-	local link = C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
-	local info = C_Container and C_Container.GetContainerItemInfo or GetContainerItemInfo
-	if not slots or not link or not info then return nil end
-	local counts = {}
-	for bag = 0, (NUM_BAG_SLOTS or 4) do
-		for slot = 1, slots(bag) do
-			local itemLink = link(bag, slot)
-			if itemLink then
-				local item, count = info(bag, slot)
-				if type(item) == "table" then count = item.stackCount end
-				if type(count) == "number" and count >= 0 then
-					local id = tonumber(itemLink:match("item:(%d+)"))
-					local name = itemLink:match("%[(.-)%]")
-					if id then counts[id] = (counts[id] or 0) + count end
-					if name then counts[name] = (counts[name] or 0) + count end
+	-- A hybrid client can expose modern container helpers before all of them
+	-- are usable. Scan one coherent API family at a time; a partial/throwing
+	-- scan must never turn an unknown material count into a misleading zero.
+	local function scan(slots, link, info)
+		if type(slots)~="function" or type(link)~="function" or type(info)~="function" then return nil end
+		local counts={}
+		for bag=0,(NUM_BAG_SLOTS or 4) do
+			local ok,slotCount=pcall(slots,bag)
+			if not ok or type(slotCount)~="number" or slotCount<0 or slotCount~=math.floor(slotCount) then return nil end
+			for slot=1,slotCount do
+				local linkOK,itemLink=pcall(link,bag,slot)
+				if not linkOK then return nil end
+				if itemLink then
+					local infoOK,item,count=pcall(info,bag,slot)
+					if not infoOK then return nil end
+					if type(item)=="table" then count=item.stackCount end
+					if type(count)~="number" or count<0 then return nil end
+					if type(itemLink)~="string" then return nil end
+					local id=tonumber(itemLink:match("item:(%d+)"))
+					local name=itemLink:match("%[(.-)%]")
+					if not id and not name then return nil end
+					if id then counts[id]=(counts[id] or 0)+count end
+					if name then counts[name]=(counts[name] or 0)+count end
 				end
 			end
 		end
+		return counts
 	end
-	return counts
+	local modern=C_Container and scan(C_Container.GetContainerNumSlots,
+		C_Container.GetContainerItemLink,C_Container.GetContainerItemInfo)
+	if modern then return modern end
+	return scan(GetContainerNumSlots,GetContainerItemLink,GetContainerItemInfo)
 end
 
 -- Fill the native auction search field without submitting a query or purchase.
