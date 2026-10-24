@@ -2,7 +2,7 @@
 
 [**Download CraftRoster.zip — 0.8.0-beta.36**](https://github.com/hurlburtc-png/CraftRoster/raw/refs/heads/main/CraftRoster.zip)
 
-[**Download tagged beta.35 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.36/CraftRoster.zip)
+[**Download tagged beta.36 ZIP**](https://github.com/hurlburtc-png/CraftRoster/releases/download/v0.8.0-beta.36/CraftRoster.zip)
 
 **Version:** `0.8.0-beta.36`  
 **Released:** ZIP validation in progress.
