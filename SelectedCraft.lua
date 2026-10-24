@@ -261,7 +261,9 @@ function View:RefreshMaterials()
 		row.Label:ClearAllPoints(); row.Label:SetPoint("TOPLEFT",40,-2)
 		row.Label:SetPoint("BOTTOMRIGHT",row,"BOTTOMRIGHT",-(countWidth+4),2)
 		row.Label:SetText(entry.name)
-		local height=36
+		local height=32
+		row.Icon:SetSize(28,28)
+		row.Count:SetHeight(28)
 		row:SetSize(column,height); row:ClearAllPoints(); row:SetPoint("TOPLEFT",tab.Details,"TOPLEFT",materialX,-y); row:Show()
 		-- Keep a modest gap so icons and counts remain individually clickable.
 		y=y+height+1
