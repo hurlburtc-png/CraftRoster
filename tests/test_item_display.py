@@ -58,6 +58,35 @@ CASES = {
  items:Resolve(779,'Item 779')
  assert(items.pending[779]==nil and requests==2)
 ''',
+'hybrid_client_uses_legacy_icon_when_modern_cache_is_empty': '''
+ inventoryFixture(false,true)
+ local items=addon.ItemDisplay
+ items.pending={}; items.loaded={}
+ C_Item=C_Item or {}
+ local requested=0
+ C_Item.GetItemInfo=function() return 'Hybrid Herb','|Hitem:777|h[Hybrid Herb]|h',1 end
+ C_Item.GetItemIconByID=function() return nil end
+ GetItemInfo=function() return nil end
+ GetItemIcon=function(id) if id==777 then return 'LegacyIcon777' end end
+ C_Item.RequestLoadItemDataByID=function() requested=requested+1; return true end
+ local name,link,icon=items:Resolve(777,'Hybrid Herb')
+ assert(name=='Hybrid Herb' and link:find('item:777',1,true))
+ assert(icon=='LegacyIcon777' and requested==0)
+''',
+'hybrid_client_uses_legacy_item_info_after_modern_failure': '''
+ inventoryFixture(false,true)
+ local items=addon.ItemDisplay
+ items.pending={}; items.loaded={}
+ C_Item=C_Item or {}
+ C_Item.GetItemInfo=function() error('modern cache unavailable') end
+ C_Item.GetItemIconByID=function() return nil end
+ GetItemInfo=function(id)
+  if id==777 then return 'Fallback Herb','|Hitem:777|h[Fallback Herb]|h',2,1,1,'Trade Goods','Herb',20,'','LegacyTexture' end
+ end
+ local name,link,icon,quality=items:Resolve(777,'Item 777')
+ assert(name=='Fallback Herb' and icon=='LegacyTexture' and quality==2)
+ assert(link:find('Fallback Herb',1,true))
+''',
 'known_item_without_icon_requests_one_async_refresh': '''
  inventoryFixture(false,true)
  local items=addon.ItemDisplay
