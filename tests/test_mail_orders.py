@@ -187,6 +187,25 @@ CASES={
     assert(#addon.WorkOrders:GetOrders()==4,
         'hidden reader must never import mail')
 """,
+'conflicting_valid_reader_indices_never_import_wrong_mail': r"""
+    inbox[1]={sender='Wrong-Realm',subject='Spidersilk Boots craft requested',
+        body='Requested item: Spidersilk Boots'}
+    inbox[2]={sender='Correct-Realm',subject='Spidersilk Boots craft requested',
+        body='Requested item: Spidersilk Boots'}
+    InboxFrame.openMailID=1
+    OpenMailFrame.openMailID=2
+    OpenMailFrame:Show()
+    addon.MailOrders:CaptureOpened()
+    GetInboxText(1)
+    GetInboxText(2)
+    assert(#addon.WorkOrders:GetOrders()==0,
+        'conflicting valid indices must not record a request for either mail')
+    InboxFrame.openMailID=2
+    addon.MailOrders:CaptureOpened()
+    local orders=addon.WorkOrders:GetOrders()
+    assert(#orders==1 and orders[1].customer=='Correct-Realm',
+        'import only when visible mail reader and inbox agree')
+""",
 'opened_reader_fallback_index_and_bare_sender': r"""
     InboxFrame=nil; OpenMailFrame.openMailID=1
     inbox[1]={sender='Crafter',subject='Spidersilk Boots craft requested',body='Requested item: Spidersilk Boots'}
