@@ -655,7 +655,7 @@ CASES.update({
         inventoryFixture(false,true)
         MailFrame=CreateFrame(); MailFrame:Show()
         SendMailNameEditBox=CreateFrame(); SendMailSubjectEditBox=CreateFrame()
-        SendMailNameEditBox:SetText('Previous-Realm')
+        SendMailNameEditBox:SetText('')
         addon.Requests:MailPlayer(42,'Crafter-Realm')
         assert(SendMailNameEditBox:GetText()=='Crafter-Realm')
         assert(SendMailSubjectEditBox:GetText()=='Potion craft requested' and moved==3)
