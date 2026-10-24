@@ -22,6 +22,42 @@ local function toggle(value)
 end
 '''
 CASES={
+'personal_availability_cycles_and_composes_with_saved_guild_ownership': '''
+ local button=tab.AvailabilityButton
+ local found=search();assert(found[800101] and found[800102] and found[800103])
+ button.scripts.OnClick(button);found=search()
+ assert(button:GetText()=='I know' and found[800101] and not found[800102] and not found[800103])
+ button.scripts.OnClick(button);found=search()
+ assert(button:GetText()=='Not in my scan' and not found[800101] and found[800102] and found[800103])
+ toggle(true);found=search()
+ assert(found[800102] and not found[800101] and not found[800103])
+ button.scripts.OnClick(button);found=search()
+ assert(button:GetText()=='Recipes: All' and found[800101] and found[800102])
+''',
+'new_scan_invalidates_personal_results_and_missing_data_is_safe': '''
+ local button=tab.AvailabilityButton
+ button.scripts.OnClick(button);button.scripts.OnClick(button)
+ CraftRosterDB.characters['Tester-Realm'].recipes[800103]={}
+ d:InvalidateIndex();flushTimers()
+ local found=search();assert(not found[800103] and found[800102])
+ CraftRosterDB.characters['Tester-Realm'].recipes=nil
+ d:InvalidateIndex();flushTimers();found=search()
+ assert(found[800101] and found[800102] and found[800103])
+ button.scripts.OnClick(button);button.scripts.OnClick(button)
+ found=search();assert(not next(found))
+''',
+'availability_button_fits_filter_stack_and_remembers_selection': '''
+ local button=tab.AvailabilityButton
+ for _,size in ipairs({{620,420},{1000,680},{1200,800}}) do
+  d.frame:SetSize(size[1],size[2]);d.frame.scripts.OnSizeChanged(d.frame)
+  inside(button,tab)
+  for _,other in ipairs({tab.SearchBox,tab.GuildKnownCheck,tab.Dropdown,tab.Results,
+   tab.SortButton,tab.FavoritesCheck,tab.CraftRosterRefreshButton}) do apart(button,other) end
+ end
+ button.scripts.OnClick(button);d.frame:Hide();d:Toggle()
+ assert(button:GetText()=='I know' and CraftRosterDB.settings.recipeAvailability=='mine')
+''',
+
 'offline_and_own_recipes_are_included_but_catalogue_is_hidden': '''
  local found=search();assert(found[800101] and found[800102] and found[800103])
  toggle(true);found=search()
