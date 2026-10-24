@@ -241,7 +241,7 @@ function ShoppingList:GetMaterialStatus(recipeID, crafter)
 	local legacyCount=GetItemCount
 	-- Hybrid clients can expose modern count APIs before they work. Keep the
 	-- legacy count path available and build a bag index only if both fail.
-	local counts
+	local counts,bagScanned
 	local ready,unavailable=0,false
 	local contribution=Contribution(recipeID,crafter)
 	local delivered=crafter and CraftRoster.Requests and CraftRoster.Requests:GetDeliveredMaterials(recipeID,crafter,self:GetQuantity(recipeID)) or {}
@@ -270,8 +270,9 @@ function ShoppingList:GetMaterialStatus(recipeID, crafter)
 			if ok and type(value)=="number" and value>=0 then owned=value end
 		end
 		if owned==nil then
-			if not counts then counts=BagCounts() or {} end
-			owned=counts[key]
+			-- Scan at most once, including when the client has no bag APIs.
+			if not bagScanned then counts=BagCounts(); bagScanned=true end
+			if counts then owned=counts[key] or 0 end
 		end
 		if owned~=nil then entry.owned=owned end
 		entry.bank=CraftRoster.BankMaterials:GetCount(entry.itemID or entry.name,snapshot or false)
