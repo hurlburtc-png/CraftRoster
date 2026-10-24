@@ -92,6 +92,55 @@ CASES = {
         assert(addon.ItemDisplay:Click({name='Herb',itemID=42}))
         assert(searches==1)
     """,
+
+    "uncertain_modern_auction_visibility_does_not_write_stale_legacy": """
+        local writes=0
+        AuctionHouseFrame=CreateFrame()
+        AuctionHouseFrame.IsShown=function() error('modern AH state unavailable') end
+        AuctionFrame=CreateFrame(); AuctionFrame:Show()
+        BrowseName=CreateFrame()
+        BrowseName.SetText=function() writes=writes+1 end
+        assert(not addon.ShoppingList:SearchAuctions({name='Herb'}))
+        assert(writes==0,'unknown modern AH state must not select stale legacy search')
+    """,
+    "modern_auction_search_visibility_error_does_not_fall_back": """
+        local modernWrites,legacyWrites=0,0
+        AuctionHouseFrame=CreateFrame(); AuctionHouseFrame:Show()
+        local search=CreateFrame()
+        search.IsShown=function() error('modern search tab not ready') end
+        search.SetText=function() modernWrites=modernWrites+1 end
+        AuctionHouseFrame.SearchBar={SearchBox=search}
+        AuctionFrame=CreateFrame(); AuctionFrame:Show()
+        BrowseName=CreateFrame()
+        BrowseName.SetText=function() legacyWrites=legacyWrites+1 end
+        assert(not addon.ShoppingList:SearchAuctions({name='Herb'}))
+        assert(modernWrites==0 and legacyWrites==0,
+            'unknown modern search visibility must not write to either box')
+    """,
+    "legacy_auction_search_visibility_error_fails_closed": """
+        local writes=0
+        AuctionHouseFrame=nil
+        AuctionFrame=CreateFrame(); AuctionFrame:Show()
+        BrowseName=CreateFrame()
+        BrowseName.IsShown=function() error('legacy browse tab unavailable') end
+        BrowseName.SetText=function() writes=writes+1 end
+        assert(not addon.ShoppingList:SearchAuctions({name='Herb'}))
+        assert(writes==0,'unknown legacy search visibility must not write')
+    """,
+    "visible_modern_auction_ignores_broken_legacy_visibility": """
+        local modernWrites,legacyWrites=0,0
+        AuctionHouseFrame=CreateFrame(); AuctionHouseFrame:Show()
+        local search=CreateFrame(); search:Show()
+        search.SetText=function(_,value) assert(value=='Herb'); modernWrites=modernWrites+1 end
+        AuctionHouseFrame.SearchBar={SearchBox=search}
+        AuctionFrame=CreateFrame()
+        AuctionFrame.IsShown=function() error('stale legacy frame') end
+        BrowseName=CreateFrame()
+        BrowseName.SetText=function() legacyWrites=legacyWrites+1 end
+        assert(addon.ShoppingList:SearchAuctions({name='Herb'}))
+        assert(modernWrites==1 and legacyWrites==0,
+            'a visible modern AH must remain usable despite stale legacy frames')
+    """,
 }
 class ChatAuctionRoutingTests(unittest.TestCase):
     pass
