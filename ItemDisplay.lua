@@ -1,4 +1,5 @@
 local ADDON_NAME, CraftRoster = ...
+local colors={[0]="ff9d9d9d",[1]="ffffffff",[2]="ff1eff00",[3]="ff0070dd",[4]="ffa335ee",[5]="ffff8000",[6]="ffe6cc80",[7]="ffe6cc80"}
 local Items = { pending = {}, loaded = {} }
 CraftRoster.ItemDisplay = Items
 
@@ -44,7 +45,6 @@ function Items:RecipeLabel(recipeID,fallback)
  local source=CraftRoster.RecipeSources
  local output=source and source:GetOutputItemID(recipeID)
  local _,link,_,quality=self:Resolve(output,fallback)
- local colors={[0]="ff9d9d9d",[1]="ffffffff",[2]="ff1eff00",[3]="ff0070dd",[4]="ffa335ee",[5]="ffff8000",[6]="ffe6cc80",[7]="ffe6cc80"}
  local color=colors[quality]
  local saved=CraftRosterDB.recipes and CraftRosterDB.recipes[recipeID]
  if not color and saved and type(saved.itemLink)=="string" then color=saved.itemLink:match("^|c(%x%x%x%x%x%x%x%x)") end
