@@ -11,6 +11,36 @@ addon.Directory:RefreshDetails()
 '''
 
 CASES = {
+'primary_action_stays_beside_quantity_with_long_material_lists': '''
+    local view=addon.SelectedCraft
+    local tab=addon.Directory.frame.ProfessionsTab
+    local original=addon.ShoppingList.GetMaterialStatus
+    addon.ShoppingList.GetMaterialStatus=function()
+        local entries={}
+        for i=1,10 do
+            entries[i]={name='Material '..i,itemID=7,icon='icon',
+                owned=1,required=2,recipeRequired=2,delivered=0,crafterProvides=0}
+        end
+        return entries
+    end
+    local lastPoint
+    view.craftButton.SetPoint=function(_,...) lastPoint={...} end
+    for _,width in ipairs({436,360,359,600,436}) do
+        tab.SelectedCraftScroll:SetWidth(width); view:Refresh()
+        assert(view.actionInHeader==(width>=360))
+        if width>=360 then
+            assert(lastPoint[5]==-68)
+            assert(view.craftButton:GetWidth()>=148)
+            assert(width-12-view.craftButton:GetWidth()>=200,
+                'craft action must leave quantity arrows unobscured')
+        else
+            assert(lastPoint[5]<-164)
+        end
+        assert(view.craftButton:GetHeight()==30)
+    end
+    addon.ShoppingList.GetMaterialStatus=original
+''',
+
 'readable_columns_at_default_width_and_stack_only_when_narrow': '''
     local view=addon.SelectedCraft
     local scroll=addon.Directory.frame.ProfessionsTab.SelectedCraftScroll
