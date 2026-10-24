@@ -17,6 +17,32 @@ def fresh(runtime='lua51',profile='modern',saved=None):
     return lua
 
 CASES={
+'conflicting_request_id_cannot_overwrite_a_different_craft': '''
+    CraftRosterDB.recipes[42]={name='Boots',profession='Tailoring'}
+    CraftRosterDB.recipes[43]={name='Gloves',profession='Tailoring'}
+    local original=addon.WorkOrders:Add('Crafter-Realm',42,2,'reused','addon')
+    assert(original and #addon.WorkOrders:GetOrders()==1)
+    local warning
+    print=function(message) warning=message end
+    assert(not addon.WorkOrders:Add('Crafter-Realm',43,2,'reused','addon'))
+    assert(not addon.WorkOrders:Add('Crafter-Realm',42,3,'reused','addon'))
+    assert(#addon.WorkOrders:GetOrders()==1)
+    assert(original.recipeID==42 and original.quantity==2 and original.requestID=='reused')
+    assert(warning and warning:find('Conflicting request ID',1,true))
+    assert(addon.WorkOrders:Add('Crafter-Realm',42,2,'reused','addon')==original)
+    assert(#addon.WorkOrders:GetOrders()==1)
+    assert(addon.WorkOrders:Add('Other-Realm',43,2,'reused','addon'))
+    assert(#addon.WorkOrders:GetOrders()==2)
+''',
+'nil_request_id_does_not_match_manual_or_whisper_order': '''
+    CraftRosterDB.recipes[42]={name='Boots',profession='Tailoring'}
+    local order=addon.WorkOrders:Add('Crafter-Realm',42,1,nil,'manual')
+    assert(order and order.requestID==nil)
+    assert(not addon.WorkOrders:FindRequest(nil,'Crafter-Realm'))
+    assert(not addon.WorkOrders:FindRequest('','Crafter-Realm'))
+    assert(not addon.WorkOrders:UpdateRequestStatus(nil,'Crafter-Realm','completed'))
+    assert(order.status=='requested')
+''',
 'queue_receives_multiple_customers_and_trade_filters': '''
     CraftRosterDB.recipes[42]={name='Boots',profession='Tailoring',itemLink='item:4320'}
     CraftRosterDB.recipes[43]={name='Enchant Chest',profession='Enchanting'}
