@@ -259,8 +259,8 @@ for field in ('SendMailNameEditBox', 'SendMailSubjectEditBox', 'SendMailBodyEdit
         local original={field}.GetText
         {field}.GetText=function() error('mail edit box not ready') end
         addon.Requests:MailPlayer(42,'Crafter-Realm')
-        assert(moved==0 and SendMailNameEditBox.text=='' and
-            SendMailSubjectEditBox.text=='' and SendMailBodyEditBox.text=='',
+        assert(moved==0 and rawget(SendMailNameEditBox,'text')==nil and
+            rawget(SendMailSubjectEditBox,'text')==nil and rawget(SendMailBodyEditBox,'text')==nil,
             'unreadable draft fields must not authorize attachment or overwrite')
         {field}.GetText=original
         dispatch('MAIL_SHOW')
