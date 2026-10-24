@@ -3,9 +3,9 @@
 ## IconTexture: Interface\Icons\INV_Potion_97
 ## Notes: Find guild crafters, recipe sources and required materials.
 ## Author: hurlburtc-png
-## Version: 0.8.0-beta.37
+## Version: 0.8.0-beta.38
 ## X-ReleaseChannel: beta
-## X-ReleaseNotes: Safer craft mail recipients and opened-mail imports
+## X-ReleaseNotes: Reject ambiguous opened-mail indices to protect work orders
 ## OptionalDeps: TomTom
 ## SavedVariables: CraftRosterDB
 
