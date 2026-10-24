@@ -3,9 +3,9 @@
 ## IconTexture: Interface\Icons\INV_Potion_97
 ## Notes: Find guild crafters, recipe sources and required materials.
 ## Author: hurlburtc-png
-## Version: 0.8.0-beta.40
+## Version: 0.8.0-beta.41
 ## X-ReleaseChannel: beta
-## X-ReleaseNotes: Optional local Auctioneer and TSM material cost estimates
+## X-ReleaseNotes: Safer guild request transport and optional local material pricing
 ## OptionalDeps: TomTom, Auctioneer, TradeSkillMaster
 ## SavedVariables: CraftRosterDB
 
